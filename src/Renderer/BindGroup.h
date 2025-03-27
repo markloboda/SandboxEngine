@@ -7,10 +7,12 @@ struct BindGroupDesc
    const std::vector<WGPUBindGroupEntry>& entries;
 };
 
+class Device;
+
 class BindGroup
 {
 public:
-   BindGroup(WGPUDevice device, BindGroupDesc desc);
+   BindGroup(Device* device, BindGroupDesc desc);
    ~BindGroup();
 
 private:

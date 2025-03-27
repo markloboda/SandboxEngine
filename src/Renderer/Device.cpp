@@ -1,6 +1,8 @@
 #include <VolumetricClouds.h>
 #include <Renderer/Device.h>
 
+#include "wgpu.h"
+
 WGPUDeviceLostCallback deviceLostCallback = [](WGPUDevice const* device, WGPUDeviceLostReason reason, WGPUStringView message, void*, void*)
 {
    std::cerr << "Device lost: reason " << reason;
@@ -15,29 +17,7 @@ WGPUPopErrorScopeCallback popErrorScopeCallback = [](WGPUPopErrorScopeStatus sta
 };
 
 Device::Device()
-{
-   Init();
-}
-
-Device::~Device()
-{
-   if (_device)
-   {
-      wgpuDeviceRelease(_device);
-   }
-   if (_adapter)
-   {
-      wgpuAdapterRelease(_adapter);
-   }
-   if (_instance)
-   {
-      wgpuInstanceRelease(_instance);
-   }
-}
-
-void Device::Init()
-{
-   // Create the instance.
+{   // Create the instance.
    {
       WGPUInstanceDescriptor instanceDesc = {};
       _instance = wgpuCreateInstance(&instanceDesc);
@@ -131,7 +111,23 @@ void Device::Init()
    }
 }
 
-WGPUShaderModule Device::CreateShaderModule(const std::vector<uint32_t>& spirvCode)
+Device::~Device()
+{
+   if (_device)
+   {
+      wgpuDeviceRelease(_device);
+   }
+   if (_adapter)
+   {
+      wgpuAdapterRelease(_adapter);
+   }
+   if (_instance)
+   {
+      wgpuInstanceRelease(_instance);
+   }
+}
+
+WGPUShaderModule Device::CreateShaderModule(const std::vector<uint32_t>& spirvCode) const
 {
    WGPUShaderSourceSPIRV spirvDesc{};
    spirvDesc.chain.sType = WGPUSType_ShaderSourceSPIRV;
@@ -142,4 +138,9 @@ WGPUShaderModule Device::CreateShaderModule(const std::vector<uint32_t>& spirvCo
    desc.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&spirvDesc);
 
    return wgpuDeviceCreateShaderModule(_device, &desc);
+}
+
+void Device::Poll() const
+{
+   wgpuDevicePoll(_device, false, nullptr);
 }

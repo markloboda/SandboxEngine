@@ -17,8 +17,8 @@ public:
    WGPUDevice Get() const { return _device; }
    WGPUQueue GetQueue() const { return _queue; }
    WGPUInstance GetInstance() const { return _instance; }
-   WGPUShaderModule CreateShaderModule(const std::vector<uint32_t>& spirvCode);
+   WGPUShaderModule CreateShaderModule(const std::vector<uint32_t>& spirvCode) const;
+   void Poll() const;
 
 private:
-   void Init();
 };

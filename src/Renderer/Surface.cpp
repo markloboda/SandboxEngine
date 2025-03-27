@@ -3,11 +3,12 @@
 
 #include <glfw3webgpu.h>
 
-Surface::Surface(WGPUInstance instance, GLFWwindow* window)
+#include <Renderer/Device.h>
+
+Surface::Surface(Device* device, GLFWwindow* window) :
+   _surface(glfwGetWGPUSurface(device->GetInstance(), window))
 {
-   // Create a surface
-   _surface = glfwGetWGPUSurface(instance, window);
-   if (_surface == nullptr)
+   if (!_surface)
    {
       throw std::runtime_error("Failed to create surface");
    }
@@ -15,16 +16,29 @@ Surface::Surface(WGPUInstance instance, GLFWwindow* window)
 
 Surface::~Surface()
 {
-   wgpuSurfaceUnconfigure(_surface);
-   wgpuSurfaceRelease(_surface);
+   if (_surface)
+   {
+      wgpuSurfaceRelease(_surface);
+   }
 }
 
 void Surface::ConfigureSurface(WGPUSurfaceConfiguration config)
 {
+   if (!config.format)
+   {
+      config.format = WGPUTextureFormat_RGBA8Unorm;
+   }
+
    wgpuSurfaceConfigure(_surface, &config);
+   _format = config.format;
 }
 
-WGPUSurfaceTexture Surface::GetNextSurfaceTexture() const
+void Surface::UnConfigureSurface()
+{
+   wgpuSurfaceUnconfigure(_surface);
+}
+
+WGPUSurfaceTexture Surface::GetNextTexture() const
 {
    WGPUSurfaceTexture surfaceTexture;
    wgpuSurfaceGetCurrentTexture(_surface, &surfaceTexture);
@@ -35,3 +49,9 @@ WGPUSurfaceTexture Surface::GetNextSurfaceTexture() const
 
    return surfaceTexture;
 }
+
+void Surface::Present() const
+{
+   wgpuSurfacePresent(_surface);
+}
+

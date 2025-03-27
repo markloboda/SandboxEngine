@@ -1,15 +1,17 @@
 #include <VolumetricClouds.h>
 #include <Renderer/Queue.h>
 
+#include <Renderer/Device.h>
+#include <Renderer/CommandBuffer.h>
+
 WGPUQueueWorkDoneCallback queueWorkDone = [](WGPUQueueWorkDoneStatus status, void*, void*)
 {
    std::cout << "Queued work finished with status: " << status << std::endl;
 };
 
-Queue::Queue(WGPUDevice device)
+Queue::Queue(Device* device) :
+   _queue(wgpuDeviceGetQueue(device->Get()))
 {
-   _queue = wgpuDeviceGetQueue(device);
-
    // Queue work done callback
    WGPUQueueWorkDoneCallbackInfo callbackInfo = {};
    callbackInfo.callback = queueWorkDone;
@@ -18,4 +20,19 @@ Queue::Queue(WGPUDevice device)
 }
 
 Queue::~Queue()
-{}
+{
+   if (_queue)
+   {
+      wgpuQueueRelease(_queue);
+   }
+}
+
+void Queue::Submit(size_t commandCount, CommandBuffer* commands) const
+{
+   std::vector<WGPUCommandBuffer> wgpuCommandBuffers(commandCount);
+   for (size_t i = 0; i < commandCount; ++i)
+   {
+      wgpuCommandBuffers[i] = commands[i].Get();
+   }
+   wgpuQueueSubmit(_queue, commandCount, wgpuCommandBuffers.data());
+}

@@ -34,14 +34,24 @@ set(SOURCE_FILES
    ${SRC_ROOT}/Renderer/BindGroup.h
    ${SRC_ROOT}/Renderer/Buffer.cpp
    ${SRC_ROOT}/Renderer/Buffer.h
+   ${SRC_ROOT}/Renderer/CommandBuffer.cpp
+   ${SRC_ROOT}/Renderer/CommandBuffer.h
+   ${SRC_ROOT}/Renderer/CommandEncoder.cpp
+   ${SRC_ROOT}/Renderer/CommandEncoder.h
    ${SRC_ROOT}/Renderer/Device.cpp
    ${SRC_ROOT}/Renderer/Device.h
+   ${SRC_ROOT}/Renderer/ImGuiManager.cpp
+   ${SRC_ROOT}/Renderer/ImGuiManager.h
    ${SRC_ROOT}/Renderer/Queue.cpp
    ${SRC_ROOT}/Renderer/Queue.h
    ${SRC_ROOT}/Renderer/Renderer.cpp
    ${SRC_ROOT}/Renderer/Renderer.h
+   ${SRC_ROOT}/Renderer/RenderPassEncoder.cpp
+   ${SRC_ROOT}/Renderer/RenderPassEncoder.h
    ${SRC_ROOT}/Renderer/Surface.cpp
    ${SRC_ROOT}/Renderer/Surface.h
+   ${SRC_ROOT}/Renderer/TextureView.cpp
+   ${SRC_ROOT}/Renderer/TextureView.h
 
    ${SRC_ROOT}/Utils/FileReader.cpp
    ${SRC_ROOT}/Utils/FileReader.h
@@ -95,7 +105,7 @@ endforeach()
 # Executable
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${SHADER_FILES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_ROOT})
-target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu)
+target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu imgui)
 
 # Copy webgpu binaries
 target_copy_webgpu_binaries(${PROJECT_NAME})

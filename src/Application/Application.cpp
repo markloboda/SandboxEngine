@@ -7,6 +7,8 @@
 
 bool Application::Initialize()
 {
+   Instance = this;
+
    // Initialize GLFW.
    if (!glfwInit())
    {
@@ -50,6 +52,8 @@ void Application::Run()
       const float dt = static_cast<float>(currentTime - lastTime);
       lastTime = currentTime;
 
+      // Render.
+      _renderer->Render();
 
       glfwPollEvents();
    }
