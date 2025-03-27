@@ -1,5 +1,4 @@
 #pragma once
-#include <webgpu/webgpu.h>
 
 class Device;
 class RenderPassEncoder;

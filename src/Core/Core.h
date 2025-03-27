@@ -1,9 +1,5 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-using namespace glm;
-
 #include <fstream>
 #include <iostream>
 #include <string.h>

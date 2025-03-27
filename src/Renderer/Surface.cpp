@@ -1,9 +1,4 @@
 #include <VolumetricClouds.h>
-#include <Renderer/Surface.h>
-
-#include <glfw3webgpu.h>
-
-#include <Renderer/Device.h>
 
 Surface::Surface(Device* device, GLFWwindow* window) :
    _surface(glfwGetWGPUSurface(device->GetInstance(), window))

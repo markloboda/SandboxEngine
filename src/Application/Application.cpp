@@ -1,8 +1,5 @@
 #include <VolumetricClouds.h>
 #include <Application/Application.h>
-
-#include <GLFW/glfw3.h>
-
 #include <Renderer/Renderer.h>
 
 bool Application::Initialize()

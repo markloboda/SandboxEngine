@@ -1,5 +1,4 @@
 #pragma once
-#include <webgpu/webgpu.h>
 
 struct BindGroupDesc
 {

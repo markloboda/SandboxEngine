@@ -1,9 +1,6 @@
 #include <VolumetricClouds.h>
 #include <Renderer/ImGuiManager.h>
 
-#include <Renderer/Device.h>
-#include <Renderer/RenderPassEncoder.h>
-
 ImGuiManager::ImGuiManager(GLFWwindow* window) :
    _window(window)
 {

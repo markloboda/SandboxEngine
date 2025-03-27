@@ -1,7 +1,4 @@
 #include <VolumetricClouds.h>
-#include <Renderer/Device.h>
-
-#include "wgpu.h"
 
 WGPUDeviceLostCallback deviceLostCallback = [](WGPUDevice const* device, WGPUDeviceLostReason reason, WGPUStringView message, void*, void*)
 {

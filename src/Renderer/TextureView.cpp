@@ -1,5 +1,4 @@
 #include <VolumetricClouds.h>
-#include <Renderer/TextureView.h>
 
 TextureView::TextureView(WGPUTexture texture, WGPUTextureViewDescriptor* descriptor) :
    _textureView(wgpuTextureCreateView(texture, descriptor))

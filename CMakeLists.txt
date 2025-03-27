@@ -107,5 +107,8 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${SHADER_FILES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_ROOT})
 target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu imgui)
 
+# Enable precompiled headers
+target_precompile_headers(${PROJECT_NAME} PRIVATE ${SRC_ROOT}/VolumetricClouds.h)
+
 # Copy webgpu binaries
 target_copy_webgpu_binaries(${PROJECT_NAME})

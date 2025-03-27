@@ -1,7 +1,4 @@
 #include <VolumetricClouds.h>
-#include <Renderer/Buffer.h>
-
-#include <Renderer/Device.h>
 
 Buffer::Buffer(Device* device, BufferDesc desc, size_t size, const void* data) :
    _size(size)

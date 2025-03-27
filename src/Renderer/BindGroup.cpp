@@ -1,7 +1,4 @@
 #include <VolumetricClouds.h>
-#include <Renderer/BindGroup.h>
-
-#include <Renderer/Device.h>
 
 BindGroup::BindGroup(Device* device, BindGroupDesc desc)
 {

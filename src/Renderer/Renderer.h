@@ -1,16 +1,5 @@
 #pragma once
 
-#include <Renderer/BindGroup.h>
-#include <Renderer/Buffer.h>
-#include <Renderer/CommandBuffer.h>
-#include <Renderer/CommandEncoder.h>
-#include <Renderer/Device.h>
-#include <Renderer/Queue.h>
-#include <Renderer/RenderPassEncoder.h>
-#include <Renderer/Surface.h>
-#include <Renderer/Queue.h>
-#include <Renderer/TextureView.h>
-
 #include <Renderer/ImGuiManager.h>
 
 struct GLFWwindow;

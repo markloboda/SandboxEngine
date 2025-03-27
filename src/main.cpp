@@ -1,3 +1,4 @@
+#include <VolumetricClouds.h>
 #include <Application/Application.h>
 
 int main()

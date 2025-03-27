@@ -1,8 +1,4 @@
 #include <VolumetricClouds.h>
-#include <Renderer/Queue.h>
-
-#include <Renderer/Device.h>
-#include <Renderer/CommandBuffer.h>
 
 WGPUQueueWorkDoneCallback queueWorkDone = [](WGPUQueueWorkDoneStatus status, void*, void*)
 {
