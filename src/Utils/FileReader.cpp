@@ -1,3 +1,4 @@
+#include <pch.h>
 #include <Utils/FileReader.h>
 
 std::vector<uint32_t> FileReader::LoadSPIRV(const std::string& path)

@@ -23,40 +23,25 @@ add_subdirectory(${LIBS_ROOT}/imgui)
 
 # Source files
 set(SOURCE_FILES
-   ${SRC_ROOT}/main.cpp
-
    ${SRC_ROOT}/Application/Application.cpp
-   ${SRC_ROOT}/Application/Application.h
-
-   ${SRC_ROOT}/Core/Core.h
 
    ${SRC_ROOT}/Renderer/BindGroup.cpp
-   ${SRC_ROOT}/Renderer/BindGroup.h
    ${SRC_ROOT}/Renderer/Buffer.cpp
-   ${SRC_ROOT}/Renderer/Buffer.h
    ${SRC_ROOT}/Renderer/CommandBuffer.cpp
-   ${SRC_ROOT}/Renderer/CommandBuffer.h
    ${SRC_ROOT}/Renderer/CommandEncoder.cpp
-   ${SRC_ROOT}/Renderer/CommandEncoder.h
    ${SRC_ROOT}/Renderer/Device.cpp
-   ${SRC_ROOT}/Renderer/Device.h
    ${SRC_ROOT}/Renderer/ImGuiManager.cpp
-   ${SRC_ROOT}/Renderer/ImGuiManager.h
    ${SRC_ROOT}/Renderer/Queue.cpp
-   ${SRC_ROOT}/Renderer/Queue.h
    ${SRC_ROOT}/Renderer/Renderer.cpp
-   ${SRC_ROOT}/Renderer/Renderer.h
    ${SRC_ROOT}/Renderer/RenderPassEncoder.cpp
-   ${SRC_ROOT}/Renderer/RenderPassEncoder.h
    ${SRC_ROOT}/Renderer/Surface.cpp
-   ${SRC_ROOT}/Renderer/Surface.h
    ${SRC_ROOT}/Renderer/TextureView.cpp
-   ${SRC_ROOT}/Renderer/TextureView.h
 
    ${SRC_ROOT}/Utils/FileReader.cpp
-   ${SRC_ROOT}/Utils/FileReader.h
 
-   ${SRC_ROOT}/VolumetricClouds.h
+   ${SRC_ROOT}/main.cpp
+
+   ${SRC_ROOT}/pch.cpp
 )
 
 # Group source files
@@ -108,7 +93,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_ROOT})
 target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu imgui)
 
 # Enable precompiled headers
-target_precompile_headers(${PROJECT_NAME} PRIVATE ${SRC_ROOT}/VolumetricClouds.h)
+target_precompile_headers(${PROJECT_NAME} PRIVATE ${SRC_ROOT}/pch.h)
 
 # Copy webgpu binaries
 target_copy_webgpu_binaries(${PROJECT_NAME})

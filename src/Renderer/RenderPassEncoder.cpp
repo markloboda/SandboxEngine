@@ -1,4 +1,4 @@
-#include <VolumetricClouds.h>
+#include <pch.h>
 
 RenderPassEncoder::RenderPassEncoder(CommandEncoder* commandEncoder, WGPURenderPassDescriptor* descriptor) :
    _encoder(wgpuCommandEncoderBeginRenderPass(commandEncoder->Get(), descriptor))
