@@ -1,11 +1,17 @@
 #pragma once
 
 class Renderer;
+class Editor;
 
 class Application
 {
 public:
-   static inline Application* Instance = nullptr;
+   // Singleton instance access
+   static Application& GetInstance()
+   {
+      static Application instance;
+      return instance;
+   }
 
 private:
    int _windowWidth = 1280;
@@ -13,10 +19,28 @@ private:
 
    GLFWwindow* _window = nullptr;
    Renderer* _renderer = nullptr;
+   Editor* _editor = nullptr;
+
+   // Private constructor for singleton
+   Application() = default;
+   ~Application() = default;
 
 public:
+   // Prevent copy/move construction
+   Application(const Application&) = delete;
+   Application& operator=(const Application&) = delete;
+
+   // Prevent copy/move assignment
+   Application(Application&&) = delete;
+   Application& operator=(Application&&) = delete;
+
    // Getters.
    [[nodiscard]] bool IsRunning() const;
+
+   GLFWwindow* GetWindow() const
+   {
+      return _window;
+   }
 
    [[nodiscard]] int GetWindowWidth() const
    {
@@ -32,6 +56,4 @@ public:
    bool Initialize();
    void Terminate() const;
    void Run();
-
-
 };

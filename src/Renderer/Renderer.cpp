@@ -1,21 +1,24 @@
 #include <pch.h>
 #include <Renderer/Renderer.h>
 #include <Application/Application.h>
+#include <Renderer/UI/ImGuiManager.h>
 
 
 Renderer::Renderer(GLFWwindow* window)
    : _window(window),
    _device(Device()),
    _surface(Surface(&_device, window)),
-   _queue(&_device),
-   _imGuiManager(_window)
+   _queue(&_device)
 {
    bool success = Initialize();
    assert(success);
+
 }
 
 Renderer::~Renderer()
-{}
+{
+   Terminate();
+}
 
 bool Renderer::Initialize()
 {
@@ -23,8 +26,8 @@ bool Renderer::Initialize()
    {
       WGPUSurfaceConfiguration config = {};
       config.device = _device.Get();
-      config.width = Application::Instance->GetWindowWidth();
-      config.height = Application::Instance->GetWindowHeight();
+      config.width = Application::GetInstance().GetWindowWidth();
+      config.height = Application::GetInstance().GetWindowHeight();
       config.viewFormatCount = 0;
       config.viewFormats = nullptr;
       config.usage = WGPUTextureUsage_RenderAttachment;
@@ -32,16 +35,18 @@ bool Renderer::Initialize()
       _surface.ConfigureSurface(config);
    }
 
-   // Configure ImGui.
-   _imGuiManager.Configure(&_device, _surface.GetFormat());
+   // Set up ImGui.
+   ImGuiManager::CreateInstance(_window);
+   ImGuiManager::GetInstance().Configure(&_device, _surface.GetFormat());
 
    return true;
 }
 
 void Renderer::Terminate()
 {
-   // UnConfigure ImGui.
-   _imGuiManager.Shutdown();
+   // Destroy ImGui.
+   ImGuiManager::GetInstance().Shutdown();
+   ImGuiManager::DestroyInstance();
 
    // UnConfigure surface.
    _surface.UnConfigureSurface();
@@ -70,9 +75,9 @@ void Renderer::Render()
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(&encoder, &renderPassDesc);
 
    // ImGui.
-   _imGuiManager.NewFrame();
-   _imGuiManager.RenderUI();
-   _imGuiManager.EndFrame(&renderPassEncoder);
+   ImGuiManager::GetInstance().NewFrame();
+   ImGuiManager::GetInstance().RenderUI();
+   ImGuiManager::GetInstance().EndFrame(&renderPassEncoder);
 
    // End render pass.
    renderPassEncoder.EndPass();

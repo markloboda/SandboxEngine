@@ -3,13 +3,12 @@
 
 int main()
 {
-   Application app;
-   if (!app.Initialize())
+   if (!Application::GetInstance().Initialize())
    {
-      return 1;
+      return -1;
    }
-   app.Run();
-   app.Terminate();
 
+   Application::GetInstance().Run();
+   Application::GetInstance().Terminate();
    return 0;
 }

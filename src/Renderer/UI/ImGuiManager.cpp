@@ -1,5 +1,9 @@
 #include <pch.h>
-#include <Renderer/ImGuiManager.h>
+#include <Renderer/UI/ImGuiManager.h>
+#include <Renderer/UI/UIRenderer.h>
+
+// Define the static member
+ImGuiManager* ImGuiManager::_instance = nullptr;
 
 ImGuiManager::ImGuiManager(GLFWwindow* window) :
    _window(window)
@@ -14,6 +18,32 @@ ImGuiManager::~ImGuiManager()
 {
    ImGui_ImplGlfw_Shutdown();
    ImGui::DestroyContext();
+}
+
+bool ImGuiManager::CreateInstance(GLFWwindow* window)
+{
+   if (_instance != nullptr)
+   {
+      throw std::runtime_error("ImGuiManager instance already exists.");
+   }
+   _instance = new ImGuiManager(window);
+   return true;
+}
+
+ImGuiManager& ImGuiManager::GetInstance()
+{
+   if (_instance == nullptr)
+   {
+      throw std::runtime_error("ImGuiManager instance has not been created.");
+   }
+
+   return *_instance;
+}
+
+void ImGuiManager::DestroyInstance()
+{
+   delete _instance;
+   _instance = nullptr;
 }
 
 void ImGuiManager::Configure(Device* device, WGPUTextureFormat renderTargetFormat)
@@ -74,5 +104,24 @@ void ImGuiManager::EndFrame(RenderPassEncoder* encoder)
 
 void ImGuiManager::RenderUI()
 {
-   ImGui::ShowDemoWindow();
+   for (UIRenderer* uiRenderer : _uiRenderers)
+   {
+      uiRenderer->RenderImGuiUI();
+   }
+}
+
+void ImGuiManager::AddUIRenderer(UIRenderer* uiRenderer)
+{
+   _uiRenderers.push_back(uiRenderer);
+}
+
+bool ImGuiManager::RemoveUIRenderer(UIRenderer* uiRenderer)
+{
+   auto it = std::find(_uiRenderers.begin(), _uiRenderers.end(), uiRenderer);
+   if (it != _uiRenderers.end())
+   {
+      _uiRenderers.erase(it);
+      return true;
+   }
+   return false;
 }

@@ -19,6 +19,9 @@ using namespace glm;
 // Core components.
 #include <Core/Core.h>
 
+// Helpers.
+#include <Application/Input.h>
+
 // Renderer components.
 #include <Renderer/BindGroup.h>
 #include <Renderer/Buffer.h>

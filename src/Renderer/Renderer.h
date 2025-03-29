@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Renderer/ImGuiManager.h>
-
 struct GLFWwindow;
 
 class Renderer
@@ -15,8 +13,6 @@ private:
    Device _device;
    Surface _surface;
    Queue _queue;
-
-   ImGuiManager _imGuiManager;
 
 public:
    void Render();

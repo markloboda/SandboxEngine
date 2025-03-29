@@ -1,11 +1,10 @@
 #include <pch.h>
 #include <Application/Application.h>
 #include <Renderer/Renderer.h>
+#include <Application/Editor.h>
 
 bool Application::Initialize()
 {
-   Instance = this;
-
    // Initialize GLFW.
    if (!glfwInit())
    {
@@ -32,12 +31,16 @@ bool Application::Initialize()
       return false;
    }
 
+   // Initialize editor.
+   _editor = new Editor();
+
    return true;
 }
 
 void Application::Terminate() const
 {
    glfwDestroyWindow(_window);
+   glfwTerminate();
 }
 
 void Application::Run()

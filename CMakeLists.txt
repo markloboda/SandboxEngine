@@ -24,13 +24,17 @@ add_subdirectory(${LIBS_ROOT}/imgui)
 # Source files
 set(SOURCE_FILES
    ${SRC_ROOT}/Application/Application.cpp
+   ${SRC_ROOT}/Application/Editor.cpp
+   ${SRC_ROOT}/Application/Input.cpp
 
+   ${SRC_ROOT}/Renderer/Clouds/CloudRenderer.cpp
+   ${SRC_ROOT}/Renderer/UI/ImGuiManager.cpp
    ${SRC_ROOT}/Renderer/BindGroup.cpp
    ${SRC_ROOT}/Renderer/Buffer.cpp
    ${SRC_ROOT}/Renderer/CommandBuffer.cpp
    ${SRC_ROOT}/Renderer/CommandEncoder.cpp
    ${SRC_ROOT}/Renderer/Device.cpp
-   ${SRC_ROOT}/Renderer/ImGuiManager.cpp
+   ${SRC_ROOT}/Renderer/GridRenderer.cpp
    ${SRC_ROOT}/Renderer/Queue.cpp
    ${SRC_ROOT}/Renderer/Renderer.cpp
    ${SRC_ROOT}/Renderer/RenderPassEncoder.cpp
@@ -38,6 +42,7 @@ set(SOURCE_FILES
    ${SRC_ROOT}/Renderer/TextureView.cpp
 
    ${SRC_ROOT}/Utils/FileReader.cpp
+   ${SRC_ROOT}/Utils/FreeCamera.cpp
 
    ${SRC_ROOT}/main.cpp
 
