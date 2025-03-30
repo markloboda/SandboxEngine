@@ -19,6 +19,6 @@ private:
    WGPUBindGroup _bindGroup;
 
 public:
-   WGPUBindGroup Get() const { return _bindGroup; }
-   WGPUBindGroupLayout GetLayout() const { return _bindGroupLayout; }
+   WGPUBindGroup const* Get() const { return &_bindGroup; }
+   WGPUBindGroupLayout const* GetLayout() const { return &_bindGroupLayout; }
 };

@@ -2,6 +2,8 @@
 
 BindGroup::BindGroup(Device* device, BindGroupDesc desc)
 {
+   assert(desc.layoutEntries.size() == desc.entries.size());
+
    // Create the BindGroupLayout
    {
       WGPUBindGroupLayoutDescriptor bindGroupLayoutDesc = {};

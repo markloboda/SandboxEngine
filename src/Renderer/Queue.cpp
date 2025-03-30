@@ -2,7 +2,7 @@
 
 WGPUQueueWorkDoneCallback queueWorkDone = [](WGPUQueueWorkDoneStatus status, void*, void*)
 {
-   std::cout << "Queued work finished with status: " << status << std::endl;
+   std::cout << "Queued work finished with status: " << status << "\n";
 };
 
 Queue::Queue(Device* device) :

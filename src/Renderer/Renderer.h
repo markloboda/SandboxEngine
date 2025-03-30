@@ -1,5 +1,6 @@
 #pragma once
 
+class GridRenderer;
 struct GLFWwindow;
 
 class Renderer
@@ -13,6 +14,8 @@ private:
    Device _device;
    Surface _surface;
    Queue _queue;
+
+   GridRenderer* _gridRenderer;
 
 public:
    void Render();

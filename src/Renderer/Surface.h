@@ -1,6 +1,6 @@
 #pragma once
 
-struct GLFWwindow;
+class GLFWwindow;
 class Device;
 class TextureView;
 

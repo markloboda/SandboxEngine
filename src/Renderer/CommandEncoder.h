@@ -1,6 +1,7 @@
 #pragma once
 
-class Device;
+class
+   Device;
 class RenderPassEncoder;
 class CommandBuffer;
 

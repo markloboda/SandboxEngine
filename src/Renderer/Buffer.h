@@ -1,16 +1,11 @@
 #pragma once
 
-struct BufferDesc
-{
-   WGPUBufferUsage usage;
-};
-
 class Device;
 
 class Buffer
 {
 public:
-   Buffer(Device* device, BufferDesc desc, size_t size, const void* data);
+   Buffer(Device* device, WGPUBufferUsage usage, size_t size, const void* data);
    ~Buffer();
 
 private:

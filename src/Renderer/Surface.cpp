@@ -37,7 +37,12 @@ WGPUSurfaceTexture Surface::GetNextTexture() const
 {
    WGPUSurfaceTexture surfaceTexture;
    wgpuSurfaceGetCurrentTexture(_surface, &surfaceTexture);
-   if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
+
+   if (surfaceTexture.status == WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
+   {
+      std::cerr << "Warning: Surface texture is not in optimal state.\n";
+   }
+   else if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
    {
       throw std::runtime_error("Failed to get surface texture in optimal way.");
    }

@@ -8,7 +8,7 @@ bool Application::Initialize()
    // Initialize GLFW.
    if (!glfwInit())
    {
-      std::cerr << "Could not initialize GLFW!" << std::endl;
+      std::cerr << "Could not initialize GLFW!\n";
       return false;
    }
 
@@ -18,7 +18,7 @@ bool Application::Initialize()
    _window = glfwCreateWindow(_windowWidth, _windowHeight, "Volumetric Clouds", nullptr, nullptr);
    if (!_window)
    {
-      std::cerr << "Could not open window!" << std::endl;
+      std::cerr << "Could not open window!\n";
       glfwTerminate();
       return false;
    }
@@ -27,7 +27,7 @@ bool Application::Initialize()
    _renderer = new Renderer(_window);
    if (!_renderer)
    {
-      std::cerr << "Could not initialize renderer!" << std::endl;
+      std::cerr << "Could not initialize renderer!\n";
       return false;
    }
 

@@ -1,0 +1,54 @@
+#include <pch.h>
+#include <Renderer/ShaderModule.h>
+
+ShaderModule::ShaderModule(WGPUShaderModule shaderModule)
+   : _shaderModule(shaderModule)
+{
+   if (_shaderModule == nullptr)
+   {
+      throw std::runtime_error("Failed to create shader module");
+   }
+}
+
+ShaderModule::~ShaderModule()
+{
+   wgpuShaderModuleRelease(_shaderModule);
+}
+
+
+std::string inline ShaderModule::GetShaderPath(const std::string& shaderName)
+{
+   return "shaders/" + shaderName;
+}
+
+ShaderModule& ShaderModule::LoadShaderModule(Device* device, const std::string& shaderName)
+{
+   std::string path = GetShaderPath(shaderName);
+
+   // Open file
+   std::ifstream file(path, std::ios::binary | std::ios::ate);
+   if (!file.is_open())
+   {
+      throw std::runtime_error("Failed to open shader file: " + path);
+   }
+
+   // Read file
+   size_t fileSize = file.tellg();
+   file.seekg(0);
+   std::vector<uint32_t> spirv(fileSize / sizeof(uint32_t));
+   file.read(reinterpret_cast<char*>(spirv.data()), fileSize);
+   file.close();
+
+   // Create shader module
+   WGPUShaderModuleDescriptorSpirV descriptor = {};
+   descriptor.sourceSize = spirv.size();
+   descriptor.source = spirv.data();
+
+   WGPUShaderModule shaderModule = wgpuDeviceCreateShaderModuleSpirV(device->Get(), &descriptor);
+   if (!shaderModule)
+   {
+      throw std::runtime_error("Failed to create shader module: " + path);
+   }
+
+   return *new ShaderModule(shaderModule);
+}

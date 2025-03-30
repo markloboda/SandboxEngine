@@ -1,11 +1,11 @@
 #include <pch.h>
 
-Buffer::Buffer(Device* device, BufferDesc desc, size_t size, const void* data) :
+Buffer::Buffer(Device* device, WGPUBufferUsage usage, size_t size, const void* data) :
    _size(size)
 {
    WGPUBufferDescriptor bufferDesc = {};
    bufferDesc.size = _size;
-   bufferDesc.usage = desc.usage | WGPUBufferUsage_CopyDst; // Ensure it's writable
+   bufferDesc.usage = usage | WGPUBufferUsage_CopyDst; // Ensure it's writable
    bufferDesc.mappedAtCreation = false;
    _buffer = wgpuDeviceCreateBuffer(device->Get(), &bufferDesc);
    if (!_buffer)

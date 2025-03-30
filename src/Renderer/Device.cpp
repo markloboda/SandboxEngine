@@ -3,20 +3,31 @@
 WGPUDeviceLostCallback deviceLostCallback = [](WGPUDevice const* device, WGPUDeviceLostReason reason, WGPUStringView message, void*, void*)
 {
    std::cerr << "Device lost: reason " << reason;
-   std::cerr << ", message: " << (message.data ? message.data : "Unknown error") << std::endl;
+   std::cerr << ", message: " << (message.data ? message.data : "Unknown error") << "\n";
    __debugbreak();
 };
 
 WGPUPopErrorScopeCallback popErrorScopeCallback = [](WGPUPopErrorScopeStatus status, WGPUErrorType type, WGPUStringView message, void*, void*)
 {
-   std::cerr << "Error: " << (message.data ? message.data : "Unknown error") << std::endl;
+   std::cerr << "Error: " << (message.data ? message.data : "Unknown error") << "\n";
+   __debugbreak();
+};
+
+WGPUUncapturedErrorCallback uncapturedErrorCallback = [](WGPUDevice const* device, WGPUErrorType type, WGPUStringView message, void*, void*)
+{
+   std::cerr << "Uncaptured error: " << (message.data ? message.data : "Unknown error") << "\n";
    __debugbreak();
 };
 
 Device::Device()
 {   // Create the instance.
    {
+      WGPUInstanceExtras extras = {};
+      extras.chain.sType = (WGPUSType)WGPUSType_InstanceExtras;
+      extras.flags = WGPUInstanceFlag_Validation | WGPUInstanceFlag_Debug;
+
       WGPUInstanceDescriptor instanceDesc = {};
+      instanceDesc.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&extras);
       _instance = wgpuCreateInstance(&instanceDesc);
       if (!_instance)
       {
@@ -41,7 +52,7 @@ Device::Device()
          }
          else
          {
-            std::cerr << "Adapter request failed: " << (message.data ? message.data : "Unknown error") << std::endl;
+            std::cerr << "Adapter request failed: " << (message.data ? message.data : "Unknown error") << "\n";
             promise->set_value(nullptr);
          }
       };
@@ -61,8 +72,19 @@ Device::Device()
       WGPUDeviceLostCallbackInfo deviceLostCallbackInfo = {};
       deviceLostCallbackInfo.callback = deviceLostCallback;
 
+      WGPUUncapturedErrorCallbackInfo uncapturedErrorCallbackInfo = {};
+      uncapturedErrorCallbackInfo.callback = uncapturedErrorCallback;
+
       WGPUDeviceDescriptor deviceDesc = {};
       deviceDesc.deviceLostCallbackInfo = deviceLostCallbackInfo;
+      deviceDesc.uncapturedErrorCallbackInfo = uncapturedErrorCallbackInfo;
+
+      WGPUFeatureName features[] = {
+          static_cast<WGPUFeatureName>(WGPUNativeFeature_SpirvShaderPassthrough)
+      };
+
+      deviceDesc.requiredFeatures = features;
+      deviceDesc.requiredFeatureCount = 1;
 
       WGPURequestDeviceCallbackInfo deviceCallbackInfo = {};
       deviceCallbackInfo.nextInChain = nullptr;
@@ -75,7 +97,7 @@ Device::Device()
          }
          else
          {
-            std::cerr << "Device request failed: " << (message.data ? message.data : "Unknown error") << std::endl;
+            std::cerr << "Device request failed: " << (message.data ? message.data : "Unknown error") << "\n";
             promise->set_value(nullptr);
          }
       };
@@ -100,7 +122,7 @@ Device::Device()
       {
          if (status != WGPUQueueWorkDoneStatus_Success)
          {
-            std::cerr << "Queue work done failed" << std::endl;
+            std::cerr << "Queue work done failed\n";
             __debugbreak();
          }
       };
