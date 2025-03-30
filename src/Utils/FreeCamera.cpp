@@ -9,6 +9,8 @@ double mouseY_;
 double mouseDifX_;
 double mouseDifY_;
 
+double mouseWheel_;
+
 void CursorPositionCallback(double xpos, double ypos)
 {
    mouseDifX_ = xpos - mouseX_;
@@ -17,6 +19,11 @@ void CursorPositionCallback(double xpos, double ypos)
    mouseY_ = ypos;
 
    Application::GetInstance().GetEditor()->GetCamera().ProcessMouseMovement(mouseDifX_, mouseDifY_);
+}
+
+void MouseWheelCallback(double yoffset)
+{
+   mouseWheel_ = yoffset;
 }
 
 FreeCamera::FreeCamera(vec3 position, vec3 up, float yaw, float pitch)
@@ -31,8 +38,8 @@ FreeCamera::FreeCamera(vec3 position, vec3 up, float yaw, float pitch)
    _zoom = 45.0f;
    UpdateCameraVectors();
 
-   // Set cursor position callback.
    Input::SetCursorPositionCallback(CursorPositionCallback);
+   Input::SetMouseWheelCallback(MouseWheelCallback);
 }
 
 mat4 FreeCamera::GetViewProjectionMatrix()
@@ -54,6 +61,9 @@ void FreeCamera::Update(float dt)
 {
    if (Input::IsKeyPressed(Input::MOUSE_BUTTON_RIGHT))
    {
+      // Mouse wheel speed increase
+      _speed = clamp(mouseWheel_ > 0 ? _speed + 0.01f : _speed - 0.01f, 0.5f, 100.0f);
+
       float speed = _speed;
       if (Input::IsKeyPressed(Input::KEY_LEFT_SHIFT))
       {

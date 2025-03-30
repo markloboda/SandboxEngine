@@ -3,7 +3,7 @@
 
 #include <Application/Application.h>
 
-void Input::CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+void Input::CursorPosChanged(GLFWwindow* window, double xpos, double ypos)
 {
    for (auto& callback : GetInstance()._cursorPositionCallback)
    {
@@ -11,9 +11,18 @@ void Input::CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
    }
 }
 
+void Input::MouseWheelChanged(GLFWwindow* window, double xoffset, double yoffset)
+{
+   for (auto& callback : GetInstance()._mouseWheelCallback)
+   {
+      callback(yoffset);
+   }
+}
+
 void Input::Initialize()
 {
-   glfwSetCursorPosCallback(Application::GetInstance().GetWindow(), CursorPosCallback);
+   glfwSetCursorPosCallback(Application::GetInstance().GetWindow(), CursorPosChanged);
+   glfwSetScrollCallback(Application::GetInstance().GetWindow(), MouseWheelChanged);
 }
 
 void Input::Terminate()
@@ -44,4 +53,9 @@ vec2 Input::GetCursorPos()
 void Input::SetCursorPositionCallback(CursorPositionCallback callback)
 {
    GetInstance()._cursorPositionCallback.push_back(callback);
+}
+
+void Input::SetMouseWheelCallback(MouseWheelCallback callback)
+{
+   GetInstance()._mouseWheelCallback.push_back(callback);
 }

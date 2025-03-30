@@ -16,6 +16,7 @@ private:
 
 public:
    FreeCamera(vec3 position = vec3(0.0f, 0.0f, 0.0f), vec3 up = vec3(0.0f, 1.0f, 0.0f), float yaw = 0, float pitch = 0);
+
    mat4 GetViewProjectionMatrix();
    mat4 GetProjectionMatrix();
    mat4 GetViewMatrix();

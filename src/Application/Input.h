@@ -140,6 +140,7 @@ public:
    };
 
    using CursorPositionCallback = std::function<void(double, double)>;
+   using MouseWheelCallback = std::function<void(double)>;
 
 private:
    static Input& GetInstance()
@@ -149,6 +150,7 @@ private:
    }
 
    std::vector<CursorPositionCallback> _cursorPositionCallback;
+   std::vector<MouseWheelCallback> _mouseWheelCallback;
 
 private:
    Input() = default;
@@ -157,7 +159,8 @@ private:
    Input& operator=(const Input&) = delete;
    Input& operator=(Input&&) = delete;
 
-   static void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
+   static void CursorPosChanged(GLFWwindow* window, double xpos, double ypos);
+   static void MouseWheelChanged(GLFWwindow* window, double xoffset, double yoffset);
 
 public:
    static void Initialize();
@@ -167,4 +170,7 @@ public:
    static vec2 GetCursorPos();
 
    static void SetCursorPositionCallback(CursorPositionCallback callback);
+   static void SetMouseWheelCallback(MouseWheelCallback callback);
 };
+
+

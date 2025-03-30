@@ -24,13 +24,13 @@ void main() {
     if (instance_id < numHorizontal) {
         // Horizontal line
         z = (instance_id * gridSpacing) - gridSize / 2 + snapped_z;
-        x = vertex_pos * 2.0 * gridSize - gridSize / 2;
+        x = vertex_pos * 2.0 * gridSize - gridSize / 2 + snapped_x;
         y = 0.0;
     } else {
         // Vertical line
         uint vertical_id = instance_id - numHorizontal;
         x = (vertical_id * gridSpacing) - gridSize / 2 + snapped_x;
-        z = vertex_pos * 2.0 * gridSize - gridSize / 2;
+        z = vertex_pos * 2.0 * gridSize - gridSize / 2 + snapped_z;
         y = 0.0;
     }
 
