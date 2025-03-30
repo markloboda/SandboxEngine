@@ -139,8 +139,29 @@ public:
       MOUSE_BUTTON_MIDDLE = MOUSE_BUTTON_3,
    };
 
+private:
+   double _mouseX;
+   double _mouseY;
+
+   double _moveMouseX;
+   double _moveMouseY;
+
+   static Input& GetInstance()
+   {
+      static Input instance;
+      return instance;
+   }
+
+   Input() = default;
+   Input(const Input&) = delete;
+   Input(Input&&) = delete;
+   Input& operator=(const Input&) = delete;
+   Input& operator=(Input&&) = delete;
 
 public:
+   static void Initialize();
+   static void Update();
+
    static bool IsKeyPressed(EInputKey key);
 
    static vec2 GetCursorPos();

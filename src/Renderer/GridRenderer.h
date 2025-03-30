@@ -14,11 +14,13 @@ static_assert(sizeof(GridUniforms) == 80, "GridUniforms size mismatch");
 class GridRenderer
 {
 private:
+   GLFWwindow* _window;
+   Device* _device;
+
    Buffer* _vertexBuffer;
    Buffer* _uniformBuffer;
 
-   WGPUPipelineLayout _pipelineLayout;
-   WGPURenderPipeline _renderPipeline;
+   RenderPipeline* _renderPipeline;
 
    ShaderModule _vertexShader;
    ShaderModule _fragmentShader;
@@ -28,7 +30,7 @@ private:
    BindGroup* _uniformsBindGroup;
 
 public:
-   GridRenderer(Device* device);
+   GridRenderer(GLFWwindow* window, Device* device);
    ~GridRenderer();
 
 private:
@@ -36,5 +38,5 @@ private:
    void Terminate();
 
 public:
-   void Render();
+   void Render(RenderPassEncoder* renderPassEncoder);
 };

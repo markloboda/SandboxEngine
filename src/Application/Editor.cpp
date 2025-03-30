@@ -2,17 +2,24 @@
 #include <Application/Editor.h>
 
 #include <Renderer/UI/ImGuiManager.h>
+#include <Utils/FreeCamera.h>
 
 Editor::Editor()
 {
    // Add to ImGuiManager
    ImGuiManager::GetInstance().AddUIRenderer(this);
+
+   // Create camera
+   _camera = new FreeCamera();
 }
 
 Editor::~Editor()
 {
    // Remove from ImGuiManager
    ImGuiManager::GetInstance().RemoveUIRenderer(this);
+
+   // Delete camera
+   delete _camera;
 }
 
 void Editor::RenderImGuiUI()
@@ -28,4 +35,10 @@ void Editor::RenderImGuiUI()
    ImGui::Checkbox("Show Grid", &_ShowGrid);
 
    ImGui::End();
+}
+
+void Editor::Update(float dt)
+{
+   // Update camera
+   _camera->Update(dt);
 }

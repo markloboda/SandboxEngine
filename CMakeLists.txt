@@ -38,6 +38,7 @@ set(SOURCE_FILES
    ${SRC_ROOT}/Renderer/Queue.cpp
    ${SRC_ROOT}/Renderer/Renderer.cpp
    ${SRC_ROOT}/Renderer/RenderPassEncoder.cpp
+   ${SRC_ROOT}/Renderer/RenderPipeline.cpp
    ${SRC_ROOT}/Renderer/ShaderModule.cpp
    ${SRC_ROOT}/Renderer/Surface.cpp
    ${SRC_ROOT}/Renderer/TextureView.cpp

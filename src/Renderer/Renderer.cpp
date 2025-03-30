@@ -80,7 +80,7 @@ bool Renderer::Initialize()
    ImGuiManager::GetInstance().Configure(&_device, _surface.GetFormat());
 
    // Set up grid renderer.
-   _gridRenderer = new GridRenderer(&_device);
+   _gridRenderer = new GridRenderer(_window, &_device);
 
    return true;
 }
@@ -100,7 +100,7 @@ void Renderer::Render()
    CommandEncoder encoder = CommandEncoder(&_device, nullptr);
 
    // Render pass.
-   WGPUSurfaceTexture surfaceTexture = _surface.GetNextTexture();
+   WGPUSurfaceTexture surfaceTexture = _surface.GetSurfaceTexture();
    TextureView textureView = TextureView(surfaceTexture.texture, nullptr);
 
    WGPURenderPassColorAttachment renderPassColorAttachment = {};
@@ -116,10 +116,14 @@ void Renderer::Render()
 
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(&encoder, &renderPassDesc);
 
+   // Grid renderer.
+   _gridRenderer->Render(&renderPassEncoder);
+
    // ImGui.
    ImGuiManager::GetInstance().NewFrame();
    ImGuiManager::GetInstance().RenderUI();
    ImGuiManager::GetInstance().EndFrame(&renderPassEncoder);
+
 
    // End render pass.
    renderPassEncoder.EndPass();

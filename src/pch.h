@@ -30,6 +30,7 @@ using namespace glm;
 #include <Renderer/Device.h>
 #include <Renderer/Queue.h>
 #include <Renderer/RenderPassEncoder.h>
+#include <Renderer/RenderPipeline.h>
 #include <Renderer/ShaderModule.h>
 #include <Renderer/Surface.h>
 #include <Renderer/Queue.h>

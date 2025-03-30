@@ -52,6 +52,11 @@ public:
       return _windowHeight;
    }
 
+   Editor* GetEditor() const
+   {
+      return _editor;
+   }
+
    // Manages the application.
    bool Initialize();
    void Terminate() const;

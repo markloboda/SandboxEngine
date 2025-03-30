@@ -1,9 +1,16 @@
 #include <pch.h>
 #include <Renderer/GridRenderer.h>
 
-GridRenderer::GridRenderer(Device* device) :
+#include <Application/Application.h>
+#include <Application/Editor.h>
+
+#include "Utils/FreeCamera.h"
+
+GridRenderer::GridRenderer(GLFWwindow* window, Device* device) :
+   _window(window),
    _vertexShader(ShaderModule::LoadShaderModule(device, "grid.vert.spv")),
-   _fragmentShader(ShaderModule::LoadShaderModule(device, "grid.frag.spv"))
+   _fragmentShader(ShaderModule::LoadShaderModule(device, "grid.frag.spv")),
+   _device(device)
 {
    bool success = Initialize(device);
    assert(success);
@@ -16,6 +23,8 @@ GridRenderer::~GridRenderer()
 
 bool GridRenderer::Initialize(Device* device)
 {
+   _device = device;
+
    // Vertex buffer
    float vertexData[] = { 0.0f, 1.0f };
    _vertexBuffer = new Buffer(device, WGPUBufferUsage_Vertex, sizeof(vertexData), vertexData);
@@ -48,12 +57,12 @@ bool GridRenderer::Initialize(Device* device)
       plDesc.label = WGPUStringView{ plLabel.data(), plLabel.length() };
       plDesc.bindGroupLayoutCount = 1;
       plDesc.bindGroupLayouts = _uniformsBindGroup->GetLayout();
-      _pipelineLayout = wgpuDeviceCreatePipelineLayout(device->Get(), &plDesc);
+      WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device->Get(), &plDesc);
 
       WGPURenderPipelineDescriptor rpDesc = {};
       std::string rpLabel = "GridRenderer Render Pipeline";
       rpDesc.label = WGPUStringView{ rpLabel.data(), rpLabel.length() };
-      rpDesc.layout = _pipelineLayout;
+      rpDesc.layout = pipelineLayout;
       rpDesc.primitive.topology = WGPUPrimitiveTopology_LineList;
       rpDesc.primitive.stripIndexFormat = WGPUIndexFormat_Undefined;
       rpDesc.primitive.frontFace = WGPUFrontFace_CW;
@@ -94,7 +103,7 @@ bool GridRenderer::Initialize(Device* device)
       fs.targets = &cts;
       rpDesc.fragment = &fs;
 
-      _renderPipeline = wgpuDeviceCreateRenderPipeline(device->Get(), &rpDesc);
+      _renderPipeline = new RenderPipeline(device, &rpDesc);
    }
 
    return true;
@@ -102,11 +111,29 @@ bool GridRenderer::Initialize(Device* device)
 
 void GridRenderer::Terminate()
 {
+   delete _renderPipeline;
    delete _uniformsBindGroup;
    delete _vertexBuffer;
    delete _uniformBuffer;
 }
 
-void GridRenderer::Render()
-{}
+void GridRenderer::Render(RenderPassEncoder* renderPassEncoder)
+{
+   auto viewProj = Application::GetInstance().GetEditor()->GetCamera().GetViewProjectionMatrix();
+
+   GridUniforms uniforms = {};
+   memcpy(uniforms.viewProj, &viewProj, sizeof(viewProj));
+   uniforms.gridSize = 100.0f;
+   uniforms.gridSpacing = 1.0f;
+   uniforms.numHorizontal = 100;
+   uniforms.numVertical = 100;
+   _uniformBuffer->UploadData(_device, &uniforms, sizeof(uniforms));
+
+   // Render
+   renderPassEncoder->SetPipeline(_renderPipeline);
+   renderPassEncoder->SetVertexBuffer(0, _vertexBuffer);
+
+   renderPassEncoder->SetBindGroup(0, _uniformsBindGroup);
+   renderPassEncoder->Draw(2, uniforms.numHorizontal + uniforms.numVertical, 0, 0);
+}
 

@@ -23,6 +23,9 @@ bool Application::Initialize()
       return false;
    }
 
+   // Initialize input.
+   Input::Initialize();
+
    // Initialize renderer.
    _renderer = new Renderer(_window);
    if (!_renderer)
@@ -39,6 +42,8 @@ bool Application::Initialize()
 
 void Application::Terminate() const
 {
+   delete _editor;
+   delete _renderer;
    glfwDestroyWindow(_window);
    glfwTerminate();
 }
@@ -51,6 +56,10 @@ void Application::Run()
       const double currentTime = glfwGetTime();
       const float dt = static_cast<float>(currentTime - lastTime);
       lastTime = currentTime;
+
+      // Update.
+      Input::Update();
+      _editor->Update(dt);
 
       // Render.
       _renderer->Render();
