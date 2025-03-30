@@ -26,16 +26,28 @@ Editor::~Editor()
 void Editor::RenderImGuiUI()
 {
    // Editor window with settings always at left side and stretch to height
-   ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
-   ImGui::SetNextWindowSize(ImVec2(200, 0), ImGuiCond_FirstUseEver);
-   ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
    // Editor settings
-   ImGui::Text("Editor Settings");
-   ImGui::Separator();
-   ImGui::Checkbox("Show Grid", &_ShowGrid);
+   {
+      ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+      ImGui::SetNextWindowSize(ImVec2(200, 0), ImGuiCond_FirstUseEver);
+      ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
-   ImGui::End();
+      ImGui::Text("Editor Settings");
+      ImGui::Separator();
+      ImGui::Checkbox("Show Grid", &_showGrid);
+
+      ImGui::End();
+   }
+
+   // Stats
+   {
+      ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 200, 0), ImGuiCond_Always);
+      ImGui::SetNextWindowSize(ImVec2(200, 0), ImGuiCond_Always);
+      ImGui::Begin("Stats", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+      ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+      ImGui::End();
+   }
 }
 
 void Editor::Update(float dt)

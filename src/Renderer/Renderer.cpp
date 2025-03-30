@@ -1,6 +1,7 @@
 #include <pch.h>
 #include <Renderer/Renderer.h>
 #include <Application/Application.h>
+#include <Application/Editor.h>
 #include <Renderer/UI/ImGuiManager.h>
 #include <Renderer/GridRenderer.h>
 
@@ -117,7 +118,11 @@ void Renderer::Render()
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(&encoder, &renderPassDesc);
 
    // Grid renderer.
-   _gridRenderer->Render(&renderPassEncoder);
+   bool renderGrid = Application::GetInstance().GetEditor()->GetRenderGrid();
+   if (renderGrid)
+   {
+      _gridRenderer->Render(&renderPassEncoder);
+   }
 
    // ImGui.
    ImGuiManager::GetInstance().NewFrame();

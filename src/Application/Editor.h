@@ -6,7 +6,7 @@ class FreeCamera;
 class Editor : public UIRenderer
 {
 private:
-   bool _ShowGrid = false;
+   bool _showGrid = true;
 
    FreeCamera* _camera;
 
@@ -20,5 +20,10 @@ public:
    FreeCamera& GetCamera() const
    {
       return *_camera;
+   }
+
+   bool GetRenderGrid() const
+   {
+      return _showGrid;
    }
 };
