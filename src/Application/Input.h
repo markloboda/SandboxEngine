@@ -140,12 +140,6 @@ public:
    };
 
 private:
-   double _mouseX;
-   double _mouseY;
-
-   double _moveMouseX;
-   double _moveMouseY;
-
    static Input& GetInstance()
    {
       static Input instance;
@@ -159,12 +153,7 @@ private:
    Input& operator=(Input&&) = delete;
 
 public:
-   static void Initialize();
-   static void Update();
-
    static bool IsKeyPressed(EInputKey key);
 
    static vec2 GetCursorPos();
-
-   static vec2 GetCursorDelta();
 };

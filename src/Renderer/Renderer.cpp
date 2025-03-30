@@ -107,7 +107,7 @@ void Renderer::Render()
    renderPassColorAttachment.view = textureView.Get();
    renderPassColorAttachment.loadOp = WGPULoadOp_Clear;
    renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
-   renderPassColorAttachment.clearValue = { 0.0f, 0.0f, 0.0f, 1.0f };
+   renderPassColorAttachment.clearValue = { 0.1f, 0.1f, 0.1f, 1.0f };
 
    WGPURenderPassDescriptor renderPassDesc = {};
    renderPassDesc.nextInChain = nullptr;
