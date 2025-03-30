@@ -9,7 +9,7 @@ double mouseY_;
 double mouseDifX_;
 double mouseDifY_;
 
-void CursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
+void CursorPositionCallback(double xpos, double ypos)
 {
    mouseDifX_ = xpos - mouseX_;
    mouseDifY_ = ypos - mouseY_;
@@ -32,7 +32,7 @@ FreeCamera::FreeCamera(vec3 position, vec3 up, float yaw, float pitch)
    UpdateCameraVectors();
 
    // Set cursor position callback.
-   glfwSetCursorPosCallback(Application::GetInstance().GetWindow(), CursorPositionCallback);
+   Input::SetCursorPositionCallback(CursorPositionCallback);
 }
 
 mat4 FreeCamera::GetViewProjectionMatrix()

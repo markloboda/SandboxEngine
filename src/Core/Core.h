@@ -5,6 +5,7 @@
 #include <string.h>
 #include <vector>
 #include <filesystem>
+#include <functional>
 #include <future>
 
 #define PI 3.14159265359f

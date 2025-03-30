@@ -139,6 +139,8 @@ public:
       MOUSE_BUTTON_MIDDLE = MOUSE_BUTTON_3,
    };
 
+   using CursorPositionCallback = std::function<void(double, double)>;
+
 private:
    static Input& GetInstance()
    {
@@ -146,14 +148,23 @@ private:
       return instance;
    }
 
+   std::vector<CursorPositionCallback> _cursorPositionCallback;
+
+private:
    Input() = default;
    Input(const Input&) = delete;
    Input(Input&&) = delete;
    Input& operator=(const Input&) = delete;
    Input& operator=(Input&&) = delete;
 
-public:
-   static bool IsKeyPressed(EInputKey key);
+   static void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 
+public:
+   static void Initialize();
+   static void Terminate();
+
+   static bool IsKeyPressed(EInputKey key);
    static vec2 GetCursorPos();
+
+   static void SetCursorPositionCallback(CursorPositionCallback callback);
 };

@@ -3,6 +3,25 @@
 
 #include <Application/Application.h>
 
+void Input::CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+{
+   for (auto& callback : GetInstance()._cursorPositionCallback)
+   {
+      callback(xpos, ypos);
+   }
+}
+
+void Input::Initialize()
+{
+   glfwSetCursorPosCallback(Application::GetInstance().GetWindow(), CursorPosCallback);
+}
+
+void Input::Terminate()
+{
+   GetInstance()._cursorPositionCallback.clear();
+   glfwSetCursorPosCallback(Application::GetInstance().GetWindow(), nullptr);
+}
+
 bool Input::IsKeyPressed(EInputKey key)
 {
    GLFWwindow* window = Application::GetInstance().GetWindow();
@@ -20,4 +39,9 @@ vec2 Input::GetCursorPos()
    double x, y;
    glfwGetCursorPos(Application::GetInstance().GetWindow(), &x, &y);
    return vec2(static_cast<float>(x), static_cast<float>(y));
+}
+
+void Input::SetCursorPositionCallback(CursorPositionCallback callback)
+{
+   GetInstance()._cursorPositionCallback.push_back(callback);
 }

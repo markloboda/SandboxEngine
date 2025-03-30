@@ -23,6 +23,8 @@ bool Application::Initialize()
       return false;
    }
 
+   Input::Initialize();
+
    // Initialize renderer.
    _renderer = new Renderer(_window);
    if (!_renderer)
@@ -41,6 +43,7 @@ void Application::Terminate() const
 {
    delete _editor;
    delete _renderer;
+   Input::Terminate();
    glfwDestroyWindow(_window);
    glfwTerminate();
 }
