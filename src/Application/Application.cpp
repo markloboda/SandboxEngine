@@ -23,9 +23,6 @@ bool Application::Initialize()
       return false;
    }
 
-   // Initialize input.
-   Input::Initialize();
-
    // Initialize renderer.
    _renderer = new Renderer(_window);
    if (!_renderer)
@@ -58,7 +55,6 @@ void Application::Run()
       lastTime = currentTime;
 
       // Update.
-      Input::Update();
       _editor->Update(dt);
 
       // Render.

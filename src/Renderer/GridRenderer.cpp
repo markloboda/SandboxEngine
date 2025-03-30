@@ -3,8 +3,7 @@
 
 #include <Application/Application.h>
 #include <Application/Editor.h>
-
-#include "Utils/FreeCamera.h"
+#include <Utils/FreeCamera.h>
 
 GridRenderer::GridRenderer(GLFWwindow* window, Device* device) :
    _window(window),
@@ -119,10 +118,11 @@ void GridRenderer::Terminate()
 
 void GridRenderer::Render(RenderPassEncoder* renderPassEncoder)
 {
-   auto viewProj = Application::GetInstance().GetEditor()->GetCamera().GetViewProjectionMatrix();
+   FreeCamera& camera = Application::GetInstance().GetEditor()->GetCamera();
 
    GridUniforms uniforms = {};
-   memcpy(uniforms.viewProj, &viewProj, sizeof(viewProj));
+   uniforms.view = camera.GetViewMatrix();
+   uniforms.proj = camera.GetProjectionMatrix();
    uniforms.gridSize = 100.0f;
    uniforms.gridSpacing = 1.0f;
    uniforms.numHorizontal = 100;

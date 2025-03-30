@@ -2,14 +2,15 @@
 
 struct GridUniforms
 {
-   alignas(16) float viewProj[16];
+   alignas(16) mat4x4 view;
+   alignas(16) mat4x4 proj;
    float gridSize;
    float gridSpacing;
    uint32_t numHorizontal;
    uint32_t numVertical;
 };
 
-static_assert(sizeof(GridUniforms) == 80, "GridUniforms size mismatch");
+static_assert(sizeof(GridUniforms) == 144, "GridUniforms size mismatch");
 
 class GridRenderer
 {
