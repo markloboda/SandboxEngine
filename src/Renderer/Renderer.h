@@ -21,6 +21,8 @@ public:
    void Render();
    bool ShouldClose() const;
 
+   void OnWindowResize(int width, int height);
+
 private:
    bool Initialize();
    void Terminate();

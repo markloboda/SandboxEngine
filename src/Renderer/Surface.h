@@ -1,6 +1,6 @@
 #pragma once
 
-class GLFWwindow;
+struct GLFWwindow;
 class Device;
 class TextureView;
 
@@ -12,17 +12,16 @@ public:
 
 private:
    WGPUSurface _surface;
-   WGPUTextureFormat _format = WGPUTextureFormat_Undefined;
+   WGPUSurfaceConfiguration _config;
 
 public:
    WGPUSurface Get() const { return _surface; }
-   WGPUTextureFormat GetFormat() const { return _format; }
+   WGPUTextureFormat GetFormat() const { return _config.format; }
+   void Resize(int width, int height);
 
    void ConfigureSurface(WGPUSurfaceConfiguration config);
    void UnConfigureSurface();
 
    WGPUSurfaceTexture GetSurfaceTexture() const;
    void Present() const;
-
-private:
 };

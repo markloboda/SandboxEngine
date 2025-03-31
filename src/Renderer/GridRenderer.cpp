@@ -1,6 +1,4 @@
-#include <pch.h>
 #include <Renderer/GridRenderer.h>
-
 #include <Application/Application.h>
 #include <Application/Editor.h>
 #include <Utils/FreeCamera.h>

@@ -57,6 +57,11 @@ public:
       return _editor;
    }
 
+   Renderer* GetRenderer() const
+   {
+      return _renderer;
+   }
+
    // Manages the application.
    bool Initialize();
    void Terminate() const;

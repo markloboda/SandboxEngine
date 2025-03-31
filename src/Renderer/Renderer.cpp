@@ -76,6 +76,12 @@ bool Renderer::Initialize()
       _surface.ConfigureSurface(config);
    }
 
+   // Set frame buffer size callback.
+   glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height)
+   {
+      Application::GetInstance().GetRenderer()->OnWindowResize(width, height);
+   });
+
    // Set up ImGui.
    ImGuiManager::CreateInstance(_window);
    ImGuiManager::GetInstance().Configure(&_device, _surface.GetFormat());
@@ -143,4 +149,9 @@ void Renderer::Render()
 bool Renderer::ShouldClose() const
 {
    return glfwWindowShouldClose(_window);
+}
+
+void Renderer::OnWindowResize(int width, int height)
+{
+   _surface.Resize(width, height);
 }

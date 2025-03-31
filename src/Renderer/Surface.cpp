@@ -1,7 +1,8 @@
 #include <pch.h>
 
 Surface::Surface(Device* device, GLFWwindow* window) :
-   _surface(glfwGetWGPUSurface(device->GetInstance(), window))
+   _surface(glfwGetWGPUSurface(device->GetInstance(), window)),
+   _config(WGPUSurfaceConfiguration{})
 {
    if (!_surface)
    {
@@ -17,6 +18,13 @@ Surface::~Surface()
    }
 }
 
+void Surface::Resize(int width, int height)
+{
+   _config.width = width;
+   _config.height = height;
+   ConfigureSurface(_config);
+}
+
 void Surface::ConfigureSurface(WGPUSurfaceConfiguration config)
 {
    if (!config.format)
@@ -24,8 +32,8 @@ void Surface::ConfigureSurface(WGPUSurfaceConfiguration config)
       config.format = WGPUTextureFormat_RGBA8Unorm;
    }
 
-   wgpuSurfaceConfigure(_surface, &config);
-   _format = config.format;
+   _config = config;
+   wgpuSurfaceConfigure(_surface, &_config);
 }
 
 void Surface::UnConfigureSurface()
