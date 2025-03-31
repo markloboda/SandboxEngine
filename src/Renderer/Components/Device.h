@@ -2,10 +2,6 @@
 
 class Device
 {
-public:
-   Device();
-   ~Device();
-
 private:
    WGPUInstance _instance;
    WGPUAdapter _adapter;
@@ -13,6 +9,9 @@ private:
    WGPUQueue _queue;
 
 public:
+   Device();
+   ~Device();
+
    WGPUDevice Get() const { return _device; }
    WGPUQueue GetQueue() const { return _queue; }
    WGPUInstance GetInstance() const { return _instance; }

@@ -7,14 +7,13 @@ class CommandBuffer;
 
 class CommandEncoder
 {
-public:
-   CommandEncoder(Device* device, WGPUCommandEncoderDescriptor* descriptor);
-   ~CommandEncoder();
-
 private:
    WGPUCommandEncoder _encoder;
 
 public:
+   CommandEncoder(Device* device, WGPUCommandEncoderDescriptor* descriptor);
+   ~CommandEncoder();
+
    WGPUCommandEncoder Get() const { return _encoder; }
 
    WGPUCommandBuffer Finish();

@@ -4,14 +4,13 @@ class CommandEncoder;
 
 class CommandBuffer
 {
+private:
+   WGPUCommandBuffer _cmdBuffer;
+
 public:
    CommandBuffer() = default;
    CommandBuffer(WGPUCommandBuffer cmdBuffer);
    ~CommandBuffer();
 
-private:
-   WGPUCommandBuffer _cmdBuffer;
-
-public:
    WGPUCommandBuffer Get() const { return _cmdBuffer; }
 };

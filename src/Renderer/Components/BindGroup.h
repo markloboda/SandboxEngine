@@ -10,15 +10,14 @@ class Device;
 
 class BindGroup
 {
-public:
-   BindGroup(Device* device, BindGroupDesc desc);
-   ~BindGroup();
-
 private:
    WGPUBindGroupLayout _bindGroupLayout;
    WGPUBindGroup _bindGroup;
 
 public:
+   BindGroup(Device* device, BindGroupDesc desc);
+   ~BindGroup();
+
    WGPUBindGroup const* Get() const { return &_bindGroup; }
    WGPUBindGroupLayout const* GetLayout() const { return &_bindGroupLayout; }
 };

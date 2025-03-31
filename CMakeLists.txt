@@ -34,20 +34,21 @@ set(SOURCE_FILES
    ${SRC_ROOT}/Application/Input.cpp
 
    ${SRC_ROOT}/Renderer/Clouds/CloudRenderer.cpp
+   ${SRC_ROOT}/Renderer/Components/BindGroup.cpp
+   ${SRC_ROOT}/Renderer/Components/Buffer.cpp
+   ${SRC_ROOT}/Renderer/Components/CommandBuffer.cpp
+   ${SRC_ROOT}/Renderer/Components/CommandEncoder.cpp
+   ${SRC_ROOT}/Renderer/Components/Device.cpp
+   ${SRC_ROOT}/Renderer/Components/Queue.cpp
+   ${SRC_ROOT}/Renderer/Components/RenderPassEncoder.cpp
+   ${SRC_ROOT}/Renderer/Components/RenderPipeline.cpp
+   ${SRC_ROOT}/Renderer/Components/ShaderModule.cpp
+   ${SRC_ROOT}/Renderer/Components/Surface.cpp
+   ${SRC_ROOT}/Renderer/Components/Texture.cpp
+   ${SRC_ROOT}/Renderer/Components/TextureView.cpp
    ${SRC_ROOT}/Renderer/UI/ImGuiManager.cpp
-   ${SRC_ROOT}/Renderer/BindGroup.cpp
-   ${SRC_ROOT}/Renderer/Buffer.cpp
-   ${SRC_ROOT}/Renderer/CommandBuffer.cpp
-   ${SRC_ROOT}/Renderer/CommandEncoder.cpp
-   ${SRC_ROOT}/Renderer/Device.cpp
    ${SRC_ROOT}/Renderer/GridRenderer.cpp
-   ${SRC_ROOT}/Renderer/Queue.cpp
    ${SRC_ROOT}/Renderer/Renderer.cpp
-   ${SRC_ROOT}/Renderer/RenderPassEncoder.cpp
-   ${SRC_ROOT}/Renderer/RenderPipeline.cpp
-   ${SRC_ROOT}/Renderer/ShaderModule.cpp
-   ${SRC_ROOT}/Renderer/Surface.cpp
-   ${SRC_ROOT}/Renderer/TextureView.cpp
 
    ${SRC_ROOT}/Utils/FileReader.cpp
    ${SRC_ROOT}/Utils/FreeCamera.cpp

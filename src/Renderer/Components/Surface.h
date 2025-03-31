@@ -6,15 +6,14 @@ class TextureView;
 
 class Surface
 {
-public:
-   Surface(Device* device, GLFWwindow* window);
-   ~Surface();
-
 private:
    WGPUSurface _surface;
    WGPUSurfaceConfiguration _config;
 
 public:
+   Surface(Device* device, GLFWwindow* window);
+   ~Surface();
+
    WGPUSurface Get() const { return _surface; }
    WGPUTextureFormat GetFormat() const { return _config.format; }
    void Resize(int width, int height);

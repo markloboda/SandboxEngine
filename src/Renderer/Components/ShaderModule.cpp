@@ -1,5 +1,4 @@
 #include <pch.h>
-#include <Renderer/ShaderModule.h>
 
 ShaderModule::ShaderModule(WGPUShaderModule shaderModule)
    : _shaderModule(shaderModule)

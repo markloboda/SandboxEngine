@@ -5,10 +5,6 @@ struct GLFWwindow;
 
 class Renderer
 {
-public:
-   Renderer(GLFWwindow* window);
-   ~Renderer();
-
 private:
    GLFWwindow* _window;
    Device _device;
@@ -16,6 +12,10 @@ private:
    Queue _queue;
 
    GridRenderer* _gridRenderer;
+
+public:
+   Renderer(GLFWwindow* window);
+   ~Renderer();
 
 public:
    void Render();

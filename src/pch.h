@@ -23,15 +23,16 @@ using namespace glm;
 #include <Application/Input.h>
 
 // Renderer components.
-#include <Renderer/BindGroup.h>
-#include <Renderer/Buffer.h>
-#include <Renderer/CommandBuffer.h>
-#include <Renderer/CommandEncoder.h>
-#include <Renderer/Device.h>
-#include <Renderer/Queue.h>
-#include <Renderer/RenderPassEncoder.h>
-#include <Renderer/RenderPipeline.h>
-#include <Renderer/ShaderModule.h>
-#include <Renderer/Surface.h>
-#include <Renderer/Queue.h>
-#include <Renderer/TextureView.h>
+#include <Renderer/Components/BindGroup.h>
+#include <Renderer/Components/Buffer.h>
+#include <Renderer/Components/CommandBuffer.h>
+#include <Renderer/Components/CommandEncoder.h>
+#include <Renderer/Components/Device.h>
+#include <Renderer/Components/Queue.h>
+#include <Renderer/Components/RenderPassEncoder.h>
+#include <Renderer/Components/RenderPipeline.h>
+#include <Renderer/Components/ShaderModule.h>
+#include <Renderer/Components/Surface.h>
+#include <Renderer/Components/Queue.h>
+#include <Renderer/Components/Texture.h>
+#include <Renderer/Components/TextureView.h>
