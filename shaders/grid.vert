@@ -18,8 +18,8 @@ void main() {
 
    float dynamicGridSpacing = floor((abs(cameraPos.y) + 10.0) / 10.0) * gridSpacing;
 
-   float snappedX = round(cameraPos.x / dynamicGridSpacing);
-   float snappedZ = round(cameraPos.z / dynamicGridSpacing);
+   float snappedX = round(cameraPos.x / gridSpacing);
+   float snappedZ = round(cameraPos.z / gridSpacing);
 
    float gridSizeX = dynamicGridSpacing * float(numVertical);
    float gridSizeZ = dynamicGridSpacing * float(numHorizontal);

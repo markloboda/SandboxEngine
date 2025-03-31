@@ -69,9 +69,10 @@ bool CloudRenderer::Initialize()
          noiseData[i + 3] = 255;     // A
       }
 
+      WGPUExtent3D copySize = { 512, 512, 1 };
       // Upload noise data to the texture
       // TODO: Queue problem!!!!! Device has WGPUQueue, Queue class is its own thing!!!
-      _noiseTexture->UploadData(_device->GetQueue(), noiseData.data(), noiseData.size(), &(WGPUExtent3D) { 512, 512, 1 });
+      _noiseTexture->UploadData(_device->GetQueue(), noiseData.data(), noiseData.size() * sizeof(uint8_t), &copySize);
    }
 
    // Sampler
