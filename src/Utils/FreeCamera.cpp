@@ -126,8 +126,3 @@ void FreeCamera::UpdateCameraVectors()
    _right = normalize(cross(_forward, _worldUp));
    _up = normalize(cross(_right, _forward));
 }
-
-void FreeCamera::SetPosition(vec3 position)
-{
-   _position = position;
-}

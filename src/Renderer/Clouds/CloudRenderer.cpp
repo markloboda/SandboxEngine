@@ -1,6 +1,10 @@
 #include <pch.h>
 #include <Renderer/Clouds/CloudRenderer.h>
 
+#include "Application/Application.h"
+#include "Application/Editor.h"
+#include "Utils/FreeCamera.h"
+
 CloudRenderer::CloudRenderer(Device* device) :
    _device(device)
 {
@@ -19,7 +23,7 @@ bool CloudRenderer::Initialize()
    ShaderModule fragmentShader = ShaderModule::LoadShaderModule(_device, "clouds.frag");
 
    // Uniform buffer
-   _uniformBuffer = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(ShaderParams), nullptr);
+   _uniformBuffer = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(ShaderParamsUniform), nullptr);
 
    // Vertex buffer
    {
@@ -37,6 +41,11 @@ bool CloudRenderer::Initialize()
       texDesc.sampleCount = 1;
       texDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
       _noiseTexture = new Texture(_device, &texDesc);
+      if (!_noiseTexture->IsValid())
+      {
+         throw std::runtime_error("Failed to create noise texture");
+         return false;
+      }
 
       WGPUTextureViewDescriptor texViewDesc = {};
       texViewDesc.dimension = WGPUTextureViewDimension_2D;
@@ -45,8 +54,24 @@ bool CloudRenderer::Initialize()
       texViewDesc.baseMipLevel = 0;
       texViewDesc.arrayLayerCount = 1;
       texViewDesc.baseArrayLayer = 0;
-      texViewDesc.usage = WGPUTextureUsage_TextureBinding;
+      // texViewDesc.usage = WGPUTextureUsage_TextureBinding;
       _noiseTextureView = new TextureView(_noiseTexture->Get(), &texViewDesc);
+
+      // Generate noise data (simplified example)
+      std::vector<uint8_t> noiseData(512 * 512 * 4);  // RGBA8
+      for (size_t i = 0; i < noiseData.size(); i += 4)
+      {
+         // Generate proper noise values (0-255)
+         uint8_t value = rand() % 256;
+         noiseData[i] = value;     // R
+         noiseData[i + 1] = value;   // G
+         noiseData[i + 2] = value;   // B
+         noiseData[i + 3] = 255;     // A
+      }
+
+      // Upload noise data to the texture
+      // TODO: Queue problem!!!!! Device has WGPUQueue, Queue class is its own thing!!!
+      _noiseTexture->UploadData(_device->GetQueue(), noiseData.data(), noiseData.size(), &(WGPUExtent3D) { 512, 512, 1 });
    }
 
    // Sampler
@@ -86,7 +111,7 @@ bool CloudRenderer::Initialize()
       bgEntries[0].binding = 0;
       bgEntries[0].buffer = _uniformBuffer->Get();
       bgEntries[0].offset = 0;
-      bgEntries[0].size = sizeof(ShaderParams);
+      bgEntries[0].size = sizeof(ShaderParamsUniform);
       bgEntries[1].binding = 1;
       bgEntries[1].textureView = _noiseTextureView->Get();
       bgEntries[2].binding = 2;
@@ -113,6 +138,7 @@ bool CloudRenderer::Initialize()
       rpDesc.multisample.count = 1;
       rpDesc.multisample.mask = 0xFFFFFFFF;
       rpDesc.multisample.alphaToCoverageEnabled = false;
+      // TODO:
       rpDesc.depthStencil = nullptr;
 
       // Vertex state
@@ -126,9 +152,11 @@ bool CloudRenderer::Initialize()
       vbLayout.stepMode = WGPUVertexStepMode_Vertex;
       vbLayout.attributeCount = 1;
       WGPUVertexAttribute va = {};
-      va.format = WGPUVertexFormat_Uint32;
-      va.offset = 0;
-      va.shaderLocation = 0;
+      {
+         va.format = WGPUVertexFormat_Uint32;
+         va.offset = 0;
+         va.shaderLocation = 0;
+      }
       vbLayout.attributes = &va;
       vs.bufferCount = 1;
       vs.buffers = &vbLayout;
@@ -141,7 +169,18 @@ bool CloudRenderer::Initialize()
       fs.entryPoint = WGPUStringView{ fsEntryPoint.data(), fsEntryPoint.length() };
       fs.targetCount = 1;
       WGPUColorTargetState cts = {};
-      cts.format = WGPUTextureFormat_RGBA8Unorm;
+      {
+         WGPUBlendState blend = {};
+         blend.color.srcFactor = WGPUBlendFactor_SrcAlpha;
+         blend.color.dstFactor = WGPUBlendFactor_OneMinusSrcAlpha;
+         blend.color.operation = WGPUBlendOperation_Add;
+         blend.alpha.srcFactor = WGPUBlendFactor_Zero;
+         blend.alpha.dstFactor = WGPUBlendFactor_One;
+         blend.alpha.operation = WGPUBlendOperation_Add;
+         cts.format = WGPUTextureFormat_RGBA8Unorm;
+         cts.blend = &blend;
+         cts.writeMask = WGPUColorWriteMask_All;
+      }
       fs.targets = &cts;
       rpDesc.fragment = &fs;
 
@@ -154,13 +193,21 @@ bool CloudRenderer::Initialize()
 
 void CloudRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureView)
 {
-   _uniformBuffer->UploadData(_device, &_shaderParams, sizeof(ShaderParams));
+   FreeCamera& camera = Application::GetInstance().GetEditor()->GetCamera();
+
+   _shaderParams.time = 0.1f;
+   _shaderParams.resolution = { 1280.0f, 720.0f };
+   _shaderParams.cameraPos = camera.GetPosition();
+   _uniformBuffer->UploadData(_device, &_shaderParams, sizeof(ShaderParamsUniform));
 
    WGPURenderPassDescriptor rpDesc = {};
    WGPURenderPassColorAttachment colorAttachment{};
-   colorAttachment.view = surfaceTextureView->Get();
-   colorAttachment.loadOp = WGPULoadOp_Load;
-   colorAttachment.storeOp = WGPUStoreOp_Store;
+   {
+      colorAttachment.view = surfaceTextureView->Get();
+      colorAttachment.loadOp = WGPULoadOp_Load;
+      colorAttachment.storeOp = WGPUStoreOp_Store;
+      colorAttachment.clearValue = { 0.0f, 0.0f, 0.0f, 0.0f };
+   }
    rpDesc.colorAttachmentCount = 1;
    rpDesc.colorAttachments = &colorAttachment;
 
@@ -175,6 +222,7 @@ void CloudRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureV
 
 void CloudRenderer::Terminate()
 {
+   delete _vertexBuffer;
    delete _pipeline;
    delete _bindGroup;
    delete _sampler;

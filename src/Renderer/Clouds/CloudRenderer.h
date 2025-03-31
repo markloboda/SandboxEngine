@@ -3,7 +3,7 @@
 class CloudRenderer
 {
 private:
-   struct ShaderParams
+   struct ShaderParamsUniform
    {
       float time;
       vec2 resolution;
@@ -21,7 +21,7 @@ private:
    TextureView* _noiseTextureView;
    Sampler* _sampler;
 
-   ShaderParams _shaderParams;
+   ShaderParamsUniform _shaderParams;
 
 public:
    CloudRenderer(Device* device);

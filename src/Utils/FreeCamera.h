@@ -25,5 +25,6 @@ public:
    void ProcessMouseMovement(float xOffset, float yOffset, bool constrainPitch = true);
    void UpdateCameraVectors();
 
-   void SetPosition(vec3 position);
+   vec3 GetPosition() const { return _position; }
+   void SetPosition(vec3 position) { _position = position; }
 };
