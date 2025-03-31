@@ -16,7 +16,7 @@ void main() {
 
    vec3 cameraPos = vec3(inverse(view)[3]);
 
-   float dynamicGridSpacing = floor((abs(cameraPos.y) + 10.0) / 10.0) * gridSpacing;
+   float dynamicGridSpacing = gridSpacing; //floor((abs(cameraPos.y) + 10.0) / 10.0) * gridSpacing;
 
    float snappedX = round(cameraPos.x / gridSpacing);
    float snappedZ = round(cameraPos.z / gridSpacing);

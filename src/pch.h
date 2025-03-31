@@ -18,6 +18,8 @@ using namespace glm;
 
 // Core components.
 #include <Core/Core.h>
+#include <Core/Node.h>
+#include <Core/Scene.h>
 
 // Helpers.
 #include <Application/Input.h>

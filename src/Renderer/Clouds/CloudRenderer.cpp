@@ -1,12 +1,15 @@
 #include <pch.h>
 #include <Renderer/Clouds/CloudRenderer.h>
 
-#include "Application/Application.h"
-#include "Application/Editor.h"
-#include "Utils/FreeCamera.h"
+#include <Application/Application.h>
+#include <Application/Editor.h>
 
-CloudRenderer::CloudRenderer(Device* device) :
-   _device(device)
+#include <Renderer/Clouds/CloudBounds.h>
+#include <Utils/FreeCamera.h>
+
+CloudRenderer::CloudRenderer(Device* device, Queue* queue) :
+   _device(device),
+   _queue(queue)
 {
    bool success = Initialize();
 }
@@ -23,56 +26,41 @@ bool CloudRenderer::Initialize()
    ShaderModule fragmentShader = ShaderModule::LoadShaderModule(_device, "clouds.frag");
 
    // Uniform buffer
-   _uniformBuffer = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(ShaderParamsUniform), nullptr);
-
-   // Vertex buffer
-   {
-      uint32_t vertexData[3] = { 0, 1, 2 };
-      _vertexBuffer = new Buffer(_device, WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst, sizeof(vertexData), vertexData);
-   }
+   _uCameraData = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CameraData), nullptr);
 
    // Noise texture
    {
       WGPUTextureDescriptor texDesc = {};
-      texDesc.dimension = WGPUTextureDimension_2D;
-      texDesc.format = WGPUTextureFormat_RGBA8Unorm;
-      texDesc.size = { 512, 512, 1 };
+      texDesc.dimension = WGPUTextureDimension_3D;
+      texDesc.size = { 128, 128, 128 };
+      texDesc.format = WGPUTextureFormat_R8Unorm;
       texDesc.mipLevelCount = 1;
       texDesc.sampleCount = 1;
       texDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
-      _noiseTexture = new Texture(_device, &texDesc);
-      if (!_noiseTexture->IsValid())
-      {
-         throw std::runtime_error("Failed to create noise texture");
-         return false;
-      }
+      _cloudTexture = new Texture(_device, &texDesc);
 
       WGPUTextureViewDescriptor texViewDesc = {};
-      texViewDesc.dimension = WGPUTextureViewDimension_2D;
-      texViewDesc.format = WGPUTextureFormat_RGBA8Unorm;
+      texViewDesc.dimension = WGPUTextureViewDimension_3D;
+      texViewDesc.format = WGPUTextureFormat_R8Unorm;
       texViewDesc.mipLevelCount = 1;
       texViewDesc.baseMipLevel = 0;
       texViewDesc.arrayLayerCount = 1;
       texViewDesc.baseArrayLayer = 0;
-      // texViewDesc.usage = WGPUTextureUsage_TextureBinding;
-      _noiseTextureView = new TextureView(_noiseTexture->Get(), &texViewDesc);
+      texViewDesc.aspect = WGPUTextureAspect_All;
+      _cloudTextureView = new TextureView(_cloudTexture->Get(), &texViewDesc);
 
       // Generate noise data (simplified example)
-      std::vector<uint8_t> noiseData(512 * 512 * 4);  // RGBA8
-      for (size_t i = 0; i < noiseData.size(); i += 4)
+      std::vector<uint8_t> noiseData(size_t(128 * 128 * 128));  // R8Unorm
+      for (size_t i = 0; i < noiseData.size(); ++i)
       {
          // Generate proper noise values (0-255)
          uint8_t value = rand() % 256;
-         noiseData[i] = value;     // R
-         noiseData[i + 1] = value;   // G
-         noiseData[i + 2] = value;   // B
-         noiseData[i + 3] = 255;     // A
+         noiseData[i] = value;
       }
 
-      WGPUExtent3D copySize = { 512, 512, 1 };
+      WGPUExtent3D copySize = { 128, 128, 128 };
       // Upload noise data to the texture
-      // TODO: Queue problem!!!!! Device has WGPUQueue, Queue class is its own thing!!!
-      _noiseTexture->UploadData(_device->GetQueue(), noiseData.data(), noiseData.size() * sizeof(uint8_t), &copySize);
+      _cloudTexture->UploadData(_queue->Get(), noiseData.data(), noiseData.size() * sizeof(uint8_t), &copySize, 1);
    }
 
    // Sampler
@@ -80,9 +68,12 @@ bool CloudRenderer::Initialize()
       WGPUSamplerDescriptor samplerDesc = {};
       samplerDesc.addressModeU = WGPUAddressMode_Repeat;
       samplerDesc.addressModeV = WGPUAddressMode_Repeat;
+      samplerDesc.addressModeW = WGPUAddressMode_Repeat;
       samplerDesc.minFilter = WGPUFilterMode_Linear;
+      samplerDesc.magFilter = WGPUFilterMode_Linear;
+      samplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
       samplerDesc.maxAnisotropy = 1;
-      _sampler = new Sampler(_device, &samplerDesc);
+      _uCloudSampler = new Sampler(_device, &samplerDesc);
    }
 
    // Bind groups
@@ -90,33 +81,34 @@ bool CloudRenderer::Initialize()
       // Bind group layout
       std::vector<WGPUBindGroupLayoutEntry> bglEntries(3);
 
-      // Uniform buffer (binding 0)
+      // cloudTexture (binding 0)
       bglEntries[0].binding = 0;
       bglEntries[0].visibility = WGPUShaderStage_Fragment;
-      bglEntries[0].buffer.type = WGPUBufferBindingType_Uniform;
+      bglEntries[0].texture.sampleType = WGPUTextureSampleType_Float;
+      bglEntries[0].texture.viewDimension = WGPUTextureViewDimension_3D;
+      bglEntries[0].texture.multisampled = WGPUOptionalBool_False;
 
-      // Texture (binding 1)
+      // cloudSampler (binding 1)
       bglEntries[1].binding = 1;
       bglEntries[1].visibility = WGPUShaderStage_Fragment;
-      bglEntries[1].texture.sampleType = WGPUTextureSampleType_Float;
-      bglEntries[1].texture.viewDimension = WGPUTextureViewDimension_2D;
+      bglEntries[1].sampler.type = WGPUSamplerBindingType_Filtering;
 
-      // Sampler (binding 2)
+      // camera (binding 2)
       bglEntries[2].binding = 2;
       bglEntries[2].visibility = WGPUShaderStage_Fragment;
-      bglEntries[2].sampler.type = WGPUSamplerBindingType_Filtering;
+      bglEntries[2].buffer.type = WGPUBufferBindingType_Uniform;
+      bglEntries[2].buffer.minBindingSize = sizeof(CameraData);
 
       // Bind group entries
       std::vector<WGPUBindGroupEntry> bgEntries(3);
       bgEntries[0] = {};
       bgEntries[0].binding = 0;
-      bgEntries[0].buffer = _uniformBuffer->Get();
-      bgEntries[0].offset = 0;
-      bgEntries[0].size = sizeof(ShaderParamsUniform);
+      bgEntries[0].textureView = _cloudTextureView->Get();
       bgEntries[1].binding = 1;
-      bgEntries[1].textureView = _noiseTextureView->Get();
+      bgEntries[1].sampler = _uCloudSampler->Get();
       bgEntries[2].binding = 2;
-      bgEntries[2].sampler = _sampler->Get();
+      bgEntries[2].buffer = _uCameraData->Get();
+      bgEntries[2].size = sizeof(CameraData);
 
       _bindGroup = new BindGroup(_device, { bglEntries, bgEntries });
    }
@@ -147,20 +139,6 @@ bool CloudRenderer::Initialize()
       vs.module = vertexShader.Get();
       std::string vsEntryPoint = "main";
       vs.entryPoint = WGPUStringView{ vsEntryPoint.data(), vsEntryPoint.length() };
-
-      WGPUVertexBufferLayout vbLayout = {};
-      vbLayout.arrayStride = sizeof(uint32_t);
-      vbLayout.stepMode = WGPUVertexStepMode_Vertex;
-      vbLayout.attributeCount = 1;
-      WGPUVertexAttribute va = {};
-      {
-         va.format = WGPUVertexFormat_Uint32;
-         va.offset = 0;
-         va.shaderLocation = 0;
-      }
-      vbLayout.attributes = &va;
-      vs.bufferCount = 1;
-      vs.buffers = &vbLayout;
       rpDesc.vertex = vs;
 
       // Fragment state
@@ -194,12 +172,15 @@ bool CloudRenderer::Initialize()
 
 void CloudRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureView)
 {
-   FreeCamera& camera = Application::GetInstance().GetEditor()->GetCamera();
+   // Collect CloudBounds nodes
+   Application* app = &Application::GetInstance();
+   vec2 resolution = { app->GetWindowWidth(), app->GetWindowHeight() };
+   FreeCamera& camera = app->GetEditor()->GetCamera();
 
-   _shaderParams.time = 0.1f;
-   _shaderParams.resolution = { 1280.0f, 720.0f };
+   _shaderParams.view = camera.GetViewMatrix();
+   _shaderParams.proj = camera.GetProjectionMatrix();
    _shaderParams.cameraPos = camera.GetPosition();
-   _uniformBuffer->UploadData(_device, &_shaderParams, sizeof(ShaderParamsUniform));
+   _uCameraData->UploadData(_device, &_shaderParams, sizeof(CameraData));
 
    WGPURenderPassDescriptor rpDesc = {};
    WGPURenderPassColorAttachment colorAttachment{};
@@ -214,7 +195,6 @@ void CloudRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureV
 
    RenderPassEncoder pass = RenderPassEncoder(encoder, &rpDesc);
    pass.SetPipeline(_pipeline);
-   pass.SetVertexBuffer(0, _vertexBuffer);
    pass.SetBindGroup(0, _bindGroup);
    pass.Draw(3, 1, 0, 0);
    pass.EndPass();
@@ -223,11 +203,10 @@ void CloudRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureV
 
 void CloudRenderer::Terminate()
 {
-   delete _vertexBuffer;
    delete _pipeline;
    delete _bindGroup;
-   delete _sampler;
-   delete _noiseTextureView;
-   delete _noiseTexture;
-   delete _uniformBuffer;
+   delete _uCloudSampler;
+   delete _cloudTextureView;
+   delete _cloudTexture;
+   delete _uCameraData;
 }

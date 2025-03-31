@@ -33,6 +33,11 @@ set(SOURCE_FILES
    ${SRC_ROOT}/Application/Editor.cpp
    ${SRC_ROOT}/Application/Input.cpp
 
+   ${SRC_ROOT}/Core/Core.h
+   ${SRC_ROOT}/Core/Node.h
+   ${SRC_ROOT}/Core/Scene.h
+
+   ${SRC_ROOT}/Renderer/Clouds/CloudBounds.cpp
    ${SRC_ROOT}/Renderer/Clouds/CloudRenderer.cpp
    ${SRC_ROOT}/Renderer/Components/BindGroup.cpp
    ${SRC_ROOT}/Renderer/Components/Buffer.cpp

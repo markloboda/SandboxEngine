@@ -1,8 +1,10 @@
 #include <pch.h>
 #include <Application/Editor.h>
 
+#include <Application/Application.h>
 #include <Renderer/UI/ImGuiManager.h>
 #include <Utils/FreeCamera.h>
+#include <Renderer/Clouds/CloudBounds.h>
 
 Editor::Editor()
 {
@@ -12,10 +14,16 @@ Editor::Editor()
    // Create camera
    _camera = new FreeCamera();
    _camera->SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));
+
+   // Create scene
+   _scene = new Scene();
 }
 
 Editor::~Editor()
 {
+   // Delete scene
+   delete _scene;
+
    // Remove from ImGuiManager
    ImGuiManager::GetInstance().RemoveUIRenderer(this);
 
@@ -25,12 +33,46 @@ Editor::~Editor()
 
 void Editor::RenderImGuiUI()
 {
-   // Editor window with settings always at left side and stretch to height
+   int windowWidth = Application::GetInstance().GetWindowWidth();
+   int windowHeight = Application::GetInstance().GetWindowHeight();
+
+   // Nodes
+   {
+      ImGui::SetNextWindowPos(ImVec2(0, 0));
+      ImGui::SetNextWindowSize(ImVec2(200, windowHeight / 2));
+      ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+      // Create nodes
+      {
+         ImGui::BeginChild("Create", ImVec2(0, 100), true);
+         ImGui::Text("Create");
+         if (ImGui::Button("Add Node Cloud Bounds"))
+         {
+            // Add CloudBounds node
+            CloudBounds* cloudBounds = new CloudBounds();
+            cloudBounds->SetName("CloudBounds");
+            _scene->AddNode(std::unique_ptr<Node>(cloudBounds));
+         }
+         ImGui::EndChild();
+      }
+
+      // Nodes in scene
+      {
+         ImGui::BeginChild("Nodes", ImVec2(0, 0), true);
+         ImGui::Text("Nodes");
+         for (const auto& node : _scene->GetNodes())
+         {
+            ImGui::Text(node->GetName().c_str());
+         }
+         ImGui::EndChild();
+      }
+      ImGui::End();
+   }
 
    // Editor settings
    {
-      ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
-      ImGui::SetNextWindowSize(ImVec2(200, ImGui::GetIO().DisplaySize.y), ImGuiCond_FirstUseEver);
+      ImGui::SetNextWindowPos(ImVec2(0, windowHeight / 2));
+      ImGui::SetNextWindowSize(ImVec2(200, windowHeight / 2), ImGuiCond_FirstUseEver);
+
       ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
       ImGui::Text("Editor Settings");

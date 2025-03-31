@@ -109,25 +109,6 @@ Device::Device()
          throw std::runtime_error("Failed to create WebGPU device");
       }
    }
-
-   // Retrieve the queue from the device.
-   {
-      _queue = wgpuDeviceGetQueue(_device);
-      if (!_queue)
-      {
-         throw std::runtime_error("Failed to obtain WebGPU queue");
-      }
-      WGPUQueueWorkDoneCallbackInfo queueWorkDoneCallbackInfo = {};
-      queueWorkDoneCallbackInfo.callback = [](WGPUQueueWorkDoneStatus status, void* userdata1, void*)
-      {
-         if (status != WGPUQueueWorkDoneStatus_Success)
-         {
-            std::cerr << "Queue work done failed\n";
-            __debugbreak();
-         }
-      };
-      wgpuQueueOnSubmittedWorkDone(_queue, queueWorkDoneCallbackInfo);
-   }
 }
 
 Device::~Device()

@@ -90,7 +90,7 @@ bool Renderer::Initialize()
 
    // Set up renderers.
    _gridRenderer = new GridRenderer(_window, &_device);
-   _cloudRenderer = new CloudRenderer(&_device);
+   _cloudRenderer = new CloudRenderer(&_device, &_queue);
 
    return true;
 }

@@ -11,6 +11,8 @@ private:
 
    FreeCamera* _camera;
 
+   Scene* _scene;
+
 public:
    Editor();
    ~Editor() override;
@@ -21,6 +23,11 @@ public:
    FreeCamera& GetCamera() const
    {
       return *_camera;
+   }
+
+   Scene* GetScene() const
+   {
+      return _scene;
    }
 
    bool GetRenderGrid() const
