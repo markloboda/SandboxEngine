@@ -25,14 +25,16 @@ public:
    void Configure(Device* device, WGPUTextureFormat renderTargetFormat);
    void Shutdown();
 
-   void NewFrame();
-   void EndFrame(RenderPassEncoder* encoder);
-
-   void RenderUI();
+   void Render(CommandEncoder* encoder, TextureView* surfaceTextureView);
 
    void AddUIRenderer(UIRenderer* uiRenderer);
    bool RemoveUIRenderer(UIRenderer* uiRenderer);
 
 private:
    void SetupStyle();
+
+   void NewFrame();
+   void EndFrame(RenderPassEncoder* encoder);
+   void RenderUI();
 };
+

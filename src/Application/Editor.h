@@ -7,6 +7,7 @@ class Editor : public UIRenderer
 {
 private:
    bool _showGrid = true;
+   bool _renderClouds = true;
 
    FreeCamera* _camera;
 
@@ -25,5 +26,10 @@ public:
    bool GetRenderGrid() const
    {
       return _showGrid;
+   }
+
+   bool GetRenderClouds() const
+   {
+      return _renderClouds;
    }
 };

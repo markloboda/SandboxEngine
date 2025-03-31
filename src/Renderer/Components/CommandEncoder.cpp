@@ -17,7 +17,7 @@ CommandEncoder::~CommandEncoder()
    }
 }
 
-WGPUCommandBuffer CommandEncoder::Finish()
+CommandBuffer* CommandEncoder::Finish()
 {
-   return wgpuCommandEncoderFinish(_encoder, nullptr);
+   return new CommandBuffer(wgpuCommandEncoderFinish(_encoder, nullptr));
 }

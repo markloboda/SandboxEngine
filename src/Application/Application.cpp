@@ -57,13 +57,14 @@ void Application::Run()
       const float dt = static_cast<float>(currentTime - lastTime);
       lastTime = currentTime;
 
+      glfwPollEvents();
+
       // Update.
       _editor->Update(dt);
 
       // Render.
       _renderer->Render();
 
-      glfwPollEvents();
    }
 }
 

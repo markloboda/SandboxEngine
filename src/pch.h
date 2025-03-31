@@ -31,6 +31,7 @@ using namespace glm;
 #include <Renderer/Components/Queue.h>
 #include <Renderer/Components/RenderPassEncoder.h>
 #include <Renderer/Components/RenderPipeline.h>
+#include <Renderer/Components/Sampler.h>
 #include <Renderer/Components/ShaderModule.h>
 #include <Renderer/Components/Surface.h>
 #include <Renderer/Components/Queue.h>

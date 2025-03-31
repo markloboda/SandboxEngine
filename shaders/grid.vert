@@ -3,36 +3,40 @@
 layout(location = 0) in float vertex_pos;
 
 layout(std140, binding = 0) uniform GridUniforms {
-    mat4 view;
-    mat4 proj;
-    float gridSize;
-    float gridSpacing;
-    uint numHorizontal;
-    uint numVertical;
+   mat4 view;
+   mat4 proj;
+   float gridSpacing;
+   uint numHorizontal;
+   uint numVertical;
 };
 
 void main() {
-    uint instance_id = gl_InstanceIndex;
-    float x, y, z;
+   uint instance_id = gl_InstanceIndex;
+   float x, y, z;
 
-    vec3 camera_pos = vec3(inverse(view)[3]);
+   vec3 cameraPos = vec3(inverse(view)[3]);
 
-    // Snap camera position to the nearest grid line
-    float snapped_x = round(camera_pos.x / gridSpacing) * gridSpacing;
-    float snapped_z = round(camera_pos.z / gridSpacing) * gridSpacing;
+   float dynamicGridSpacing = floor((abs(cameraPos.y) + 10.0) / 10.0) * gridSpacing;
 
-    if (instance_id < numHorizontal) {
-        // Horizontal line
-        z = (instance_id * gridSpacing) - gridSize / 2 + snapped_z;
-        x = vertex_pos * 2.0 * gridSize - gridSize / 2 + snapped_x;
-        y = 0.0;
-    } else {
-        // Vertical line
-        uint vertical_id = instance_id - numHorizontal;
-        x = (vertical_id * gridSpacing) - gridSize / 2 + snapped_x;
-        z = vertex_pos * 2.0 * gridSize - gridSize / 2 + snapped_z;
-        y = 0.0;
-    }
+   float snappedX = round(cameraPos.x / dynamicGridSpacing);
+   float snappedZ = round(cameraPos.z / dynamicGridSpacing);
 
-    gl_Position = proj * view * vec4(x, y, z, 1.0);
+   float gridSizeX = dynamicGridSpacing * float(numVertical);
+   float gridSizeZ = dynamicGridSpacing * float(numHorizontal);
+
+   if (instance_id < numHorizontal) {
+      // Horizontal grid lines
+      int zIndex = int(instance_id - (numHorizontal / 2));
+      x = (vertex_pos * gridSizeX) + snappedX;
+      y = 0.0;
+      z = ((zIndex + 0.5) * dynamicGridSpacing) + snappedZ;
+   } else {
+      // Vertical grid lines
+      int xIndex = int((instance_id - numHorizontal) - (numVertical / 2));
+      x = ((xIndex + 0.5) * dynamicGridSpacing) + snappedX;
+      y = 0.0;
+      z = (vertex_pos * gridSizeZ) + snappedZ;
+   }
+
+   gl_Position = proj * view * vec4(x, y, z, 1.0);
 }

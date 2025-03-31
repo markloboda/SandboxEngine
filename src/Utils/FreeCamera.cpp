@@ -49,7 +49,7 @@ mat4 FreeCamera::GetViewProjectionMatrix()
 
 mat4 FreeCamera::GetProjectionMatrix()
 {
-   return perspective(radians(_zoom), 16.0f / 9.0f, 0.1f, 100.0f);
+   return perspective(radians(_zoom), 16.0f / 9.0f, 0.1f, 100000.0f);
 }
 
 mat4 FreeCamera::GetViewMatrix()
@@ -62,7 +62,7 @@ void FreeCamera::Update(float dt)
    if (Input::IsKeyPressed(Input::MOUSE_BUTTON_RIGHT))
    {
       // Mouse wheel speed increase
-      _speed = clamp(mouseWheel_ > 0 ? _speed + 0.01f : _speed - 0.01f, 0.5f, 100.0f);
+      _speed = clamp(mouseWheel_ > 0 ? _speed + 0.01f : _speed - 0.01f, 0.5f, 10.0f);
 
       float speed = _speed;
       if (Input::IsKeyPressed(Input::KEY_LEFT_SHIFT))

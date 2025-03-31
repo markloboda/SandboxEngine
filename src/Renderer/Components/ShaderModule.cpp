@@ -11,7 +11,10 @@ ShaderModule::ShaderModule(WGPUShaderModule shaderModule)
 
 ShaderModule::~ShaderModule()
 {
-   wgpuShaderModuleRelease(_shaderModule);
+   if (_shaderModule)
+   {
+      wgpuShaderModuleRelease(_shaderModule);
+   }
 }
 
 

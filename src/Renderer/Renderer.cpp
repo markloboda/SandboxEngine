@@ -3,7 +3,9 @@
 #include <Application/Application.h>
 #include <Application/Editor.h>
 #include <Renderer/UI/ImGuiManager.h>
+
 #include <Renderer/GridRenderer.h>
+#include <Renderer/Clouds/CloudRenderer.h>
 
 WGPULogCallback logCallback = [](WGPULogLevel level, WGPUStringView message, void*)
 {
@@ -86,8 +88,9 @@ bool Renderer::Initialize()
    ImGuiManager::CreateInstance(_window);
    ImGuiManager::GetInstance().Configure(&_device, _surface.GetFormat());
 
-   // Set up grid renderer.
+   // Set up renderers.
    _gridRenderer = new GridRenderer(_window, &_device);
+   _cloudRenderer = new CloudRenderer(&_device);
 
    return true;
 }
@@ -107,38 +110,30 @@ void Renderer::Render()
    CommandEncoder encoder = CommandEncoder(&_device, nullptr);
 
    // Render pass.
-   WGPUSurfaceTexture surfaceTexture = _surface.GetSurfaceTexture();
+   WGPUSurfaceTexture surfaceTexture = _surface.GetNextSurfaceTexture();
    TextureView textureView = TextureView(surfaceTexture.texture, nullptr);
 
-   WGPURenderPassColorAttachment renderPassColorAttachment = {};
-   renderPassColorAttachment.view = textureView.Get();
-   renderPassColorAttachment.loadOp = WGPULoadOp_Clear;
-   renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
-   renderPassColorAttachment.clearValue = { 0.1f, 0.1f, 0.1f, 1.0f };
-
-   WGPURenderPassDescriptor renderPassDesc = {};
-   renderPassDesc.nextInChain = nullptr;
-   renderPassDesc.colorAttachmentCount = 1;
-   renderPassDesc.colorAttachments = &renderPassColorAttachment;
-
-   RenderPassEncoder renderPassEncoder = RenderPassEncoder(&encoder, &renderPassDesc);
-
-   // Grid renderer.
-   bool renderGrid = Application::GetInstance().GetEditor()->GetRenderGrid();
-   if (renderGrid)
+   // Renderers
    {
-      _gridRenderer->Render(&renderPassEncoder);
+      ClearRenderPass(&encoder, &textureView);
+
+      bool renderGrid = Application::GetInstance().GetEditor()->GetRenderGrid();
+      if (renderGrid)
+      {
+         _gridRenderer->Render(&encoder, &textureView);
+      }
+
+      bool renderClouds = Application::GetInstance().GetEditor()->GetRenderClouds();
+      if (renderClouds)
+      {
+         _cloudRenderer->Render(&encoder, &textureView);
+      }
+
+      // ImGui.
+      ImGuiManager::GetInstance().Render(&encoder, &textureView);
    }
 
-   // ImGui.
-   ImGuiManager::GetInstance().NewFrame();
-   ImGuiManager::GetInstance().RenderUI();
-   ImGuiManager::GetInstance().EndFrame(&renderPassEncoder);
-
-
-   // End render pass.
-   renderPassEncoder.EndPass();
-   CommandBuffer cmdBuffer = CommandBuffer(encoder.Finish());
+   CommandBuffer cmdBuffer = *encoder.Finish();
    _queue.Submit(1, &cmdBuffer);
    _surface.Present();
    _device.Poll();
@@ -154,4 +149,19 @@ bool Renderer::ShouldClose() const
 void Renderer::OnWindowResize(int width, int height)
 {
    _surface.Resize(width, height);
+}
+
+void Renderer::ClearRenderPass(CommandEncoder* encoder, TextureView* surfaceTextureView)
+{
+   WGPURenderPassColorAttachment renderPassColorAttachment = {};
+   renderPassColorAttachment.view = surfaceTextureView->Get();
+   renderPassColorAttachment.loadOp = WGPULoadOp_Clear;
+   renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
+   renderPassColorAttachment.clearValue = { 0.1f, 0.1f, 0.1f, 1.0f };
+   WGPURenderPassDescriptor renderPassDesc = {};
+   renderPassDesc.nextInChain = nullptr;
+   renderPassDesc.colorAttachmentCount = 1;
+   renderPassDesc.colorAttachments = &renderPassColorAttachment;
+   RenderPassEncoder clearPass = RenderPassEncoder(encoder, &renderPassDesc);
+   clearPass.EndPass();
 }

@@ -30,12 +30,16 @@ void Editor::RenderImGuiUI()
    // Editor settings
    {
       ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
-      ImGui::SetNextWindowSize(ImVec2(200, 0), ImGuiCond_FirstUseEver);
-      ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+      ImGui::SetNextWindowSize(ImVec2(200, ImGui::GetIO().DisplaySize.y), ImGuiCond_FirstUseEver);
+      ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
       ImGui::Text("Editor Settings");
+
       ImGui::Separator();
       ImGui::Checkbox("Show Grid", &_showGrid);
+
+      ImGui::Separator();
+      ImGui::Checkbox("Render Clouds", &_renderClouds);
 
       ImGui::End();
    }

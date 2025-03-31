@@ -16,5 +16,5 @@ public:
 
    WGPUCommandEncoder Get() const { return _encoder; }
 
-   WGPUCommandBuffer Finish();
+   CommandBuffer* Finish();
 };

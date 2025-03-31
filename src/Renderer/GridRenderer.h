@@ -4,7 +4,6 @@ struct GridUniforms
 {
    alignas(16) mat4x4 view;
    alignas(16) mat4x4 proj;
-   float gridSize;
    float gridSpacing;
    uint32_t numHorizontal;
    uint32_t numVertical;
@@ -23,21 +22,24 @@ private:
 
    RenderPipeline* _renderPipeline;
 
-   ShaderModule _vertexShader;
-   ShaderModule _fragmentShader;
-
    GridUniforms _uniformsData;
 
    BindGroup* _uniformsBindGroup;
+
+   GridUniforms _uniforms = {
+      .gridSpacing = 1.0f,
+      .numHorizontal = 500,
+      .numVertical = 500
+   };
 
 public:
    GridRenderer(GLFWwindow* window, Device* device);
    ~GridRenderer();
 
 private:
-   bool Initialize(Device* device);
+   bool Initialize();
    void Terminate();
 
 public:
-   void Render(RenderPassEncoder* renderPassEncoder);
+   void Render(CommandEncoder* encoder, TextureView* surfaceTextureView);
 };

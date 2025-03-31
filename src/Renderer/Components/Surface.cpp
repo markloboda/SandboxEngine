@@ -41,7 +41,7 @@ void Surface::UnConfigureSurface()
    wgpuSurfaceUnconfigure(_surface);
 }
 
-WGPUSurfaceTexture Surface::GetSurfaceTexture() const
+WGPUSurfaceTexture Surface::GetNextSurfaceTexture() const
 {
    WGPUSurfaceTexture surfaceTexture;
    wgpuSurfaceGetCurrentTexture(_surface, &surfaceTexture);
@@ -62,4 +62,3 @@ void Surface::Present() const
 {
    wgpuSurfacePresent(_surface);
 }
-

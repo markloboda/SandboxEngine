@@ -42,6 +42,7 @@ set(SOURCE_FILES
    ${SRC_ROOT}/Renderer/Components/Queue.cpp
    ${SRC_ROOT}/Renderer/Components/RenderPassEncoder.cpp
    ${SRC_ROOT}/Renderer/Components/RenderPipeline.cpp
+   ${SRC_ROOT}/Renderer/Components/Sampler.cpp
    ${SRC_ROOT}/Renderer/Components/ShaderModule.cpp
    ${SRC_ROOT}/Renderer/Components/Surface.cpp
    ${SRC_ROOT}/Renderer/Components/Texture.cpp
@@ -77,7 +78,7 @@ endif()
 # Compile shader files
 function(compile_shader SHADER_PATH)
     get_filename_component(SHADER_NAME ${SHADER_PATH} NAME)
-    set(SPIRV_OUTPUT "${BIN_ROOT}/shaders/${SHADER_NAME}.spv")
+    set(SPIRV_OUTPUT "${BIN_ROOT}/shaders/${SHADER_NAME}")
     
     # Create output directory
     file(MAKE_DIRECTORY "${BIN_ROOT}/shaders")

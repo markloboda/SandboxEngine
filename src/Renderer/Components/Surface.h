@@ -21,6 +21,6 @@ public:
    void ConfigureSurface(WGPUSurfaceConfiguration config);
    void UnConfigureSurface();
 
-   WGPUSurfaceTexture GetSurfaceTexture() const;
+   WGPUSurfaceTexture GetNextSurfaceTexture() const;
    void Present() const;
 };

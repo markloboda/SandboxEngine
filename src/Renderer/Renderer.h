@@ -1,5 +1,6 @@
 #pragma once
 
+class CloudRenderer;
 class GridRenderer;
 struct GLFWwindow;
 
@@ -12,10 +13,15 @@ private:
    Queue _queue;
 
    GridRenderer* _gridRenderer;
+   CloudRenderer* _cloudRenderer;
 
 public:
    Renderer(GLFWwindow* window);
    ~Renderer();
+
+private:
+   bool Initialize();
+   void Terminate();
 
 public:
    void Render();
@@ -24,6 +30,5 @@ public:
    void OnWindowResize(int width, int height);
 
 private:
-   bool Initialize();
-   void Terminate();
+   void ClearRenderPass(CommandEncoder* encoder, TextureView* surfaceTextureView);
 };

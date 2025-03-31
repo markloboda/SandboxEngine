@@ -14,8 +14,8 @@ public:
    }
 
 private:
-   int _windowWidth = 1280;
-   int _windowHeight = 720;
+   int _windowWidth = 1920;
+   int _windowHeight = 1060;
 
    GLFWwindow* _window = nullptr;
    Renderer* _renderer = nullptr;

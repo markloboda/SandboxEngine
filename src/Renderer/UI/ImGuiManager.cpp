@@ -69,6 +69,26 @@ void ImGuiManager::Shutdown()
    ImGui_ImplWGPU_Shutdown();
 }
 
+void ImGuiManager::Render(CommandEncoder* encoder, TextureView* surfaceTextureView)
+{
+   // Render pass
+   WGPURenderPassDescriptor renderPassDesc = {};
+   renderPassDesc.colorAttachmentCount = 1;
+   WGPURenderPassColorAttachment renderPassColorAttachment = {};
+   renderPassColorAttachment.view = surfaceTextureView->Get();
+   renderPassColorAttachment.loadOp = WGPULoadOp_Load;
+   renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
+   renderPassDesc.colorAttachments = &renderPassColorAttachment;
+   RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder, &renderPassDesc);
+
+   GetInstance().NewFrame();
+   GetInstance().RenderUI();
+   GetInstance().EndFrame(&renderPassEncoder);
+
+   renderPassEncoder.EndPass();
+}
+
+
 void ImGuiManager::SetupStyle()
 {
    ImGuiStyle& style = ImGui::GetStyle();
