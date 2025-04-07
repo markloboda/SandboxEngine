@@ -162,6 +162,6 @@ void Renderer::ClearRenderPass(CommandEncoder* encoder, TextureView* surfaceText
    renderPassDesc.nextInChain = nullptr;
    renderPassDesc.colorAttachmentCount = 1;
    renderPassDesc.colorAttachments = &renderPassColorAttachment;
-   RenderPassEncoder clearPass = RenderPassEncoder(encoder, &renderPassDesc);
+   RenderPassEncoder clearPass = *encoder->BeginRenderPass(&renderPassDesc);
    clearPass.EndPass();
 }

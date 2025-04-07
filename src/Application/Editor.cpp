@@ -4,7 +4,6 @@
 #include <Application/Application.h>
 #include <Renderer/UI/ImGuiManager.h>
 #include <Utils/FreeCamera.h>
-#include <Renderer/Clouds/CloudBounds.h>
 
 Editor::Editor()
 {
@@ -44,14 +43,7 @@ void Editor::RenderImGuiUI()
       // Create nodes
       {
          ImGui::BeginChild("Create", ImVec2(0, 100), true);
-         ImGui::Text("Create");
-         if (ImGui::Button("Add Node Cloud Bounds"))
-         {
-            // Add CloudBounds node
-            CloudBounds* cloudBounds = new CloudBounds();
-            cloudBounds->SetName("CloudBounds");
-            _scene->AddNode(std::unique_ptr<Node>(cloudBounds));
-         }
+
          ImGui::EndChild();
       }
 

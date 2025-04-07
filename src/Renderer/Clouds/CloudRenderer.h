@@ -1,5 +1,7 @@
 #pragma once
 
+class CloudsModel;
+
 class CloudRenderer
 {
 private:
@@ -7,7 +9,12 @@ private:
    {
       mat4x4 view;
       mat4x4 proj;
-      vec3 cameraPos;
+      vec3 pos;
+   };
+
+   struct ResolutionData
+   {
+      vec2 xy;
    };
 
 private:
@@ -19,9 +26,12 @@ private:
    Texture* _cloudTexture;
    TextureView* _cloudTextureView;
    Buffer* _uCameraData;
+   Buffer* _uResolution;
    Sampler* _uCloudSampler;
 
    CameraData _shaderParams;
+
+   CloudsModel* _cloudsModel;
 
 public:
    CloudRenderer(Device* device, Queue* queue);

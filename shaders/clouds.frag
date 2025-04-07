@@ -1,68 +1,118 @@
 #version 450
 
+// inputs
 layout(set = 0, binding = 0) uniform texture3D cloudTexture;
+
 layout(set = 0, binding = 1) uniform sampler cloudSampler;
+
 layout(set = 0, binding = 2) uniform CameraData {
-    mat4 view;
-    mat4 proj;
-    vec3 cameraPos;
-} camera;
+   mat4 view;
+   mat4 proj;
+   vec3 pos;
+} uCamera;
+
+layout(set = 0, binding = 3) uniform ResolutionData {
+   vec2 xy;
+} uResolution;
 
 layout(location = 0) in vec2 uv;
+
+
+// outputs
 layout(location = 0) out vec4 fragColor;
 
-#define MAX_STEPS 64
-#define STEP_SIZE 1.0
-#define CLOUD_DENSITY_SCALE 3.0
 
-// Generate a world-space ray from UV coordinates
+// define settings
+#define CLOUD_START_HEIGHT 500.0
+#define CLOUD_END_HEIGHT 1500.0
+#define DENSITY_MULTIPLIER 0.15
+
+const vec3 LIGHT_DIR = normalize(vec3(0.8, -0.6, 0.2));
+
+// helper functions
 vec3 getRayDirection(vec2 uv) {
     vec4 ndc = vec4(uv * 2.0 - 1.0, 1.0, 1.0);
-    vec4 worldPos = inverse(camera.proj) * ndc;
+    vec4 worldPos = inverse(uCamera.proj) * ndc;
     worldPos /= worldPos.w;
-    vec3 rayDir = normalize((inverse(camera.view) * vec4(worldPos.xyz, 0.0)).xyz);
+    vec3 rayDir = normalize((inverse(uCamera.view) * vec4(worldPos.xyz, 0.0)).xyz);
     return rayDir;
 }
 
-// Sample the 3D cloud density texture
-float sampleCloudDensity(vec3 pos) {
-    vec3 cloudUV = pos * 0.005; // Scale world position to texture UV space
-    return texture(sampler3D(cloudTexture, cloudSampler), cloudUV).r * CLOUD_DENSITY_SCALE;
+float getCloudEntryDistance(vec3 rayOrigin, vec3 rayDir) {
+   // Ray starts inside the cloud layer
+   if (rayOrigin.y > CLOUD_START_HEIGHT && rayOrigin.y < CLOUD_END_HEIGHT)
+      return 0.0;
+
+   // Ray is parallel to the cloud layer (no intersection)
+   if (abs(rayDir.y) < 1e-5)
+      return -1.0;
+
+   float t = 0.0;
+   if (rayOrigin.y < CLOUD_START_HEIGHT) {
+      // Ray starts below the cloud layer
+      t = (CLOUD_START_HEIGHT - rayOrigin.y) / rayDir.y;
+      
+   } else if (rayOrigin.y > CLOUD_END_HEIGHT) {
+      // Ray starts above the cloud layer
+      t = (CLOUD_END_HEIGHT - rayOrigin.y) / rayDir.y;
+   }
+
+   // We only care about intersections in front of the camera
+   return (t > 0.0) ? t : -1.0;
 }
 
-// Raymarching algorithm for volumetric clouds
-float raymarchClouds(vec3 rayOrigin, vec3 rayDir) {
-    float transmittance = 1.0; // Start fully transparent
-    float totalDensity = 0.0;
-    
-    for (int i = 0; i < MAX_STEPS; i++) {
-        vec3 samplePos = rayOrigin + rayDir * (STEP_SIZE * i);
-        
-        float density = sampleCloudDensity(samplePos);
-        totalDensity += density * STEP_SIZE;
+float getCloudDensity(vec3 pos) {
+   if (pos.y < CLOUD_START_HEIGHT || pos.y > CLOUD_END_HEIGHT)
+      return 0.0;
 
-        // Exponential absorption (Beer’s law)
-        transmittance *= exp(-density * 0.1);
-        if (transmittance < 0.01) break; // Early exit if fully opaque
+   float noiseScalingFactor = 0.000005;
+   vec3 noiseCoord = fract(pos * noiseScalingFactor);
+   float noise = texture(sampler3D(cloudTexture, cloudSampler), noiseCoord).r;
+   float density = (noise - 0.5) * DENSITY_MULTIPLIER;
+   density = clamp(density, 0.0, 1.0);
+   return density;
+}
+
+float raymarchToLight(vec3 pos) {
+    float shadow = 1.0;
+    for(int s = 0; s < 8; s++) {
+        pos += LIGHT_DIR * 2.0;
+        shadow -= getCloudDensity(pos) * 0.2;
     }
-    
-    return clamp(totalDensity, 0.0, 1.0);
-}
-
-// Simple lighting model for clouds
-float computeLighting(vec3 pos, vec3 lightDir) {
-    float lightIntensity = 0.5 + 0.5 * dot(normalize(pos), lightDir); // Fake scattering
-    return lightIntensity;
+    return clamp(shadow, 0.3, 1.0);
 }
 
 void main() {
-    vec3 rayDir = getRayDirection(uv);
-    float cloudDensity = raymarchClouds(camera.cameraPos, rayDir);
-    
-    vec3 lightDir = normalize(vec3(1.0, 1.0, 0.5)); // Example sun direction
-    float lighting = computeLighting(rayDir, lightDir);
+   vec3 rayOrigin = uCamera.pos;
+   vec3 rayDir = getRayDirection(uv);
+   
+   float t = min(getCloudEntryDistance(rayOrigin, rayDir), 10000); // total distance traveled
+   
+   float stepSize = 0.7;
+   int stepCount = 1024;
 
-    vec3 cloudColor = mix(vec3(0.5, 0.6, 0.7), vec3(1.0), lighting) * cloudDensity;
+   float accDensity = 0.0;
+   if (t >= 0.0) {
+      for (int i = 0; i < stepCount; i++) {
+         vec3 rayPos = rayOrigin + rayDir * t;
 
-    fragColor = vec4(cloudColor, cloudDensity);
+         float densitySample = getCloudDensity(rayPos) * stepSize;
+         accDensity += densitySample;
+         if (accDensity > 1.0) {
+            accDensity = 1.0;
+            break;
+         }
+
+         // Adjust stepSize based on density
+         if (densitySample > 0.1) {
+            stepSize = 0.5;
+         } else {
+            stepSize *= 1.01;
+         }
+
+         t += stepSize;
+      }
+   }
+
+   fragColor = vec4(vec3(1), accDensity);
 }

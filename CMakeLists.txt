@@ -21,6 +21,7 @@ set(LIBS_ROOT ${REPO_ROOT}/libs)
 set(BIN_ROOT ${CMAKE_BINARY_DIR})
 
 # Dependencies
+add_subdirectory(${LIBS_ROOT}/fbm)
 add_subdirectory(${LIBS_ROOT}/glfw)
 add_subdirectory(${LIBS_ROOT}/glm)
 add_subdirectory(${LIBS_ROOT}/webgpu)
@@ -33,16 +34,14 @@ set(SOURCE_FILES
    ${SRC_ROOT}/Application/Editor.cpp
    ${SRC_ROOT}/Application/Input.cpp
 
-   ${SRC_ROOT}/Core/Core.h
-   ${SRC_ROOT}/Core/Node.h
-   ${SRC_ROOT}/Core/Scene.h
-
-   ${SRC_ROOT}/Renderer/Clouds/CloudBounds.cpp
+   ${SRC_ROOT}/Renderer/Clouds/CloudModel.cpp
    ${SRC_ROOT}/Renderer/Clouds/CloudRenderer.cpp
    ${SRC_ROOT}/Renderer/Components/BindGroup.cpp
    ${SRC_ROOT}/Renderer/Components/Buffer.cpp
    ${SRC_ROOT}/Renderer/Components/CommandBuffer.cpp
    ${SRC_ROOT}/Renderer/Components/CommandEncoder.cpp
+   ${SRC_ROOT}/Renderer/Components/ComputePassEncoder.cpp
+   ${SRC_ROOT}/Renderer/Components/ComputePipeline.cpp
    ${SRC_ROOT}/Renderer/Components/Device.cpp
    ${SRC_ROOT}/Renderer/Components/Queue.cpp
    ${SRC_ROOT}/Renderer/Components/RenderPassEncoder.cpp
@@ -129,7 +128,7 @@ add_executable(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_ROOT})
-target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu imgui)
+target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu imgui fbm)
 
 # Enable precompiled headers
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${SRC_ROOT}/pch.h)

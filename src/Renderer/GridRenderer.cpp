@@ -26,8 +26,10 @@ bool GridRenderer::Initialize()
    // Buffers
    {
       float vertexData[] = { -0.5, 0.5f };
-      _vertexBuffer = new Buffer(_device, WGPUBufferUsage_Vertex, sizeof(vertexData), vertexData);
-      _uniformBuffer = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(GridUniforms), &_uniformsData);
+      _vertexBuffer = new Buffer(_device, WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst, sizeof(vertexData));
+      _vertexBuffer->UploadData(_device, vertexData, sizeof(vertexData));
+      _uniformBuffer = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(GridUniforms));
+      _uniformBuffer->UploadData(_device, &_uniforms, sizeof(GridUniforms));
    }
 
    // Bind groups
@@ -126,7 +128,7 @@ void GridRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureVi
    ca.loadOp = WGPULoadOp_Load;
    ca.storeOp = WGPUStoreOp_Store;
    rpDesc.colorAttachments = &ca;
-   RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder, &rpDesc);
+   RenderPassEncoder renderPassEncoder = *encoder->BeginRenderPass(&rpDesc);
 
    FreeCamera& camera = Application::GetInstance().GetEditor()->GetCamera();
 

@@ -1,21 +1,16 @@
 #include <pch.h>
 
-Buffer::Buffer(Device* device, WGPUBufferUsage usage, size_t size, const void* data) :
+Buffer::Buffer(Device* device, WGPUBufferUsage usage, size_t size) :
    _size(size)
 {
    WGPUBufferDescriptor bufferDesc = {};
    bufferDesc.size = _size;
-   bufferDesc.usage = usage | WGPUBufferUsage_CopyDst; // Ensure it's writable
+   bufferDesc.usage = usage; // Ensure it's writable
    bufferDesc.mappedAtCreation = false;
    _buffer = wgpuDeviceCreateBuffer(device->Get(), &bufferDesc);
    if (!_buffer)
    {
       throw std::runtime_error("Failed to create WebGPU buffer");
-   }
-
-   if (data)
-   {
-      UploadData(device, data, _size);
    }
 }
 

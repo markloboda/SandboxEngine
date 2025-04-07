@@ -14,7 +14,7 @@ Texture::~Texture()
    wgpuTextureRelease(_texture);
 }
 
-void Texture::UploadData(WGPUQueue queue, const void* data, size_t dataSize, const WGPUExtent3D* writeSize, int bytesPerRow)
+void Texture::UploadData(Queue* queue, const void* data, size_t dataSize, const WGPUExtent3D* writeSize)
 {
    WGPUTexelCopyTextureInfo destination = {};
    destination.texture = _texture;
@@ -22,7 +22,7 @@ void Texture::UploadData(WGPUQueue queue, const void* data, size_t dataSize, con
    destination.origin = { 0, 0, 0 };
    WGPUTexelCopyBufferLayout bufferLayout = {};
    bufferLayout.offset = 0;
-   bufferLayout.bytesPerRow = bytesPerRow * writeSize->width;
+   bufferLayout.bytesPerRow = dataSize / static_cast<size_t>(writeSize->height * writeSize->depthOrArrayLayers);
    bufferLayout.rowsPerImage = writeSize->height;
-   wgpuQueueWriteTexture(queue, &destination, data, dataSize, &bufferLayout, writeSize);
+   wgpuQueueWriteTexture(queue->Get(), &destination, data, dataSize, &bufferLayout, writeSize);
 }

@@ -29,6 +29,8 @@ using namespace glm;
 #include <Renderer/Components/Buffer.h>
 #include <Renderer/Components/CommandBuffer.h>
 #include <Renderer/Components/CommandEncoder.h>
+#include <Renderer/Components/ComputePassEncoder.h>
+#include <Renderer/Components/ComputePipeline.h>
 #include <Renderer/Components/Device.h>
 #include <Renderer/Components/Queue.h>
 #include <Renderer/Components/RenderPassEncoder.h>

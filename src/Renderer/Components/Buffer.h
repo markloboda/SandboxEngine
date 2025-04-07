@@ -9,7 +9,7 @@ private:
    size_t _size;
 
 public:
-   Buffer(Device* device, WGPUBufferUsage usage, size_t size, const void* data);
+   Buffer(Device* device, WGPUBufferUsage usage, size_t size);
    ~Buffer();
 
    WGPUBuffer Get() const { return _buffer; }
