@@ -39,16 +39,18 @@ void Editor::RenderImGuiUI()
    int windowWidth = Application::GetInstance().GetWindowWidth();
    int windowHeight = Application::GetInstance().GetWindowHeight();
 
+   Renderer* renderer = Application::GetInstance().GetRenderer();
+
    // Clouds
    {
       ImGui::Begin("Clouds", nullptr);
       {
-         CloudRenderer::CloudRenderSettings* settings = &Application::GetInstance().GetRenderer()->GetCloudRenderer()->Settings;
+         CloudRenderer::CloudRenderSettings* settings = &renderer->GetCloudRenderer()->Settings;
 
          ImGui::InputFloat("Start Height", &settings->cloudStartHeight);
          ImGui::InputFloat("End Height", &settings->cloudEndHeight);
-         ImGui::InputFloat("Cloud Scale", &settings->cloudScale);
-         ImGui::InputFloat("Density Multiplier", &settings->densityMultiplier);
+         ImGui::SliderFloat("Density Multiplier", &settings->densityMultiplier, 0.01f, 5.0f);
+         ImGui::SliderFloat("Density Threshold", &settings->densityThreshold, 0.01f, 1.0f);
       }
       ImGui::End();
    }
@@ -73,10 +75,20 @@ void Editor::RenderImGuiUI()
 
    // Stats
    {
+      Renderer::RenderStats stats = renderer->GetRenderStats();
+
       ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 200, 0), ImGuiCond_Always);
       ImGui::SetNextWindowSize(ImVec2(200, 0), ImGuiCond_Always);
       ImGui::Begin("Stats", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
       ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+
+      ImGui::BeginChild("Stats", ImVec2(200, 100));
+      ImGui::Text("Render Stats:");
+      ImGui::Text("Grid: %.1f ms", stats.gridTime);
+      ImGui::Text("Cloud: %.1f ms", stats.cloudTime);
+      ImGui::Text("UI: %.1f ms", stats.uiTime);
+      ImGui::EndChild();
+
       ImGui::End();
    }
 }

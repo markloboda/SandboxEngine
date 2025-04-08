@@ -113,24 +113,34 @@ void Renderer::Render()
    WGPUSurfaceTexture surfaceTexture = _surface.GetNextSurfaceTexture();
    TextureView textureView = TextureView(surfaceTexture.texture, nullptr);
 
+   std::chrono::high_resolution_clock::time_point start, end;
    // Renderers
    {
       ClearRenderPass(&encoder, &textureView);
 
+      start = std::chrono::high_resolution_clock::now();
       bool renderGrid = Application::GetInstance().GetEditor()->GetRenderGrid();
       if (renderGrid)
       {
          _gridRenderer->Render(&encoder, &textureView);
       }
+      end = std::chrono::high_resolution_clock::now();
+      _stats.gridTime = std::chrono::duration<float, std::milli>(end - start).count();
 
+      start = std::chrono::high_resolution_clock::now();
       bool renderClouds = Application::GetInstance().GetEditor()->GetRenderClouds();
       if (renderClouds)
       {
          _cloudRenderer->Render(&encoder, &textureView);
       }
+      end = std::chrono::high_resolution_clock::now();
+      _stats.cloudTime = std::chrono::duration<float, std::milli>(end - start).count();
 
       // ImGui.
+      start = std::chrono::high_resolution_clock::now();
       ImGuiManager::GetInstance().Render(&encoder, &textureView);
+      end = std::chrono::high_resolution_clock::now();
+      _stats.uiTime = std::chrono::duration<float, std::milli>(end - start).count();
    }
 
    CommandBuffer cmdBuffer = *encoder.Finish();

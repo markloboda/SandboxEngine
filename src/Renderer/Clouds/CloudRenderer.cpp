@@ -29,7 +29,7 @@ bool CloudRenderer::Initialize()
    // Uniform buffer
    _uCameraData = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CameraData));
    _uResolution = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(ResolutionData));
-   _uCloudRenderSettings  = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CloudRenderSettings));
+   _uCloudRenderSettings = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CloudRenderSettings));
 
    // Clouds model
    _cloudsModel = new CloudsModel();

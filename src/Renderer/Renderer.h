@@ -6,6 +6,14 @@ struct GLFWwindow;
 
 class Renderer
 {
+public:
+   struct RenderStats
+   {
+      float gridTime = 0.0f;
+      float cloudTime = 0.0f;
+      float uiTime = 0.0f;
+   };
+
 private:
    GLFWwindow* _window;
    Device _device;
@@ -14,6 +22,8 @@ private:
 
    GridRenderer* _gridRenderer;
    CloudRenderer* _cloudRenderer;
+
+   RenderStats _stats;
 
 public:
    Renderer(GLFWwindow* window);
@@ -29,7 +39,7 @@ public:
 
    void OnWindowResize(int width, int height);
 
-   // Cloud
+   RenderStats GetRenderStats() const { return _stats; }
    CloudRenderer* GetCloudRenderer() const { return _cloudRenderer; }
 
 private:
