@@ -33,7 +33,7 @@ FreeCamera::FreeCamera(vec3 position, vec3 up, float yaw, float pitch)
    _yaw = yaw;
    _pitch = pitch;
    _forward = vec3(0.0f, 0.0f, -1.0f);
-   _speed = 0.05f;
+   _speed = 100.0f;
    _sensitivity = 0.1f;
    _zoom = 45.0f;
    UpdateCameraVectors();
@@ -62,7 +62,7 @@ void FreeCamera::Update(float dt)
    if (Input::IsKeyPressed(Input::MOUSE_BUTTON_RIGHT) || Input::IsKeyPressed(Input::KEY_RIGHT_CONTROL))
    {
       // Mouse wheel speed increase
-      _speed = clamp(mouseWheel_ > 0 ? _speed + 0.01f : _speed - 0.01f, 0.5f, 1000.0f);
+      _speed = clamp(mouseWheel_ > 0 ? _speed * 1.01f : _speed * 0.99f, 0.5f, 1000.0f);
 
       float speed = _speed;
       if (Input::IsKeyPressed(Input::KEY_LEFT_SHIFT))

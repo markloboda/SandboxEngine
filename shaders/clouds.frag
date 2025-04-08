@@ -28,10 +28,16 @@ layout(set = 0, binding = 4) uniform CloudRenderSettings
 layout(location = 0) in vec2 uv;
 
 // outputs
-layout(location = 0) out vec4 fragColor;
+layout(location = 0) out vec4 fragCol;
+
+// constants
+#define EPSILON 1e-5
 
 // define settings
 #define NOISE_SCALING_FACTOR 0.00001
+#define SUN_DIR vec3(0.577, -0.577, 0.577)
+#define CLOUD_MARCH_STEPS_COUNT 64
+#define LIGHT_MARCH_STEPS_COUNT 16
 
 // helper functions
 vec3 getStartRayDirection(vec2 uv)
@@ -45,73 +51,96 @@ vec3 getStartRayDirection(vec2 uv)
 
 float getCloudEntryDistance(vec3 rayOrigin, vec3 rayDir)
 {
-   float t = 0.0;
+   float res = 0.0;
 
-   if (rayOrigin.y > uSettings.cloudStartHeight && rayOrigin.y < uSettings.cloudEndHeight)
-   {
-      // Ray starts inside the cloud layer
-      t = 0.0;
-   }
-   else if (abs(rayDir.y) < 1e-5)
-   {
-      // Ray is parallel to the cloud layer (no intersection)
-      t = -1.0;
-   }
-   else if (rayOrigin.y < uSettings.cloudStartHeight)
+   if (rayOrigin.y < uSettings.cloudStartHeight)
    {
       // Ray starts below the cloud layer
-      t = (uSettings.cloudStartHeight - rayOrigin.y) / rayDir.y;
+      if (rayDir.y < EPSILON)
+      {
+         // no intersection
+         res = -1.0;
+      }
+      else 
+      {
+         res = (uSettings.cloudStartHeight - rayOrigin.y) / rayDir.y;
+      }
    }
    else if (rayOrigin.y > uSettings.cloudEndHeight)
    {
       // Ray starts above the cloud layer
-      t = (uSettings.cloudEndHeight - rayOrigin.y) / rayDir.y;
-   }
-
-   return (t >= 0.0) ? t : -1.0;
-}
-
-float getCloudInsideDistance(vec3 rayOrigin, vec3 rayDir)
-{
-   float t = 0.0;
-
-   if (rayOrigin.y > uSettings.cloudStartHeight && rayOrigin.y < uSettings.cloudEndHeight)
-   {
-      // Ray starts inside the cloud layer
-      if (abs(rayDir.y) < 1e-5)
+      if (rayDir.y > -EPSILON)
       {
-         // Ray is parallel to the cloud layer, default distance
-         t = 1000.0;
+         // no intersection
+         res = -1.0;
       }
       else
       {
-         if (rayDir.y > 0)
-         {
-            // Ray is going up
-            t = (uSettings.cloudEndHeight - rayOrigin.y) / rayDir.y;
-         }
-         else
-         {
-            // Ray is going down
-            t = (uSettings.cloudStartHeight - rayOrigin.y) / rayDir.y;
-         }
+         res = (uSettings.cloudEndHeight - rayOrigin.y) / rayDir.y;
       }
    }
    else
    {
-      // Ray starts outside the cloud layer
-      if (abs(rayDir.y) < 1e-5)
+      // Ray starts inside the cloud layer
+      res = 0.0;
+   }
+
+   return res;
+}
+
+float getCloudInsideDistance(vec3 rayOrigin, vec3 rayDir)
+{
+   float res = 0.0;
+
+   if (rayOrigin.y < uSettings.cloudStartHeight)
+   {
+      // Ray starts below the cloud layer
+      if (rayDir.y < EPSILON)
       {
-         // Ray is parallel to the cloud layer
-         t = -1.0;
+         // No intersection
+         res = -1.0;
       }
       else
       {
-         t = abs(uSettings.cloudEndHeight- uSettings.cloudStartHeight) / rayDir.y;
+         // Ray is going up
+         res = (uSettings.cloudEndHeight - uSettings.cloudStartHeight) / rayDir.y;
+      }
+   }
+   else if (rayOrigin.y > uSettings.cloudEndHeight)
+   {
+      // Ray starts above the cloud layer
+      if (rayDir.y > -EPSILON)
+      {
+         // No intersection
+         res = -1.0;
+      }
+      else
+      {
+         // Ray is going down
+         res = (uSettings.cloudStartHeight - uSettings.cloudEndHeight) / rayDir.y;
+      }
+   }
+   else
+   {
+      // Ray starts inside the cloud layer
+      if (abs(rayDir.y) < EPSILON)
+      {
+         // Ray is parallel to the cloud layer, default distance
+         res = 500.0;
+      }
+      else if (rayDir.y > 0)
+      {
+         // Ray is going up
+         res = (uSettings.cloudEndHeight - rayOrigin.y) / rayDir.y;
+      }
+      else
+      {
+         // Ray is going down
+         res = (uSettings.cloudStartHeight - rayOrigin.y) / rayDir.y;
       }
    }
 
-   return (t > 0.0) ? t : -1.0;
+   return res;
 }
 
 float sampleDensity(vec3 pos)
@@ -125,12 +154,29 @@ float sampleDensity(vec3 pos)
    return density;
 }
 
+float raymarchToLight(vec3 rayOrigin, vec3 rayDir)
+{
+   float dstInsideCloud = getCloudInsideDistance(rayOrigin, rayDir);
+   float stepSize = dstInsideCloud / float(LIGHT_MARCH_STEPS_COUNT);
+   
+   float totalDensity = 0.0;
+   for (int i = 0; i < LIGHT_MARCH_STEPS_COUNT; i++)
+   {
+      vec3 rayPos = rayOrigin + rayDir * (i * stepSize);
+      float density = sampleDensity(rayPos);
+      totalDensity += density * stepSize;
+   }
+
+   float transmittance = exp(-totalDensity);
+   return transmittance;
+}
+
 void main()
 {
    vec3 rayOrigin = uCamera.pos;
    vec3 rayDir = getStartRayDirection(uv);
    
-   int numSteps = 64;
+   int numSteps = CLOUD_MARCH_STEPS_COUNT;
 
    float dstToCloud = getCloudEntryDistance(rayOrigin, rayDir);
    float dstInsideCloud = getCloudInsideDistance(rayOrigin, rayDir);
@@ -138,11 +184,11 @@ void main()
    float stepSize = dstLimit / float(numSteps);
 
    float dstTravelled = 0.0;
-   float totalDensity = 0.0;
-   if (dstToCloud < 0.0 || dstLimit < 0.0)
+   float transmittance = 1.0;
+   float lightEnergy = 0.0;
+   if (dstToCloud < -EPSILON || dstLimit < -EPSILON)
    {
-      // We will never reach a cloud with this ray.
-      totalDensity = 0.0;
+      // Ray does not intersect the cloud layer
    }
    else 
    {
@@ -151,13 +197,17 @@ void main()
       {
          vec3 rayPos = rayOrigin + rayDir * (dstToCloud + dstTravelled);
          float density = sampleDensity(rayPos);
-
-         totalDensity += density * stepSize;
-
-         if (totalDensity > 1.0)
+         if (density > 0.0)
          {
-            totalDensity = 1.0;
-            break;
+            float lightTransmittance = raymarchToLight(rayPos, SUN_DIR);
+            lightEnergy += density * stepSize * transmittance * lightTransmittance;
+            transmittance *= exp(-density * stepSize);
+
+            if (transmittance < 0.01)
+            {
+               // Early exit if transmittance is very low
+               break;
+            }
          }
 
          dstTravelled += stepSize;
@@ -165,6 +215,6 @@ void main()
    }
 
    // Output color
-   float transmittance = exp(-totalDensity);
-   fragColor = vec4(vec3(1.0), 1.0 - transmittance);
+   vec3 cloudCol = vec3(1.0, 1.0, 1.0) * (1.0 - lightEnergy);
+   fragCol = vec4(cloudCol, 1.0 - transmittance);
 }
