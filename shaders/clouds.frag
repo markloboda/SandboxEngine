@@ -27,6 +27,7 @@ layout(set = 0, binding = 4) uniform CloudRenderSettings
 
    int cloudNumSteps;
    int lightNumSteps;
+   float cloudMaxStepSize;
 } uSettings;
 
 layout(location = 0) in vec2 uv;
@@ -138,7 +139,7 @@ float getCloudInsideDistance(vec3 rayOrigin, vec3 rayDir)
       if (abs(rayDir.y) < EPSILON)
       {
          // Ray is parallel to the cloud layer, default distance
-         res = 500.0;
+         res = 5000.0;
       }
       else if (rayDir.y > 0)
       {
@@ -201,6 +202,7 @@ void main()
    float dstInsideCloud = getCloudInsideDistance(rayOrigin, rayDir);
    float dstLimit = dstInsideCloud;
    float stepSize = dstLimit / float(numSteps);
+   stepSize = min(stepSize, uSettings.cloudMaxStepSize); // Prevent too large step size
 
    float dstTravelled = 0.0;
    float transmittance = 1.0;
@@ -212,7 +214,7 @@ void main()
    else 
    {
       // Ray march cloud.
-      while (dstTravelled < dstLimit)
+      for (int i = 0; i < numSteps; i++)
       {
          vec3 rayPos = rayEntryPoint + rayDir * dstTravelled;
          float density = sampleDensity(rayPos);

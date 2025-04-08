@@ -28,6 +28,7 @@ public:
 
       int cloudNumSteps = 128;
       int lightNumSteps = 6;
+      float cloudMaxStepSize = 25.0f;
    };
 
    CloudRenderSettings Settings;

@@ -60,9 +60,10 @@ void Editor::RenderImGuiUI()
 
          ImGui::Separator();
 
-         ImGui::Text("Steps");
-         ImGui::SliderInt("Cloud Steps", &settings->cloudNumSteps, 1, 128);
+         ImGui::Text("Technical");
+         ImGui::SliderInt("Cloud Steps", &settings->cloudNumSteps, 1, 512);
          ImGui::SliderInt("Light Steps", &settings->lightNumSteps, 1, 128);
+         ImGui::SliderFloat("Max Step Size", &settings->cloudMaxStepSize, 0.01f, 100.0f);
       }
       ImGui::End();
    }
