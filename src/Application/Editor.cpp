@@ -47,10 +47,22 @@ void Editor::RenderImGuiUI()
       {
          CloudRenderer::CloudRenderSettings* settings = &renderer->GetCloudRenderer()->Settings;
 
+         // Cloud settings
+         ImGui::Text("General");
          ImGui::InputFloat("Start Height", &settings->cloudStartHeight);
          ImGui::InputFloat("End Height", &settings->cloudEndHeight);
+
+         ImGui::Separator();
+
+         ImGui::Text("Visual");
          ImGui::SliderFloat("Density Multiplier", &settings->densityMultiplier, 0.01f, 5.0f);
          ImGui::SliderFloat("Density Threshold", &settings->densityThreshold, 0.01f, 1.0f);
+
+         ImGui::Separator();
+
+         ImGui::Text("Steps");
+         ImGui::SliderInt("Cloud Steps", &settings->cloudNumSteps, 1, 128);
+         ImGui::SliderInt("Light Steps", &settings->lightNumSteps, 1, 128);
       }
       ImGui::End();
    }
