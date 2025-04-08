@@ -73,13 +73,14 @@ void Editor::RenderImGuiUI()
       ImGui::SetNextWindowSize(ImVec2(200, 0), ImGuiCond_Always);
       ImGui::Begin("Stats", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
       ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+      ImGui::Text("Frame Time: %.1f ms", 1000.0f / ImGui::GetIO().Framerate);
 
-      ImGui::BeginChild("Stats", ImVec2(200, 100));
-      ImGui::Text("Render Stats:");
-      ImGui::Text("Grid: %.1f ms", stats.gridTime);
-      ImGui::Text("Cloud: %.1f ms", stats.cloudTime);
-      ImGui::Text("UI: %.1f ms", stats.uiTime);
-      ImGui::EndChild();
+      if (ImGui::CollapsingHeader("Rendering Stats", ImGuiTreeNodeFlags_DefaultOpen))
+      {
+         ImGui::Text("Grid: %.1f ms", stats.gridTime);
+         ImGui::Text("Cloud: %.1f ms", stats.cloudTime);
+         ImGui::Text("UI: %.1f ms", stats.uiTime);
+      }
 
       ImGui::End();
    }
@@ -91,22 +92,24 @@ void Editor::RenderImGuiUI()
          CloudRenderer::CloudRenderSettings* settings = &renderer->GetCloudRenderer()->Settings;
 
          // Cloud settings
-         ImGui::Text("General");
-         ImGui::InputFloat("Start Height", &settings->cloudStartHeight);
-         ImGui::InputFloat("End Height", &settings->cloudEndHeight);
+         if (ImGui::CollapsingHeader("Position", ImGuiTreeNodeFlags_DefaultOpen))
+         {
+            ImGui::InputFloat("Start Height", &settings->cloudStartHeight);
+            ImGui::InputFloat("End Height", &settings->cloudEndHeight);
+         }
 
-         ImGui::Separator();
+         if (ImGui::CollapsingHeader("Visuals", ImGuiTreeNodeFlags_DefaultOpen))
+         {
+            ImGui::SliderFloat("Density Multiplier", &settings->densityMultiplier, 0.01f, 5.0f);
+            ImGui::SliderFloat("Density Threshold", &settings->densityThreshold, 0.01f, 1.0f);
+         }
 
-         ImGui::Text("Visual");
-         ImGui::SliderFloat("Density Multiplier", &settings->densityMultiplier, 0.01f, 5.0f);
-         ImGui::SliderFloat("Density Threshold", &settings->densityThreshold, 0.01f, 1.0f);
-
-         ImGui::Separator();
-
-         ImGui::Text("Technical");
-         ImGui::SliderInt("Cloud Steps", &settings->cloudNumSteps, 1, 512);
-         ImGui::SliderInt("Light Steps", &settings->lightNumSteps, 1, 128);
-         ImGui::SliderFloat("Max Step Size", &settings->cloudMaxStepSize, 0.01f, 100.0f);
+         if (ImGui::CollapsingHeader("Technical"))
+         {
+            ImGui::SliderInt("Cloud Steps", &settings->cloudNumSteps, 1, 512);
+            ImGui::SliderInt("Light Steps", &settings->lightNumSteps, 1, 128);
+            ImGui::SliderFloat("Max Step Size", &settings->cloudMaxStepSize, 0.01f, 100.0f);
+         }
       }
       ImGui::End();
    }

@@ -51,8 +51,9 @@ layout(location = 0) out vec4 fragCol;
 #define LIGHT_MARCH_STEPS_COUNT uSettings.lightNumSteps
 
 // constant settings
-#define WEATHER_MAP_SCALING_FACTOR 1.0 / 5000.0 // covers 5km x 5km
+#define WEATHER_MAP_SCALING_FACTOR 1.0 / 10000.0 // covers 10km x 10km
 #define SUN_DIR vec3(0.577, -0.577, 0.577)
+#define CLOUD_BASE_DENSITY_MULTIPLIER 0.1
 
 // helper functions
 vec3 getStartRayDirection(vec2 uv)
@@ -172,7 +173,7 @@ float sampleDensity(vec3 pos)
       weatherMapValue = texture(sampler2D(weatherMap, weatherMapSampler), weatherMapCoord).r;
    }
 
-   float density = max(0.0, weatherMapValue - DENSITY_THRESHOLD) * DENSITY_MULTIPLIER;
+   float density = max(0.0, weatherMapValue - DENSITY_THRESHOLD)* CLOUD_BASE_DENSITY_MULTIPLIER * DENSITY_MULTIPLIER;
 
    // height gradient
    float heightGradient = smoothstep(CLOUD_START_HEIGHT, CLOUD_START_HEIGHT + 100.0, pos.y) * 
