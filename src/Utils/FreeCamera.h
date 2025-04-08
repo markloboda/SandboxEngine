@@ -27,4 +27,7 @@ public:
 
    vec3 GetPosition() const { return _position; }
    void SetPosition(vec3 position) { _position = position; }
+
+   vec3 GetEulerRotation() const { return vec3(_pitch, _yaw, 0.0f); }
+   void SetEulerRotation(vec3 rotation) { _pitch = rotation.x; _yaw = rotation.y; }
 };

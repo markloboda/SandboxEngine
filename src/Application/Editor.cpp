@@ -70,10 +70,10 @@ void Editor::RenderImGuiUI()
 
    // Editor settings
    {
-      ImGui::SetNextWindowPos(ImVec2(0, windowHeight / 2));
-      ImGui::SetNextWindowSize(ImVec2(200, windowHeight / 2), ImGuiCond_FirstUseEver);
+      ImGui::SetNextWindowPos(ImVec2(0, 0));
+      ImGui::SetNextWindowSize(ImVec2(250, windowHeight / 2), ImGuiCond_FirstUseEver);
 
-      ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+      ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
       ImGui::Text("Editor Settings");
 
@@ -82,6 +82,12 @@ void Editor::RenderImGuiUI()
 
       ImGui::Separator();
       ImGui::Checkbox("Render Clouds", &_renderClouds);
+
+      ImGui::Separator();
+
+      ImGui::Text("Camera");
+      ImGui::Text("Position: (%.2f, %.2f, %.2f)", _camera->GetPosition().x, _camera->GetPosition().y, _camera->GetPosition().z);
+      ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", _camera->GetEulerRotation().x, _camera->GetEulerRotation().y, _camera->GetEulerRotation().z);
 
       ImGui::End();
    }
