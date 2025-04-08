@@ -29,6 +29,7 @@ bool CloudRenderer::Initialize()
    // Uniform buffer
    _uCameraData = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CameraData));
    _uResolution = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(ResolutionData));
+   _uCloudRenderSettings  = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CloudRenderSettings));
 
    // Clouds model
    _cloudsModel = new CloudsModel();
@@ -85,7 +86,7 @@ bool CloudRenderer::Initialize()
    // Bind groups
    {
       // Bind group layout
-      std::vector<WGPUBindGroupLayoutEntry> bglEntries(4);
+      std::vector<WGPUBindGroupLayoutEntry> bglEntries(5);
 
       // cloudTexture (binding 0)
       bglEntries[0].binding = 0;
@@ -111,8 +112,14 @@ bool CloudRenderer::Initialize()
       bglEntries[3].buffer.type = WGPUBufferBindingType_Uniform;
       bglEntries[3].buffer.minBindingSize = sizeof(ResolutionData);
 
+      // cloud render settings (binding 4)
+      bglEntries[4].binding = 4;
+      bglEntries[4].visibility = WGPUShaderStage_Fragment;
+      bglEntries[4].buffer.type = WGPUBufferBindingType_Uniform;
+      bglEntries[4].buffer.minBindingSize = sizeof(CloudRenderSettings);
+
       // Bind group entries
-      std::vector<WGPUBindGroupEntry> bgEntries(4);
+      std::vector<WGPUBindGroupEntry> bgEntries(5);
       bgEntries[0] = {};
       bgEntries[0].binding = 0;
       bgEntries[0].textureView = _cloudTextureView->Get();
@@ -124,6 +131,9 @@ bool CloudRenderer::Initialize()
       bgEntries[3].binding = 3;
       bgEntries[3].buffer = _uResolution->Get();
       bgEntries[3].size = sizeof(ResolutionData);
+      bgEntries[4].binding = 4;
+      bgEntries[4].buffer = _uCloudRenderSettings->Get();
+      bgEntries[4].size = sizeof(CloudRenderSettings);
 
       _bindGroup = new BindGroup(_device, { bglEntries, bgEntries });
    }
@@ -194,6 +204,7 @@ void CloudRenderer::Terminate()
    delete _uCameraData;
    delete _uResolution;
    delete _cloudsModel;
+   delete _uCloudRenderSettings;
 }
 
 void CloudRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureView)
@@ -208,6 +219,7 @@ void CloudRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureV
    _shaderParams.pos = camera.GetPosition();
    _uCameraData->UploadData(_device, &_shaderParams, sizeof(CameraData));
    _uResolution->UploadData(_device, &resolution, sizeof(ResolutionData));
+   _uCloudRenderSettings->UploadData(_device, &Settings, sizeof(CloudRenderSettings));
 
    WGPURenderPassDescriptor rpDesc = {};
    WGPURenderPassColorAttachment colorAttachment{};

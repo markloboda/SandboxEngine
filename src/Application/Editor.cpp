@@ -5,6 +5,10 @@
 #include <Renderer/UI/ImGuiManager.h>
 #include <Utils/FreeCamera.h>
 
+#include <Renderer/Clouds/CloudRenderer.h>
+
+#include "Renderer/Renderer.h"
+
 Editor::Editor()
 {
    // Add to ImGuiManager
@@ -35,27 +39,16 @@ void Editor::RenderImGuiUI()
    int windowWidth = Application::GetInstance().GetWindowWidth();
    int windowHeight = Application::GetInstance().GetWindowHeight();
 
-   // Nodes
+   // Clouds
    {
-      ImGui::SetNextWindowPos(ImVec2(0, 0));
-      ImGui::SetNextWindowSize(ImVec2(200, windowHeight / 2));
-      ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
-      // Create nodes
+      ImGui::Begin("Clouds", nullptr);
       {
-         ImGui::BeginChild("Create", ImVec2(0, 100), true);
+         CloudRenderer::CloudRenderSettings* settings = &Application::GetInstance().GetRenderer()->GetCloudRenderer()->Settings;
 
-         ImGui::EndChild();
-      }
-
-      // Nodes in scene
-      {
-         ImGui::BeginChild("Nodes", ImVec2(0, 0), true);
-         ImGui::Text("Nodes");
-         for (const auto& node : _scene->GetNodes())
-         {
-            ImGui::Text(node->GetName().c_str());
-         }
-         ImGui::EndChild();
+         ImGui::InputFloat("Start Height", &settings->cloudStartHeight);
+         ImGui::InputFloat("End Height", &settings->cloudEndHeight);
+         ImGui::InputFloat("Cloud Scale", &settings->cloudScale);
+         ImGui::InputFloat("Density Multiplier", &settings->densityMultiplier);
       }
       ImGui::End();
    }

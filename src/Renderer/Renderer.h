@@ -29,6 +29,9 @@ public:
 
    void OnWindowResize(int width, int height);
 
+   // Cloud
+   CloudRenderer* GetCloudRenderer() const { return _cloudRenderer; }
+
 private:
    void ClearRenderPass(CommandEncoder* encoder, TextureView* surfaceTextureView);
 };

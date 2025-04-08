@@ -59,7 +59,7 @@ mat4 FreeCamera::GetViewMatrix()
 
 void FreeCamera::Update(float dt)
 {
-   if (Input::IsKeyPressed(Input::MOUSE_BUTTON_RIGHT))
+   if (Input::IsKeyPressed(Input::MOUSE_BUTTON_RIGHT) || Input::IsKeyPressed(Input::KEY_RIGHT_CONTROL))
    {
       // Mouse wheel speed increase
       _speed = clamp(mouseWheel_ > 0 ? _speed + 0.01f : _speed - 0.01f, 0.5f, 1000.0f);
@@ -102,7 +102,7 @@ void FreeCamera::Update(float dt)
 
 void FreeCamera::ProcessMouseMovement(float xOffset, float yOffset, bool constrainPitch)
 {
-   if (Input::IsKeyPressed(Input::MOUSE_BUTTON_RIGHT))
+   if (Input::IsKeyPressed(Input::MOUSE_BUTTON_RIGHT) || Input::IsKeyPressed(Input::KEY_RIGHT_CONTROL))
    {
       xOffset *= _sensitivity;
       yOffset *= _sensitivity;

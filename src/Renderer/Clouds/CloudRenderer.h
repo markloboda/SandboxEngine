@@ -17,6 +17,17 @@ private:
       vec2 xy;
    };
 
+public:
+   struct CloudRenderSettings
+   {
+      float cloudStartHeight = 200;
+      float cloudEndHeight = 500;
+      float cloudScale = 1.0;
+      float densityMultiplier = 1.0;
+   };
+
+   CloudRenderSettings Settings;
+
 private:
    Device* _device;
    Queue* _queue;
@@ -27,6 +38,7 @@ private:
    TextureView* _cloudTextureView;
    Buffer* _uCameraData;
    Buffer* _uResolution;
+   Buffer* _uCloudRenderSettings;
    Sampler* _uCloudSampler;
 
    CameraData _shaderParams;
