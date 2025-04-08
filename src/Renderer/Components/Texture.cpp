@@ -23,7 +23,7 @@ void Texture::UploadData(Queue* queue, const void* data, size_t dataSize, const 
    destination.origin = { 0, 0, 0 };
    WGPUTexelCopyBufferLayout bufferLayout = {};
    bufferLayout.offset = 0;
-   bufferLayout.bytesPerRow = dataSize / static_cast<size_t>(writeSize->height * writeSize->depthOrArrayLayers);
+   bufferLayout.bytesPerRow = static_cast<uint32_t>(dataSize / (writeSize->height * writeSize->depthOrArrayLayers));
    bufferLayout.rowsPerImage = writeSize->height;
    wgpuQueueWriteTexture(queue->Get(), &destination, data, dataSize, &bufferLayout, writeSize);
 }

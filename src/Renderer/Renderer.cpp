@@ -79,7 +79,7 @@ bool Renderer::Initialize()
    }
 
    // Set frame buffer size callback.
-   glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height)
+   glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* /*window*/, int width, int height)
    {
       Application::GetInstance().GetRenderer()->OnWindowResize(width, height);
    });
@@ -107,7 +107,10 @@ void Renderer::Terminate()
 
 void Renderer::Render()
 {
-   CommandEncoder encoder = CommandEncoder(&_device, nullptr);
+   WGPUCommandEncoderDescriptor encoderDesc = {};
+   std::string encoderLabel = "My Command Encoder (Renderer::Render())";
+   encoderDesc.label = WGPUStringView{ encoderLabel.c_str(), encoderLabel.size() };
+   CommandEncoder encoder = CommandEncoder(&_device, &encoderDesc);
 
    // Render pass.
    WGPUSurfaceTexture surfaceTexture = _surface.GetNextSurfaceTexture();

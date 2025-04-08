@@ -13,6 +13,7 @@ CloudRenderer::CloudRenderer(Device* device, Queue* queue) :
    _queue(queue)
 {
    bool success = Initialize();
+   assert(success);
 }
 
 CloudRenderer::~CloudRenderer()

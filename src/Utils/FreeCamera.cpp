@@ -100,14 +100,14 @@ void FreeCamera::Update(float dt)
    }
 }
 
-void FreeCamera::ProcessMouseMovement(float xOffset, float yOffset, bool constrainPitch)
+void FreeCamera::ProcessMouseMovement(double xOffset, double yOffset, bool constrainPitch)
 {
    if (Input::IsKeyPressed(Input::MOUSE_BUTTON_RIGHT) || Input::IsKeyPressed(Input::KEY_RIGHT_CONTROL))
    {
       xOffset *= _sensitivity;
       yOffset *= _sensitivity;
-      _yaw += xOffset;
-      _pitch -= yOffset;
+      _yaw += static_cast<float>(xOffset);
+      _pitch -= static_cast<float>(yOffset);
       if (constrainPitch)
       {
          _pitch = clamp(_pitch, -89.0f, 89.0f);

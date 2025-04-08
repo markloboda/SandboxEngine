@@ -19,7 +19,10 @@ CommandEncoder::~CommandEncoder()
 
 CommandBuffer* CommandEncoder::Finish()
 {
-   return new CommandBuffer(wgpuCommandEncoderFinish(_encoder, nullptr));
+   WGPUCommandBufferDescriptor desc = {};
+   std::string label = "My Command Buffer";
+   desc.label = WGPUStringView{ label.c_str(), label.size() };
+   return new CommandBuffer(wgpuCommandEncoderFinish(_encoder, &desc));
 }
 
 void CommandEncoder::CopyTextureToBuffer(WGPUTexelCopyTextureInfo const* source, WGPUTexelCopyBufferInfo const* destination, WGPUExtent3D const* copySize)

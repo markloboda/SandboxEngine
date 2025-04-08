@@ -60,14 +60,14 @@ void CloudsModel::GenerateWeatherMapTexture()
          // Combine values into (subtract worley noise from low density regions of perlin noise)
          float noise = perlin - invWorley;
 
-         noiseData[(y * _weatherMapTextureDimensions.x + x) * 4 + 0] = static_cast<uint8_t>(noise * 255.0f); // R channel
-         noiseData[(y * _weatherMapTextureDimensions.x + x) * 4 + 1] = 0.0; // G channel
-         noiseData[(y * _weatherMapTextureDimensions.x + x) * 4 + 2] = 0.0; // B channel
-         noiseData[(y * _weatherMapTextureDimensions.x + x) * 4 + 3] = 0.0; // A channel
+         uint32_t idx = (y * _weatherMapTextureDimensions.x + x) * 4;
+         noiseData[idx + 0] = static_cast<uint8_t>(noise * 255.0f); // R channel
+         noiseData[idx + 1] = 0; // G channel
+         noiseData[idx + 2] = 0; // B channel
+         noiseData[idx + 3] = 0; // A channel
       }
    }
 
-   // Create the texture
    WGPUTextureDescriptor textureDesc = {};
    textureDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
    textureDesc.dimension = WGPUTextureDimension_2D;
@@ -103,15 +103,22 @@ void CloudsModel::GenerateBaseNoiseTexture()
    noise.SetFrequency(0.1f);
 
    // Generate the noise texture
-   std::vector<uint32_t> noiseData(_baseNoiseTextureDimensions.x * _baseNoiseTextureDimensions.y * _baseNoiseTextureDimensions.z);
+   std::vector<uint8_t> noiseData(_baseNoiseTextureDimensions.x * _baseNoiseTextureDimensions.y * _baseNoiseTextureDimensions.z * 4);
    for (uint32_t z = 0; z < _baseNoiseTextureDimensions.z; ++z)
    {
       for (uint32_t y = 0; y < _baseNoiseTextureDimensions.y; ++y)
       {
          for (uint32_t x = 0; x < _baseNoiseTextureDimensions.x; ++x)
          {
-            float noiseValue = noise.GetNoise((float)x, (float)y, (float)z);
-            noiseData[(z * _baseNoiseTextureDimensions.y + y) * _baseNoiseTextureDimensions.x + x] = static_cast<uint32_t>((noiseValue + 1.0f) * 127.5f);
+            float noiseValue = noise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+            // remap from [-1, 1] to [0, 255]
+            noiseValue = (noiseValue + 1.0f) * 0.5f;
+
+            uint32_t idx = (z * _baseNoiseTextureDimensions.x * _baseNoiseTextureDimensions.y + y * _baseNoiseTextureDimensions.x + x) * 4;
+            noiseData[idx + 0] = static_cast<uint8_t>(noiseValue * 255.0f); // R channel
+            noiseData[idx + 1] = 0; // G channel
+            noiseData[idx + 2] = 0; // B channel
+            noiseData[idx + 3] = 0; // A channel
          }
       }
    }
@@ -135,5 +142,5 @@ void CloudsModel::GenerateBaseNoiseTexture()
 
    // Upload data to the texture
    WGPUExtent3D copyExtent = { _baseNoiseTextureDimensions.x,_baseNoiseTextureDimensions.y,_baseNoiseTextureDimensions.z };
-   _baseNoiseTexture->UploadData(_queue, noiseData.data(), noiseData.size() * sizeof(uint32_t), &copyExtent);
+   _baseNoiseTexture->UploadData(_queue, noiseData.data(), noiseData.size() * sizeof(uint8_t), &copyExtent);
 }

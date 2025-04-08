@@ -22,7 +22,7 @@ public:
    mat4 GetViewMatrix();
 
    void Update(float dt);
-   void ProcessMouseMovement(float xOffset, float yOffset, bool constrainPitch = true);
+   void ProcessMouseMovement(double xOffset, double yOffset, bool constrainPitch = true);
    void UpdateCameraVectors();
 
    vec3 GetPosition() const { return _position; }

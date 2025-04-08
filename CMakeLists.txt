@@ -7,12 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(COMPILE_WARNING_AS_ERROR ON)
 
-# Enable Hot Reload for MSVC compilers if supported.
-if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-endif()
-
 # Define path variables
 set(REPO_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 set(SRC_ROOT ${REPO_ROOT}/src)
@@ -65,12 +59,12 @@ set(SOURCE_FILES
 # Group source files
 source_group(TREE ${REPO_ROOT} FILES ${SOURCE_FILES})
 
-# Set compiler flags
-# if (MSVC)
-#     add_compile_options(VolumetricClouds PRIVATE /W4 /WX)
-# else()
-#     add_compile_options(VolumetricClouds PRIVATE -Wall -Wextra -pedantic)
-# endif()
+# Set compiler flags for warning as error and all warnings
+if (MSVC)
+   add_compile_options(/W4 /WX)
+else()
+   add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+endif()
 
 if (XCODE)
     add_compile_options(VolumetricClouds PROPERTIES

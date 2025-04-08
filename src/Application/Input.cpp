@@ -3,7 +3,7 @@
 
 #include <Application/Application.h>
 
-void Input::CursorPosChanged(GLFWwindow* window, double xpos, double ypos)
+void Input::CursorPosChanged(GLFWwindow* /*window*/, double xpos, double ypos)
 {
    for (auto& callback : GetInstance()._cursorPositionCallback)
    {
@@ -11,7 +11,7 @@ void Input::CursorPosChanged(GLFWwindow* window, double xpos, double ypos)
    }
 }
 
-void Input::MouseWheelChanged(GLFWwindow* window, double xoffset, double yoffset)
+void Input::MouseWheelChanged(GLFWwindow* /*window*/, double /*xoffset*/, double yoffset)
 {
    for (auto& callback : GetInstance()._mouseWheelCallback)
    {

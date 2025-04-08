@@ -43,7 +43,7 @@ ShaderModule& ShaderModule::LoadShaderModule(Device* device, const std::string& 
 
    // Create shader module
    WGPUShaderModuleDescriptorSpirV descriptor = {};
-   descriptor.sourceSize = spirv.size();
+   descriptor.sourceSize = static_cast<uint32_t>(spirv.size());
    descriptor.source = spirv.data();
 
    WGPUShaderModule shaderModule = wgpuDeviceCreateShaderModuleSpirV(device->Get(), &descriptor);
