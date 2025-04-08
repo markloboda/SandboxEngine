@@ -3,21 +3,23 @@
 class CloudsModel
 {
 private:
-   uint32_t _texWidth;
-   uint32_t _texHeight;
-   uint32_t _texDepth;
+   Device* _device;
+   Queue* _queue;
 
-   // Data
-   std::vector<float> _cloudFBM;
+   // R - channel: Cloud Coverage (Worley Noise)
+   highp_u32vec2 _weatherMapTextureDimensions;
+   Texture* _weatherMapTexture;
+
+   highp_u32vec3 _baseNoiseTextureDimensions;
+   Texture* _baseNoiseTexture;
 
 public:
-   CloudsModel();
+   CloudsModel(Device* device, Queue* queue);
    ~CloudsModel();
 
-   const float* GetCloudFBM() const { return _cloudFBM.data(); }
-   size_t GetCloudFBMSize() const { return _cloudFBM.size() * sizeof(float); }
-
-   vec3 GetTextureDimensions() const { return vec3(_texWidth, _texHeight, _texDepth); }
+   Texture* GetWeatherMapTexture() const { return _weatherMapTexture; }
+   Texture* GetBaseNoiseTexture() const { return _baseNoiseTexture; }
 private:
-   void GenerateNoiseTexture(uint32_t texWidth, uint32_t texHeight, uint32_t texDepth);
+   void GenerateWeatherMapTexture();
+   void GenerateBaseNoiseTexture();
 };

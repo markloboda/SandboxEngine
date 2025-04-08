@@ -21,7 +21,7 @@ set(LIBS_ROOT ${REPO_ROOT}/libs)
 set(BIN_ROOT ${CMAKE_BINARY_DIR})
 
 # Dependencies
-add_subdirectory(${LIBS_ROOT}/fbm)
+add_subdirectory(${LIBS_ROOT}/FastNoiseLite)
 add_subdirectory(${LIBS_ROOT}/glfw)
 add_subdirectory(${LIBS_ROOT}/glm)
 add_subdirectory(${LIBS_ROOT}/webgpu)
@@ -128,7 +128,7 @@ add_executable(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_ROOT})
-target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu imgui fbm)
+target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu imgui FastNoiseLite)
 
 # Enable precompiled headers
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${SRC_ROOT}/pch.h)

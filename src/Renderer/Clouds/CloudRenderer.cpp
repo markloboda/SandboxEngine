@@ -32,117 +32,148 @@ bool CloudRenderer::Initialize()
    _uCloudRenderSettings = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CloudRenderSettings));
 
    // Clouds model
-   _cloudsModel = new CloudsModel();
+   _cloudsModel = new CloudsModel(_device, _queue);
 
    // Sampler
    {
-      WGPUSamplerDescriptor samplerDesc = {};
-      samplerDesc.addressModeU = WGPUAddressMode_Repeat;
-      samplerDesc.addressModeV = WGPUAddressMode_Repeat;
-      samplerDesc.addressModeW = WGPUAddressMode_Repeat;
-      samplerDesc.minFilter = WGPUFilterMode_Linear;
-      samplerDesc.magFilter = WGPUFilterMode_Linear;
-      samplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
-      samplerDesc.maxAnisotropy = 1;
-      _uCloudSampler = new Sampler(_device, &samplerDesc);
+      WGPUSamplerDescriptor weatherMapSamplerDesc = {};
+      weatherMapSamplerDesc.addressModeU = WGPUAddressMode_ClampToEdge;
+      weatherMapSamplerDesc.addressModeV = WGPUAddressMode_ClampToEdge;
+      weatherMapSamplerDesc.addressModeW = WGPUAddressMode_ClampToEdge;
+      weatherMapSamplerDesc.minFilter = WGPUFilterMode_Linear;
+      weatherMapSamplerDesc.magFilter = WGPUFilterMode_Linear;
+      weatherMapSamplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
+      weatherMapSamplerDesc.maxAnisotropy = 1;
+      _weatherMapSampler = new Sampler(_device, &weatherMapSamplerDesc);
+
+      WGPUSamplerDescriptor cloudBaseSamplerDesc = {};
+      cloudBaseSamplerDesc.addressModeU = WGPUAddressMode_Repeat;
+      cloudBaseSamplerDesc.addressModeV = WGPUAddressMode_Repeat;
+      cloudBaseSamplerDesc.addressModeW = WGPUAddressMode_Repeat;
+      cloudBaseSamplerDesc.minFilter = WGPUFilterMode_Linear;
+      cloudBaseSamplerDesc.magFilter = WGPUFilterMode_Linear;
+      cloudBaseSamplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
+      cloudBaseSamplerDesc.maxAnisotropy = 1;
+      _uCloudBaseSampler = new Sampler(_device, &cloudBaseSamplerDesc);
    }
 
-   // Cloud noise texture.
+   // Texture views
    {
-      WGPUTextureDescriptor texDesc = {};
-      texDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
-      texDesc.dimension = WGPUTextureDimension_3D;
-      vec3 texDim = _cloudsModel->GetTextureDimensions();
-      texDesc.size.width = texDim.x;
-      texDesc.size.height = texDim.y;
-      texDesc.size.depthOrArrayLayers = texDim.z;
-      texDesc.format = WGPUTextureFormat_RGBA8Unorm;
-      texDesc.mipLevelCount = 1;
-      texDesc.sampleCount = 1;
-      _cloudTexture = new Texture(_device, &texDesc);
-      if (!_cloudTexture->IsValid())
       {
-         std::cerr << "Failed to create cloud texture." << std::endl;
-         return false;
+         Texture* weatherMap = _cloudsModel->GetWeatherMapTexture();
+         WGPUTextureViewDescriptor viewDesc = {};
+         viewDesc.format = weatherMap->GetFormat();
+         viewDesc.dimension = WGPUTextureViewDimension_2D;
+         viewDesc.baseMipLevel = 0;
+         viewDesc.mipLevelCount = 1;
+         viewDesc.baseArrayLayer = 0;
+         viewDesc.arrayLayerCount = 1;
+         _weatherMapTextureView = new TextureView(weatherMap->Get(), &viewDesc);
       }
-      WGPUTextureViewDescriptor viewDesc = {};
-      viewDesc.format = texDesc.format;
-      viewDesc.dimension = WGPUTextureViewDimension_3D;
-      viewDesc.baseMipLevel = 0;
-      viewDesc.mipLevelCount = 1;
-      viewDesc.baseArrayLayer = 0;
-      viewDesc.arrayLayerCount = 1;
-      _cloudTextureView = new TextureView(_cloudTexture->Get(), &viewDesc);
 
-      // Upload data to the texture
-      vec3 texSize = _cloudsModel->GetTextureDimensions();
-      uint32_t texWidth = static_cast<uint32_t>(texSize.x);
-      uint32_t texHeight = static_cast<uint32_t>(texSize.y);
-      uint32_t texDepth = static_cast<uint32_t>(texSize.z);
-      WGPUExtent3D copyExtent = { texWidth, texHeight, texDepth };
-      _cloudTexture->UploadData(_queue, _cloudsModel->GetCloudFBM(), _cloudsModel->GetCloudFBMSize(), &copyExtent);
+      {
+         Texture* cloudBaseTexture = _cloudsModel->GetBaseNoiseTexture();
+         WGPUTextureViewDescriptor viewDesc = {};
+         viewDesc.format = cloudBaseTexture->GetFormat();
+         viewDesc.dimension = WGPUTextureViewDimension_3D;
+         viewDesc.baseMipLevel = 0;
+         viewDesc.mipLevelCount = 1;
+         viewDesc.baseArrayLayer = 0;
+         viewDesc.arrayLayerCount = 1;
+         _cloudBaseTextureView = new TextureView(cloudBaseTexture->Get(), &viewDesc);
+      }
    }
 
    // Bind groups
    {
-      // Bind group layout
-      std::vector<WGPUBindGroupLayoutEntry> bglEntries(5);
+      {
+         std::vector<WGPUBindGroupLayoutEntry> bglEntries(4);
 
-      // cloudTexture (binding 0)
-      bglEntries[0].binding = 0;
-      bglEntries[0].visibility = WGPUShaderStage_Fragment;
-      bglEntries[0].texture.sampleType = WGPUTextureSampleType_UnfilterableFloat;
-      bglEntries[0].texture.viewDimension = WGPUTextureViewDimension_3D;
-      bglEntries[0].texture.multisampled = WGPUOptionalBool_False;
+         // weatherMap (binding 0)
+         bglEntries[0].binding = 0;
+         bglEntries[0].visibility = WGPUShaderStage_Fragment;
+         bglEntries[0].texture.sampleType = WGPUTextureSampleType_UnfilterableFloat;
+         bglEntries[0].texture.viewDimension = WGPUTextureViewDimension_2D;
+         bglEntries[0].texture.multisampled = WGPUOptionalBool_False;
 
-      // cloudSampler (binding 1)
-      bglEntries[1].binding = 1;
-      bglEntries[1].visibility = WGPUShaderStage_Fragment;
-      bglEntries[1].sampler.type = WGPUSamplerBindingType_Filtering;
+         // weatherMapSampler (binding 1)
+         bglEntries[1].binding = 1;
+         bglEntries[1].visibility = WGPUShaderStage_Fragment;
+         bglEntries[1].sampler.type = WGPUSamplerBindingType_Filtering;
 
-      // camera (binding 2)
-      bglEntries[2].binding = 2;
-      bglEntries[2].visibility = WGPUShaderStage_Fragment;
-      bglEntries[2].buffer.type = WGPUBufferBindingType_Uniform;
-      bglEntries[2].buffer.minBindingSize = sizeof(CameraData);
+         // cloudTexture (binding 2)
+         bglEntries[2].binding = 2;
+         bglEntries[2].visibility = WGPUShaderStage_Fragment;
+         bglEntries[2].texture.sampleType = WGPUTextureSampleType_UnfilterableFloat;
+         bglEntries[2].texture.viewDimension = WGPUTextureViewDimension_3D;
+         bglEntries[2].texture.multisampled = WGPUOptionalBool_False;
 
-      // resolution (binding 3)
-      bglEntries[3].binding = 3;
-      bglEntries[3].visibility = WGPUShaderStage_Fragment;
-      bglEntries[3].buffer.type = WGPUBufferBindingType_Uniform;
-      bglEntries[3].buffer.minBindingSize = sizeof(ResolutionData);
+         // cloudSampler (binding 3)
+         bglEntries[3].binding = 3;
+         bglEntries[3].visibility = WGPUShaderStage_Fragment;
+         bglEntries[3].sampler.type = WGPUSamplerBindingType_Filtering;
 
-      // cloud render settings (binding 4)
-      bglEntries[4].binding = 4;
-      bglEntries[4].visibility = WGPUShaderStage_Fragment;
-      bglEntries[4].buffer.type = WGPUBufferBindingType_Uniform;
-      bglEntries[4].buffer.minBindingSize = sizeof(CloudRenderSettings);
+         std::vector<WGPUBindGroupEntry> bgEntries(4);
 
-      // Bind group entries
-      std::vector<WGPUBindGroupEntry> bgEntries(5);
-      bgEntries[0] = {};
-      bgEntries[0].binding = 0;
-      bgEntries[0].textureView = _cloudTextureView->Get();
-      bgEntries[1].binding = 1;
-      bgEntries[1].sampler = _uCloudSampler->Get();
-      bgEntries[2].binding = 2;
-      bgEntries[2].buffer = _uCameraData->Get();
-      bgEntries[2].size = sizeof(CameraData);
-      bgEntries[3].binding = 3;
-      bgEntries[3].buffer = _uResolution->Get();
-      bgEntries[3].size = sizeof(ResolutionData);
-      bgEntries[4].binding = 4;
-      bgEntries[4].buffer = _uCloudRenderSettings->Get();
-      bgEntries[4].size = sizeof(CloudRenderSettings);
+         bgEntries[0].binding = 0;
+         bgEntries[0].textureView = _weatherMapTextureView->Get();
+         bgEntries[1].binding = 1;
+         bgEntries[1].sampler = _weatherMapSampler->Get();
+         bgEntries[2].binding = 2;
+         bgEntries[2].textureView = _cloudBaseTextureView->Get();
+         bgEntries[3].binding = 3;
+         bgEntries[3].sampler = _uCloudBaseSampler->Get();
 
-      _bindGroup = new BindGroup(_device, { bglEntries, bgEntries });
+         _texturesBindGroup = new BindGroup(_device, { bglEntries, bgEntries });
+      }
+
+      {
+         std::vector<WGPUBindGroupLayoutEntry> bglEntries(3);
+
+         // camera (binding 0)
+         bglEntries[0].binding = 0;
+         bglEntries[0].visibility = WGPUShaderStage_Fragment;
+         bglEntries[0].buffer.type = WGPUBufferBindingType_Uniform;
+         bglEntries[0].buffer.minBindingSize = sizeof(CameraData);
+
+         // resolution (binding 1)
+         bglEntries[1].binding = 1;
+         bglEntries[1].visibility = WGPUShaderStage_Fragment;
+         bglEntries[1].buffer.type = WGPUBufferBindingType_Uniform;
+         bglEntries[1].buffer.minBindingSize = sizeof(ResolutionData);
+
+         // cloud render settings (binding 2)
+         bglEntries[2].binding = 2;
+         bglEntries[2].visibility = WGPUShaderStage_Fragment;
+         bglEntries[2].buffer.type = WGPUBufferBindingType_Uniform;
+         bglEntries[2].buffer.minBindingSize = sizeof(CloudRenderSettings);
+
+         std::vector<WGPUBindGroupEntry> bgEntries(3);
+
+         bgEntries[0].binding = 0;
+         bgEntries[0].buffer = _uCameraData->Get();
+         bgEntries[0].size = sizeof(CameraData);
+         bgEntries[1].binding = 1;
+         bgEntries[1].buffer = _uResolution->Get();
+         bgEntries[1].size = sizeof(ResolutionData);
+         bgEntries[2].binding = 2;
+         bgEntries[2].buffer = _uCloudRenderSettings->Get();
+         bgEntries[2].size = sizeof(CloudRenderSettings);
+
+         _dataBindGroup = new BindGroup(_device, { bglEntries, bgEntries });
+      }
    }
 
    // Create render pipeline
    {
+      // Bind group layouts array
+      WGPUBindGroupLayout bindGroupLayouts[2];
+      bindGroupLayouts[0] = *_texturesBindGroup->GetLayout();
+      bindGroupLayouts[1] = *_dataBindGroup->GetLayout();
+
       WGPUPipelineLayoutDescriptor plDesc = {};
-      plDesc.bindGroupLayoutCount = 1;
-      plDesc.bindGroupLayouts = _bindGroup->GetLayout();
+      plDesc.bindGroupLayoutCount = 2;
+      plDesc.bindGroupLayouts = bindGroupLayouts;
       WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(_device->Get(), &plDesc);
 
       WGPURenderPipelineDescriptor rpDesc = {};
@@ -156,7 +187,6 @@ bool CloudRenderer::Initialize()
       rpDesc.multisample.count = 1;
       rpDesc.multisample.mask = 0xFFFFFFFF;
       rpDesc.multisample.alphaToCoverageEnabled = false;
-      // TODO:
       rpDesc.depthStencil = nullptr;
 
       // Vertex state
@@ -197,10 +227,9 @@ bool CloudRenderer::Initialize()
 void CloudRenderer::Terminate()
 {
    delete _pipeline;
-   delete _bindGroup;
-   delete _uCloudSampler;
-   delete _cloudTextureView;
-   delete _cloudTexture;
+   delete _texturesBindGroup;
+   delete _uCloudBaseSampler;
+   delete _cloudBaseTextureView;
    delete _uCameraData;
    delete _uResolution;
    delete _cloudsModel;
@@ -234,7 +263,8 @@ void CloudRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureV
 
    RenderPassEncoder pass = *encoder->BeginRenderPass(&rpDesc);
    pass.SetPipeline(_pipeline);
-   pass.SetBindGroup(0, _bindGroup);
+   pass.SetBindGroup(0, _texturesBindGroup);
+   pass.SetBindGroup(1, _dataBindGroup);
    pass.Draw(3, 1, 0, 0);
    pass.EndPass();
 }

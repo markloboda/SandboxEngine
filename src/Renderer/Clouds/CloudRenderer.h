@@ -38,13 +38,15 @@ private:
    Queue* _queue;
 
    RenderPipeline* _pipeline;
-   BindGroup* _bindGroup;
-   Texture* _cloudTexture;
-   TextureView* _cloudTextureView;
+   BindGroup* _texturesBindGroup;
+   BindGroup* _dataBindGroup;
+   TextureView* _weatherMapTextureView;
+   Sampler* _weatherMapSampler;
+   TextureView* _cloudBaseTextureView;
+   Sampler* _uCloudBaseSampler;
    Buffer* _uCameraData;
    Buffer* _uResolution;
    Buffer* _uCloudRenderSettings;
-   Sampler* _uCloudSampler;
 
    CameraData _shaderParams;
 

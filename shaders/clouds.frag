@@ -1,23 +1,25 @@
 #version 450
 
 // inputs
-layout(set = 0, binding = 0) uniform texture3D cloudTexture;
+layout(set = 0, binding = 0) uniform texture2D weatherMap;
+layout(set = 0, binding = 1) uniform sampler weatherMapSampler;
 
-layout(set = 0, binding = 1) uniform sampler cloudSampler;
+layout(set = 0, binding = 2) uniform texture3D cloudBaseTexture;
+layout(set = 0, binding = 3) uniform sampler cloudBaseSampler;
 
-layout(set = 0, binding = 2) uniform CameraData 
+layout(set = 1, binding = 0) uniform CameraData 
 {
    mat4 view;
    mat4 proj;
    vec3 pos;
 } uCamera;
 
-layout(set = 0, binding = 3) uniform ResolutionData
+layout(set = 1, binding = 1) uniform ResolutionData
 {
    vec2 xy;
 } uResolution;
 
-layout(set = 0, binding = 4) uniform CloudRenderSettings
+layout(set = 1, binding = 2) uniform CloudRenderSettings
 {
    float cloudStartHeight; 
    float cloudEndHeight;
@@ -162,7 +164,7 @@ float sampleDensity(vec3 pos)
       return 0.0;
 
    vec3 noiseCoord = fract(pos * NOISE_SCALING_FACTOR);
-   float noise = texture(sampler3D(cloudTexture, cloudSampler), noiseCoord).r;
+   float noise = texture(sampler3D(cloudBaseTexture, cloudBaseSampler), noiseCoord).r;
    float density = max(0.0, noise - DENSITY_THRESHOLD) * DENSITY_MULTIPLIER;
 
    // height gradient
