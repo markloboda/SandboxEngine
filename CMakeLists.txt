@@ -24,91 +24,88 @@ add_subdirectory(${LIBS_ROOT}/imgui)
 
 # Source files
 set(SOURCE_FILES
-   ${SRC_ROOT}/Application/Application.cpp
-   ${SRC_ROOT}/Application/Editor.cpp
-   ${SRC_ROOT}/Application/Input.cpp
+  ${SRC_ROOT}/Application/Application.cpp
+  ${SRC_ROOT}/Application/Editor.cpp
+  ${SRC_ROOT}/Application/Input.cpp
 
-   ${SRC_ROOT}/Renderer/Clouds/CloudModel.cpp
-   ${SRC_ROOT}/Renderer/Clouds/CloudRenderer.cpp
-   ${SRC_ROOT}/Renderer/Components/BindGroup.cpp
-   ${SRC_ROOT}/Renderer/Components/Buffer.cpp
-   ${SRC_ROOT}/Renderer/Components/CommandBuffer.cpp
-   ${SRC_ROOT}/Renderer/Components/CommandEncoder.cpp
-   ${SRC_ROOT}/Renderer/Components/ComputePassEncoder.cpp
-   ${SRC_ROOT}/Renderer/Components/ComputePipeline.cpp
-   ${SRC_ROOT}/Renderer/Components/Device.cpp
-   ${SRC_ROOT}/Renderer/Components/Queue.cpp
-   ${SRC_ROOT}/Renderer/Components/RenderPassEncoder.cpp
-   ${SRC_ROOT}/Renderer/Components/RenderPipeline.cpp
-   ${SRC_ROOT}/Renderer/Components/Sampler.cpp
-   ${SRC_ROOT}/Renderer/Components/ShaderModule.cpp
-   ${SRC_ROOT}/Renderer/Components/Surface.cpp
-   ${SRC_ROOT}/Renderer/Components/Texture.cpp
-   ${SRC_ROOT}/Renderer/Components/TextureView.cpp
-   ${SRC_ROOT}/Renderer/UI/ImGuiManager.cpp
-   ${SRC_ROOT}/Renderer/GridRenderer.cpp
-   ${SRC_ROOT}/Renderer/Renderer.cpp
+  ${SRC_ROOT}/Renderer/Clouds/CloudModel.cpp
+  ${SRC_ROOT}/Renderer/Clouds/CloudRenderer.cpp
+  ${SRC_ROOT}/Renderer/Components/BindGroup.cpp
+  ${SRC_ROOT}/Renderer/Components/Buffer.cpp
+  ${SRC_ROOT}/Renderer/Components/CommandBuffer.cpp
+  ${SRC_ROOT}/Renderer/Components/CommandEncoder.cpp
+  ${SRC_ROOT}/Renderer/Components/ComputePassEncoder.cpp
+  ${SRC_ROOT}/Renderer/Components/ComputePipeline.cpp
+  ${SRC_ROOT}/Renderer/Components/Device.cpp
+  ${SRC_ROOT}/Renderer/Components/Queue.cpp
+  ${SRC_ROOT}/Renderer/Components/RenderPassEncoder.cpp
+  ${SRC_ROOT}/Renderer/Components/RenderPipeline.cpp
+  ${SRC_ROOT}/Renderer/Components/Sampler.cpp
+  ${SRC_ROOT}/Renderer/Components/ShaderModule.cpp
+  ${SRC_ROOT}/Renderer/Components/Surface.cpp
+  ${SRC_ROOT}/Renderer/Components/Texture.cpp
+  ${SRC_ROOT}/Renderer/Components/TextureView.cpp
+  ${SRC_ROOT}/Renderer/UI/ImGuiManager.cpp
+  ${SRC_ROOT}/Renderer/GridRenderer.cpp
+  ${SRC_ROOT}/Renderer/Renderer.cpp
 
-   ${SRC_ROOT}/Utils/FileReader.cpp
-   ${SRC_ROOT}/Utils/FreeCamera.cpp
+  ${SRC_ROOT}/Utils/FileReader.cpp
+  ${SRC_ROOT}/Utils/FreeCamera.cpp
 
-   ${SRC_ROOT}/main.cpp
-   ${SRC_ROOT}/pch.cpp
+  ${SRC_ROOT}/main.cpp
+  ${SRC_ROOT}/pch.cpp
 )
 
 # Group source files
 source_group(TREE ${REPO_ROOT} FILES ${SOURCE_FILES})
 
-# Set compiler flags for warning as error and all warnings
+# Set compiler flags
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 if (MSVC)
-   add_compile_options(/W4 /WX)
+  add_compile_options(/W4 /WX)
+  add_compile_options(/Zi /Od)
 else()
-   add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+  add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+  add_compile_options(-g -O0)
 endif()
-
-if (XCODE)
-    add_compile_options(VolumetricClouds PROPERTIES
-        XCODE_GENERATE_SCHEME ON
-        XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE "Metal"
-    )
 endif()
 
 # Compile shader files
 function(compile_shader SHADER_PATH)
-    get_filename_component(SHADER_NAME ${SHADER_PATH} NAME)
-    set(SPIRV_OUTPUT "${BIN_ROOT}/shaders/${SHADER_NAME}")
-    
-    # Create output directory
-    file(MAKE_DIRECTORY "${BIN_ROOT}/shaders")
+  get_filename_component(SHADER_NAME ${SHADER_PATH} NAME)
+  set(SPIRV_OUTPUT "${BIN_ROOT}/shaders/${SHADER_NAME}")
+  
+  # Create output directory
+  file(MAKE_DIRECTORY "${BIN_ROOT}/shaders")
 
-    add_custom_command(
-        OUTPUT ${SPIRV_OUTPUT}
-        COMMAND ${GLSLANG_VALIDATOR} -V "${SHADER_PATH}" -o "${SPIRV_OUTPUT}"
-        DEPENDS "${SHADER_PATH}"
-        COMMENT "Compiling shader: ${SHADER_NAME}"
-        VERBATIM
-    )
-    
-    # Add to global list of shader outputs
-    set(SHADER_SPIRV_FILES ${SHADER_SPIRV_FILES} ${SPIRV_OUTPUT} PARENT_SCOPE)
+  add_custom_command(
+   OUTPUT ${SPIRV_OUTPUT}
+   COMMAND ${GLSLANG_VALIDATOR} -V "${SHADER_PATH}" -o "${SPIRV_OUTPUT}"
+   DEPENDS "${SHADER_PATH}"
+   COMMENT "Compiling shader: ${SHADER_NAME}"
+   VERBATIM
+  )
+  
+  # Add to global list of shader outputs
+  set(SHADER_SPIRV_FILES ${SHADER_SPIRV_FILES} ${SPIRV_OUTPUT} PARENT_SCOPE)
 endfunction()
 
 # Find glslangValidator
 find_program(GLSLANG_VALIDATOR 
-    NAMES glslangValidator
-    HINTS "$ENV{VULKAN_SDK}/Bin"
-    REQUIRED
+  NAMES glslangValidator
+  HINTS "$ENV{VULKAN_SDK}/Bin"
+  REQUIRED
 )
 
 # Compile all shaders
 file(GLOB SHADER_FILES 
-    "${SHADER_ROOT}/*.vert" 
-    "${SHADER_ROOT}/*.frag"
-    "${SHADER_ROOT}/*.comp"
+  "${SHADER_ROOT}/*.vert" 
+  "${SHADER_ROOT}/*.frag"
+  "${SHADER_ROOT}/*.comp"
 )
 
 foreach(SHADER ${SHADER_FILES})
-    compile_shader(${SHADER})
+  compile_shader(${SHADER})
 endforeach()
 
 # Create custom target that depends on all shader outputs
@@ -116,9 +113,9 @@ add_custom_target(Shaders ALL DEPENDS ${SHADER_SPIRV_FILES})
 
 # Create executable with shader outputs as dependencies
 add_executable(${PROJECT_NAME} 
-    ${SOURCE_FILES} 
-    ${SHADER_FILES}
-    ${SHADER_SPIRV_FILES}  # Explicitly list SPIR-V outputs
+  ${SOURCE_FILES} 
+  ${SHADER_FILES}
+  ${SHADER_SPIRV_FILES}  # Explicitly list SPIR-V outputs
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_ROOT})

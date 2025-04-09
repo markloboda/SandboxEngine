@@ -8,7 +8,7 @@ private:
    WGPUComputePassEncoder _encoder;
 
 public:
-   ComputePassEncoder(CommandEncoder* commandEncoder, WGPUComputePassDescriptor* descriptor);
+   ComputePassEncoder(WGPUComputePassEncoder encoder);
    ~ComputePassEncoder();
 
    WGPUComputePassEncoder Get() const { return _encoder; }

@@ -33,7 +33,7 @@ private:
    };
 
 public:
-   GridRenderer(GLFWwindow* window, Device* device);
+   GridRenderer(Device* device);
    ~GridRenderer();
 
 private:

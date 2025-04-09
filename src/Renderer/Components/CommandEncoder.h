@@ -16,9 +16,9 @@ public:
 
    WGPUCommandEncoder Get() const { return _encoder; }
 
-   ComputePassEncoder* BeginComputePass(WGPUComputePassDescriptor* descriptor);
-   RenderPassEncoder* BeginRenderPass(WGPURenderPassDescriptor* descriptor);
-   CommandBuffer* Finish();
+   WGPUComputePassEncoder BeginComputePass(WGPUComputePassDescriptor* descriptor);
+   WGPURenderPassEncoder BeginRenderPass(WGPURenderPassDescriptor* descriptor);
+   WGPUCommandBuffer Finish();
 
    void CopyTextureToBuffer(WGPUTexelCopyTextureInfo const* source, WGPUTexelCopyBufferInfo const* destination, WGPUExtent3D const* copySize);
 

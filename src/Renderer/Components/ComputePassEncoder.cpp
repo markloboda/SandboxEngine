@@ -1,7 +1,7 @@
 #include <pch.h>
 
-ComputePassEncoder::ComputePassEncoder(CommandEncoder* commandEncoder, WGPUComputePassDescriptor* descriptor) :
-   _encoder(wgpuCommandEncoderBeginComputePass(commandEncoder->Get(), descriptor))
+ComputePassEncoder::ComputePassEncoder(WGPUComputePassEncoder encoder) :
+   _encoder(encoder)
 {
    if (!_encoder)
    {

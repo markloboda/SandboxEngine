@@ -89,7 +89,7 @@ bool Renderer::Initialize()
    ImGuiManager::GetInstance().Configure(&_device, _surface.GetFormat());
 
    // Set up renderers.
-   _gridRenderer = new GridRenderer(_window, &_device);
+   _gridRenderer = new GridRenderer(&_device);
    _cloudRenderer = new CloudRenderer(&_device, &_queue);
 
    return true;
@@ -129,7 +129,7 @@ void Renderer::Render()
       }
       end = std::chrono::high_resolution_clock::now();
       _stats.gridTime = std::chrono::duration<float, std::milli>(end - start).count();
-
+      
       start = std::chrono::high_resolution_clock::now();
       bool renderClouds = Application::GetInstance().GetEditor()->GetRenderClouds();
       if (renderClouds)
@@ -138,7 +138,7 @@ void Renderer::Render()
       }
       end = std::chrono::high_resolution_clock::now();
       _stats.cloudTime = std::chrono::duration<float, std::milli>(end - start).count();
-
+      
       // ImGui.
       start = std::chrono::high_resolution_clock::now();
       ImGuiManager::GetInstance().Render(&encoder, &textureView);
@@ -146,7 +146,7 @@ void Renderer::Render()
       _stats.uiTime = std::chrono::duration<float, std::milli>(end - start).count();
    }
 
-   CommandBuffer cmdBuffer = *encoder.Finish();
+   CommandBuffer cmdBuffer = CommandBuffer(encoder.Finish());
    _queue.Submit(1, &cmdBuffer);
    _surface.Present();
    _device.Poll();
@@ -175,6 +175,6 @@ void Renderer::ClearRenderPass(CommandEncoder* encoder, TextureView* surfaceText
    renderPassDesc.nextInChain = nullptr;
    renderPassDesc.colorAttachmentCount = 1;
    renderPassDesc.colorAttachments = &renderPassColorAttachment;
-   RenderPassEncoder clearPass = *encoder->BeginRenderPass(&renderPassDesc);
+   RenderPassEncoder clearPass = RenderPassEncoder(encoder->BeginRenderPass(&renderPassDesc));
    clearPass.EndPass();
 }

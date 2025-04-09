@@ -1,7 +1,7 @@
 #include <pch.h>
 
-RenderPassEncoder::RenderPassEncoder(CommandEncoder* commandEncoder, WGPURenderPassDescriptor* descriptor) :
-   _encoder(wgpuCommandEncoderBeginRenderPass(commandEncoder->Get(), descriptor))
+RenderPassEncoder::RenderPassEncoder(WGPURenderPassEncoder encoder) :
+   _encoder(encoder)
 {
    if (!_encoder)
    {

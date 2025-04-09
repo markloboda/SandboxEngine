@@ -4,8 +4,7 @@
 #include <Application/Editor.h>
 #include <Utils/FreeCamera.h>
 
-GridRenderer::GridRenderer(GLFWwindow* window, Device* device) :
-   _window(window),
+GridRenderer::GridRenderer(Device* device) :
    _device(device)
 {
    bool success = Initialize();
@@ -128,7 +127,7 @@ void GridRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureVi
    ca.loadOp = WGPULoadOp_Load;
    ca.storeOp = WGPUStoreOp_Store;
    rpDesc.colorAttachments = &ca;
-   RenderPassEncoder renderPassEncoder = *encoder->BeginRenderPass(&rpDesc);
+   RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder->BeginRenderPass(&rpDesc));
 
    FreeCamera& camera = Application::GetInstance().GetEditor()->GetCamera();
 
@@ -140,10 +139,8 @@ void GridRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureVi
    // Render
    renderPassEncoder.SetPipeline(_renderPipeline);
    renderPassEncoder.SetVertexBuffer(0, _vertexBuffer);
-
    renderPassEncoder.SetBindGroup(0, _uniformsBindGroup);
    renderPassEncoder.Draw(2, _uniforms.numHorizontal + _uniforms.numVertical, 0, 0);
-
    renderPassEncoder.EndPass();
 }
 

@@ -10,7 +10,7 @@ private:
    WGPURenderPassEncoder _encoder;
 
 public:
-   RenderPassEncoder(CommandEncoder* commandEncoder, WGPURenderPassDescriptor* descriptor);
+   RenderPassEncoder(WGPURenderPassEncoder encoder);
    ~RenderPassEncoder();
 
    WGPURenderPassEncoder Get() const { return _encoder; }

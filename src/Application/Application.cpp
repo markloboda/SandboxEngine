@@ -64,7 +64,6 @@ void Application::Run()
 
       // Render.
       _renderer->Render();
-
    }
 }
 

@@ -79,7 +79,7 @@ void ImGuiManager::Render(CommandEncoder* encoder, TextureView* surfaceTextureVi
    renderPassColorAttachment.loadOp = WGPULoadOp_Load;
    renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
    renderPassDesc.colorAttachments = &renderPassColorAttachment;
-   RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder, &renderPassDesc);
+   RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder->BeginRenderPass(&renderPassDesc));
 
    GetInstance().NewFrame();
    GetInstance().RenderUI();

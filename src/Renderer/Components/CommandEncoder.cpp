@@ -17,25 +17,25 @@ CommandEncoder::~CommandEncoder()
    }
 }
 
-CommandBuffer* CommandEncoder::Finish()
+WGPUComputePassEncoder CommandEncoder::BeginComputePass(WGPUComputePassDescriptor* descriptor)
+{
+   return wgpuCommandEncoderBeginComputePass(Get(), descriptor);
+}
+
+WGPURenderPassEncoder CommandEncoder::BeginRenderPass(WGPURenderPassDescriptor* descriptor)
+{
+   return wgpuCommandEncoderBeginRenderPass(Get(), descriptor);
+}
+
+WGPUCommandBuffer CommandEncoder::Finish()
 {
    WGPUCommandBufferDescriptor desc = {};
    std::string label = "My Command Buffer";
    desc.label = WGPUStringView{ label.c_str(), label.size() };
-   return new CommandBuffer(wgpuCommandEncoderFinish(_encoder, &desc));
+   return wgpuCommandEncoderFinish(_encoder, &desc);
 }
 
 void CommandEncoder::CopyTextureToBuffer(WGPUTexelCopyTextureInfo const* source, WGPUTexelCopyBufferInfo const* destination, WGPUExtent3D const* copySize)
 {
    wgpuCommandEncoderCopyTextureToBuffer(_encoder, source, destination, copySize);
-}
-
-ComputePassEncoder* CommandEncoder::BeginComputePass(WGPUComputePassDescriptor* descriptor)
-{
-   return new ComputePassEncoder(this, descriptor);
-}
-
-RenderPassEncoder* CommandEncoder::BeginRenderPass(WGPURenderPassDescriptor* descriptor)
-{
-   return new RenderPassEncoder(this, descriptor);
 }

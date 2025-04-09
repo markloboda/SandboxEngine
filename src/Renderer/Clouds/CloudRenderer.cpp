@@ -262,7 +262,7 @@ void CloudRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureV
    rpDesc.colorAttachmentCount = 1;
    rpDesc.colorAttachments = &colorAttachment;
 
-   RenderPassEncoder pass = *encoder->BeginRenderPass(&rpDesc);
+   RenderPassEncoder pass = RenderPassEncoder(encoder->BeginRenderPass(&rpDesc));
    pass.SetPipeline(_pipeline);
    pass.SetBindGroup(0, _texturesBindGroup);
    pass.SetBindGroup(1, _dataBindGroup);
