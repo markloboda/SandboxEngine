@@ -113,7 +113,8 @@ void Renderer::Render()
    CommandEncoder encoder = CommandEncoder(&_device, &encoderDesc);
 
    // Render pass.
-   WGPUSurfaceTexture surfaceTexture = _surface.GetNextSurfaceTexture();
+   WGPUSurfaceTexture surfaceTexture;
+   _surface.GetNextSurfaceTexture(&surfaceTexture);
    TextureView textureView = TextureView(surfaceTexture.texture, nullptr);
 
    std::chrono::high_resolution_clock::time_point start, end;

@@ -32,6 +32,16 @@ void Surface::ConfigureSurface(WGPUSurfaceConfiguration config)
       config.format = WGPUTextureFormat_RGBA8Unorm;
    }
 
+   if (config.width == 0)
+   {
+      config.width = 1;
+   }
+
+   if (config.height == 0)
+   {
+      config.height = 1;
+   }
+
    _config = config;
    wgpuSurfaceConfigure(_surface, &_config);
 }
@@ -41,24 +51,25 @@ void Surface::UnConfigureSurface()
    wgpuSurfaceUnconfigure(_surface);
 }
 
-WGPUSurfaceTexture Surface::GetNextSurfaceTexture() const
+void Surface::GetNextSurfaceTexture(WGPUSurfaceTexture* surfaceTexture) const
 {
-   WGPUSurfaceTexture surfaceTexture;
-   wgpuSurfaceGetCurrentTexture(_surface, &surfaceTexture);
+   wgpuSurfaceGetCurrentTexture(_surface, surfaceTexture);
 
-   if (surfaceTexture.status == WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
+   if (surfaceTexture->status == WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
    {
       std::cerr << "Warning: Surface texture is not in optimal state.\n";
    }
-   else if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
+   else if (surfaceTexture->status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
    {
       throw std::runtime_error("Failed to get surface texture in optimal way.");
    }
-
-   return surfaceTexture;
 }
 
 void Surface::Present() const
 {
-   wgpuSurfacePresent(_surface);
+   WGPUStatus status = wgpuSurfacePresent(_surface);
+   if (status != WGPUStatus_Success)
+   {
+      throw std::runtime_error("Failed to present surface.");
+   }
 }
