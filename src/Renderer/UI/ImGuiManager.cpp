@@ -73,11 +73,14 @@ void ImGuiManager::Render(Renderer*, CommandEncoder* encoder, TextureView* surfa
    // Render pass
    WGPURenderPassDescriptor renderPassDesc = {};
    renderPassDesc.colorAttachmentCount = 1;
-   WGPURenderPassColorAttachment renderPassColorAttachment = {};
-   renderPassColorAttachment.view = surfaceTextureView->Get();
-   renderPassColorAttachment.loadOp = WGPULoadOp_Load;
-   renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
-   renderPassDesc.colorAttachments = &renderPassColorAttachment;
+   WGPURenderPassColorAttachment ca = {};
+   {
+      ca.view = surfaceTextureView->Get();
+      ca.loadOp = WGPULoadOp_Load;
+      ca.storeOp = WGPUStoreOp_Store;
+      ca.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
+   }
+   renderPassDesc.colorAttachments = &ca;
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder->BeginRenderPass(&renderPassDesc));
 
    GetInstance().NewFrame();

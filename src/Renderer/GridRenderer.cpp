@@ -127,7 +127,9 @@ void GridRenderer::Render(Renderer* renderer, CommandEncoder* encoder, TextureVi
    ca.view = surfaceTextureView->Get();
    ca.loadOp = WGPULoadOp_Load;
    ca.storeOp = WGPUStoreOp_Store;
+   ca.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
    rpDesc.colorAttachments = &ca;
+   rpDesc.depthStencilAttachment = nullptr;
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder->BeginRenderPass(&rpDesc));
 
    FreeCamera& camera = Application::GetInstance().GetEditor()->GetCamera();

@@ -10,7 +10,6 @@
 
 #include <GLFW/glfw3.h>
 
-#define WEBGPU_CPP_IMPLEMENTATION
 #include <webgpu/webgpu.hpp>
 
 #include <glfw3webgpu.h>

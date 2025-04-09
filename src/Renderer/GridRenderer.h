@@ -21,6 +21,8 @@ private:
    RenderPipeline* _renderPipeline;
 
    GridUniforms _uniforms = {
+      .view = mat4x4(),
+      .proj = mat4x4(),
       .gridSpacing = 1.0f,
       .numHorizontal = 500,
       .numVertical = 500

@@ -7,33 +7,36 @@
 #include <Renderer/GridRenderer.h>
 #include <Renderer/Clouds/CloudRenderer.h>
 
-WGPULogCallback logCallback = [](WGPULogLevel level, WGPUStringView message, void*)
+WGPULogCallback GetLogCallback()
 {
-   switch (level)
+   return [](WGPULogLevel level, WGPUStringView message, void*)
    {
-      case WGPULogLevel_Off:
-         break;
-      case WGPULogLevel_Error:
-         std::cerr << "WGPU Error: " << message.data << "\n";
+      switch (level)
+      {
+         case WGPULogLevel_Off:
+            break;
+         case WGPULogLevel_Error:
+            std::cerr << "WGPU Error: " << message.data << "\n";
          __debugbreak();
          break;
-      case WGPULogLevel_Warn:
-         std::cerr << "WGPU Warning: " << message.data << "\n";
+         case WGPULogLevel_Warn:
+            std::cerr << "WGPU Warning: " << message.data << "\n";
          break;
-      case WGPULogLevel_Info:
-         std::cout << "WGPU Info: " << message.data << "\n";
+         case WGPULogLevel_Info:
+            std::cout << "WGPU Info: " << message.data << "\n";
          break;
-      case WGPULogLevel_Debug:
-         std::cout << "WGPU Debug: " << message.data << "\n";
+         case WGPULogLevel_Debug:
+            std::cout << "WGPU Debug: " << message.data << "\n";
          break;
-      case WGPULogLevel_Trace:
-         std::cout << "WGPU Trace: " << message.data << "\n";
+         case WGPULogLevel_Trace:
+            std::cout << "WGPU Trace: " << message.data << "\n";
          break;
-      case WGPULogLevel_Force32:
-         std::cerr << "WGPU Force32: " << message.data << "\n";
+         case WGPULogLevel_Force32:
+            std::cerr << "WGPU Force32: " << message.data << "\n";
          __debugbreak();
          break;
-   }
+      }
+   };
 };
 
 Renderer::Renderer(GLFWwindow* window)
@@ -60,7 +63,7 @@ bool Renderer::Initialize()
 #else
       wgpuSetLogLevel(WGPULogLevel_Info);
 #endif
-      wgpuSetLogCallback(logCallback, nullptr);
+      wgpuSetLogCallback(GetLogCallback(), nullptr);
    }
 
    // Configure surface.
@@ -190,15 +193,17 @@ void Renderer::UploadBufferData(Buffer* buffer, const void* data, size_t size)
 
 void Renderer::ClearRenderPass(CommandEncoder* encoder, TextureView* surfaceTextureView)
 {
-   WGPURenderPassColorAttachment renderPassColorAttachment = {};
-   renderPassColorAttachment.view = surfaceTextureView->Get();
-   renderPassColorAttachment.loadOp = WGPULoadOp_Clear;
-   renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
-   renderPassColorAttachment.clearValue = { 0.1f, 0.1f, 0.1f, 1.0f };
-   WGPURenderPassDescriptor renderPassDesc = {};
-   renderPassDesc.nextInChain = nullptr;
-   renderPassDesc.colorAttachmentCount = 1;
-   renderPassDesc.colorAttachments = &renderPassColorAttachment;
-   RenderPassEncoder clearPass = RenderPassEncoder(encoder->BeginRenderPass(&renderPassDesc));
+   WGPURenderPassColorAttachment ca = {};
+   ca.view = surfaceTextureView->Get();
+   ca.loadOp = WGPULoadOp_Clear;
+   ca.storeOp = WGPUStoreOp_Store;
+   ca.clearValue = { 0.1f, 0.1f, 0.1f, 1.0f };
+   ca.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
+   WGPURenderPassDescriptor rpDesc = {};
+   rpDesc.nextInChain = nullptr;
+   rpDesc.colorAttachmentCount = 1;
+   rpDesc.colorAttachments = &ca;
+   rpDesc.depthStencilAttachment = nullptr;
+   RenderPassEncoder clearPass = RenderPassEncoder(encoder->BeginRenderPass(&rpDesc));
    clearPass.EndPass();
 }

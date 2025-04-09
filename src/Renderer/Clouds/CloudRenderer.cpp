@@ -252,15 +252,17 @@ void CloudRenderer::Render(Renderer* renderer, CommandEncoder* encoder, TextureV
    renderer->UploadBufferData(_uCloudRenderSettings, &Settings, sizeof(CloudRenderSettings));
 
    WGPURenderPassDescriptor rpDesc = {};
-   WGPURenderPassColorAttachment colorAttachment{};
+   WGPURenderPassColorAttachment cp{};
    {
-      colorAttachment.view = surfaceTextureView->Get();
-      colorAttachment.loadOp = WGPULoadOp_Load;
-      colorAttachment.storeOp = WGPUStoreOp_Store;
-      colorAttachment.clearValue = { 0.0f, 0.0f, 0.0f, 0.0f };
+      cp.view = surfaceTextureView->Get();
+      cp.loadOp = WGPULoadOp_Load;
+      cp.storeOp = WGPUStoreOp_Store;
+      cp.clearValue = { 0.0f, 0.0f, 0.0f, 0.0f };
+      cp.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
    }
    rpDesc.colorAttachmentCount = 1;
-   rpDesc.colorAttachments = &colorAttachment;
+   rpDesc.colorAttachments = &cp;
+   rpDesc.depthStencilAttachment = nullptr;
 
    RenderPassEncoder pass = RenderPassEncoder(encoder->BeginRenderPass(&rpDesc));
    pass.SetPipeline(_pipeline);
