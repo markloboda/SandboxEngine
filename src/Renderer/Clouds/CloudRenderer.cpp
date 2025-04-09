@@ -8,11 +8,9 @@
 #include <Utils/FreeCamera.h>
 #include <Utils/Noise.h>
 
-CloudRenderer::CloudRenderer(Device* device, Queue* queue) :
-   _device(device),
-   _queue(queue)
+CloudRenderer::CloudRenderer(Renderer* renderer)
 {
-   bool success = Initialize();
+   bool success = Initialize(renderer);
    assert(success);
 }
 
@@ -21,19 +19,21 @@ CloudRenderer::~CloudRenderer()
    Terminate();
 }
 
-bool CloudRenderer::Initialize()
+bool CloudRenderer::Initialize(Renderer* renderer)
 {
+   Device* device = renderer->GetDevice();
+
    // Shader modules
-   ShaderModule vertexShader = ShaderModule::LoadShaderModule(_device, "clouds.vert");
-   ShaderModule fragmentShader = ShaderModule::LoadShaderModule(_device, "clouds.frag");
+   ShaderModule vertexShader = ShaderModule::LoadShaderModule(device, "clouds.vert");
+   ShaderModule fragmentShader = ShaderModule::LoadShaderModule(device, "clouds.frag");
 
    // Uniform buffer
-   _uCameraData = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CameraData));
-   _uResolution = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(ResolutionData));
-   _uCloudRenderSettings = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CloudRenderSettings));
+   _uCameraData = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CameraData));
+   _uResolution = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(ResolutionData));
+   _uCloudRenderSettings = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CloudRenderSettings));
 
    // Clouds model
-   _cloudsModel = new CloudsModel(_device, _queue);
+   _cloudsModel = new CloudsModel(renderer);
 
    // Sampler
    {
@@ -45,7 +45,7 @@ bool CloudRenderer::Initialize()
       weatherMapSamplerDesc.magFilter = WGPUFilterMode_Linear;
       weatherMapSamplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
       weatherMapSamplerDesc.maxAnisotropy = 1;
-      _weatherMapSampler = new Sampler(_device, &weatherMapSamplerDesc);
+      _weatherMapSampler = new Sampler(device, &weatherMapSamplerDesc);
 
       WGPUSamplerDescriptor cloudBaseSamplerDesc = {};
       cloudBaseSamplerDesc.addressModeU = WGPUAddressMode_Repeat;
@@ -55,7 +55,7 @@ bool CloudRenderer::Initialize()
       cloudBaseSamplerDesc.magFilter = WGPUFilterMode_Linear;
       cloudBaseSamplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
       cloudBaseSamplerDesc.maxAnisotropy = 1;
-      _uCloudBaseSampler = new Sampler(_device, &cloudBaseSamplerDesc);
+      _uCloudBaseSampler = new Sampler(device, &cloudBaseSamplerDesc);
    }
 
    // Texture views
@@ -125,7 +125,7 @@ bool CloudRenderer::Initialize()
          bgEntries[3].binding = 3;
          bgEntries[3].sampler = _uCloudBaseSampler->Get();
 
-         _texturesBindGroup = new BindGroup(_device, { bglEntries, bgEntries });
+         _texturesBindGroup = new BindGroup(device, { bglEntries, bgEntries });
       }
 
       {
@@ -161,7 +161,7 @@ bool CloudRenderer::Initialize()
          bgEntries[2].buffer = _uCloudRenderSettings->Get();
          bgEntries[2].size = sizeof(CloudRenderSettings);
 
-         _dataBindGroup = new BindGroup(_device, { bglEntries, bgEntries });
+         _dataBindGroup = new BindGroup(device, { bglEntries, bgEntries });
       }
    }
 
@@ -175,7 +175,7 @@ bool CloudRenderer::Initialize()
       WGPUPipelineLayoutDescriptor plDesc = {};
       plDesc.bindGroupLayoutCount = 2;
       plDesc.bindGroupLayouts = bindGroupLayouts;
-      WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(_device->Get(), &plDesc);
+      WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device->Get(), &plDesc);
 
       WGPURenderPipelineDescriptor rpDesc = {};
       std::string rpLabel = "CloudRenderer Render Pipeline";
@@ -219,7 +219,7 @@ bool CloudRenderer::Initialize()
       fs.targets = &cts;
       rpDesc.fragment = &fs;
 
-      _pipeline = new RenderPipeline(_device, &rpDesc);
+      _pipeline = new RenderPipeline(device, &rpDesc);
    }
 
    return true;
@@ -237,7 +237,7 @@ void CloudRenderer::Terminate()
    delete _uCloudRenderSettings;
 }
 
-void CloudRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureView)
+void CloudRenderer::Render(Renderer* renderer, CommandEncoder* encoder, TextureView* surfaceTextureView)
 {
    // Collect CloudBounds nodes
    Application* app = &Application::GetInstance();
@@ -247,9 +247,9 @@ void CloudRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureV
    _shaderParams.view = camera.GetViewMatrix();
    _shaderParams.proj = camera.GetProjectionMatrix();
    _shaderParams.pos = camera.GetPosition();
-   _uCameraData->UploadData(_device, &_shaderParams, sizeof(CameraData));
-   _uResolution->UploadData(_device, &resolution, sizeof(ResolutionData));
-   _uCloudRenderSettings->UploadData(_device, &Settings, sizeof(CloudRenderSettings));
+   renderer->UploadBufferData(_uCameraData, &_shaderParams, sizeof(CameraData));
+   renderer->UploadBufferData(_uResolution, &resolution, sizeof(ResolutionData));
+   renderer->UploadBufferData(_uCloudRenderSettings, &Settings, sizeof(CloudRenderSettings));
 
    WGPURenderPassDescriptor rpDesc = {};
    WGPURenderPassColorAttachment colorAttachment{};

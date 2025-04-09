@@ -4,10 +4,9 @@
 #include <Application/Editor.h>
 #include <Utils/FreeCamera.h>
 
-GridRenderer::GridRenderer(Device* device) :
-   _device(device)
+GridRenderer::GridRenderer(Renderer* renderer)
 {
-   bool success = Initialize();
+   bool success = Initialize(renderer);
    assert(success);
 }
 
@@ -16,19 +15,21 @@ GridRenderer::~GridRenderer()
    Terminate();
 }
 
-bool GridRenderer::Initialize()
+bool GridRenderer::Initialize(Renderer* renderer)
 {
+   Device* device = renderer->GetDevice();
+
    // Shader modules
-   ShaderModule vertexShader = ShaderModule::LoadShaderModule(_device, "grid.vert");
-   ShaderModule fragmentShader = ShaderModule::LoadShaderModule(_device, "grid.frag");
+   ShaderModule vertexShader = ShaderModule::LoadShaderModule(device, "grid.vert");
+   ShaderModule fragmentShader = ShaderModule::LoadShaderModule(device, "grid.frag");
 
    // Buffers
    {
       float vertexData[] = { -0.5, 0.5f };
-      _vertexBuffer = new Buffer(_device, WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst, sizeof(vertexData));
-      _vertexBuffer->UploadData(_device, vertexData, sizeof(vertexData));
-      _uniformBuffer = new Buffer(_device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(GridUniforms));
-      _uniformBuffer->UploadData(_device, &_uniforms, sizeof(GridUniforms));
+      _vertexBuffer = new Buffer(device, WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst, sizeof(vertexData));
+      renderer->UploadBufferData(_vertexBuffer, vertexData, sizeof(vertexData));
+      _uniformBuffer = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(GridUniforms));
+      renderer->UploadBufferData(_uniformBuffer, &_uniforms, sizeof(GridUniforms));
    }
 
    // Bind groups
@@ -48,7 +49,7 @@ bool GridRenderer::Initialize()
       bgEntries[0].offset = 0;
       bgEntries[0].size = sizeof(GridUniforms);
 
-      _uniformsBindGroup = new BindGroup(_device, { bglEntries, bgEntries });
+      _uniformsBindGroup = new BindGroup(device, { bglEntries, bgEntries });
    }
 
    // Create render pipeline
@@ -58,7 +59,7 @@ bool GridRenderer::Initialize()
       plDesc.label = WGPUStringView{ plLabel.data(), plLabel.length() };
       plDesc.bindGroupLayoutCount = 1;
       plDesc.bindGroupLayouts = _uniformsBindGroup->GetLayout();
-      WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(_device->Get(), &plDesc);
+      WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device->Get(), &plDesc);
 
       WGPURenderPipelineDescriptor rpDesc = {};
       std::string rpLabel = "GridRenderer Render Pipeline";
@@ -104,7 +105,7 @@ bool GridRenderer::Initialize()
       fs.targets = &cts;
       rpDesc.fragment = &fs;
 
-      _renderPipeline = new RenderPipeline(_device, &rpDesc);
+      _renderPipeline = new RenderPipeline(device, &rpDesc);
    }
 
    return true;
@@ -118,7 +119,7 @@ void GridRenderer::Terminate()
    delete _uniformBuffer;
 }
 
-void GridRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureView)
+void GridRenderer::Render(Renderer* renderer, CommandEncoder* encoder, TextureView* surfaceTextureView)
 {
    WGPURenderPassDescriptor rpDesc = {};
    rpDesc.colorAttachmentCount = 1;
@@ -134,7 +135,7 @@ void GridRenderer::Render(CommandEncoder* encoder, TextureView* surfaceTextureVi
    // Update uniforms.
    _uniforms.view = camera.GetViewMatrix();
    _uniforms.proj = camera.GetProjectionMatrix();
-   _uniformBuffer->UploadData(_device, &_uniforms, sizeof(_uniforms));
+   renderer->UploadBufferData(_uniformBuffer, &_uniforms, sizeof(_uniforms));
 
    // Render
    renderPassEncoder.SetPipeline(_renderPipeline);

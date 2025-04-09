@@ -3,9 +3,6 @@
 class CloudsModel
 {
 private:
-   Device* _device;
-   Queue* _queue;
-
    // R - channel: Cloud Coverage (Worley Noise)
    highp_u32vec2 _weatherMapTextureDimensions;
    Texture* _weatherMapTexture;
@@ -15,12 +12,12 @@ private:
    Texture* _baseNoiseTexture;
 
 public:
-   CloudsModel(Device* device, Queue* queue);
+   CloudsModel(Renderer* renderer);
    ~CloudsModel();
 
    Texture* GetWeatherMapTexture() const { return _weatherMapTexture; }
    Texture* GetBaseNoiseTexture() const { return _baseNoiseTexture; }
 private:
-   void GenerateWeatherMapTexture();
-   void GenerateBaseNoiseTexture();
+   void GenerateWeatherMapTexture(Renderer* renderer);
+   void GenerateBaseNoiseTexture(Renderer* renderer);
 };

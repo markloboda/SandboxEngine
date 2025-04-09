@@ -14,17 +14,11 @@ static_assert(sizeof(GridUniforms) == 144, "GridUniforms size mismatch");
 class GridRenderer
 {
 private:
-   GLFWwindow* _window;
-   Device* _device;
-
+   BindGroup* _uniformsBindGroup;
    Buffer* _vertexBuffer;
    Buffer* _uniformBuffer;
 
    RenderPipeline* _renderPipeline;
-
-   GridUniforms _uniformsData;
-
-   BindGroup* _uniformsBindGroup;
 
    GridUniforms _uniforms = {
       .gridSpacing = 1.0f,
@@ -33,13 +27,13 @@ private:
    };
 
 public:
-   GridRenderer(Device* device);
+   GridRenderer(Renderer* renderer);
    ~GridRenderer();
 
 private:
-   bool Initialize();
+   bool Initialize(Renderer* renderer);
    void Terminate();
 
 public:
-   void Render(CommandEncoder* encoder, TextureView* surfaceTextureView);
+   void Render(Renderer* renderer, CommandEncoder* encoder, TextureView* surfaceTextureView);
 };

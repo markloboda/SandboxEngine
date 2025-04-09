@@ -21,14 +21,3 @@ Buffer::~Buffer()
       wgpuBufferRelease(_buffer);
    }
 }
-
-void Buffer::UploadData(Device* device, const void* data, size_t size)
-{
-   if (size > _size)
-   {
-      throw std::runtime_error("Data size exceeds buffer capacity");
-   }
-
-   WGPUQueue queue = wgpuDeviceGetQueue(device->Get());
-   wgpuQueueWriteBuffer(queue, _buffer, 0, data, size);
-}

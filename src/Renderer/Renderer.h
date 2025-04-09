@@ -39,8 +39,18 @@ public:
 
    void OnWindowResize(int width, int height);
 
-   RenderStats GetRenderStats() const { return _stats; }
+   void UploadTextureData(Texture* texture, const void* data, size_t dataSize, const WGPUExtent3D* writeSize);
+   void UploadBufferData(Buffer* buffer, const void* data, size_t size);
+
+   GLFWwindow* GetWindow() const { return _window; }
+   Device* GetDevice() { return &_device; }
+   Surface* GetSurface() { return &_surface; }
+   Queue* GetQueue() { return &_queue; }
+
    CloudRenderer* GetCloudRenderer() const { return _cloudRenderer; }
+   GridRenderer* GetGridRenderer() const { return _gridRenderer; }
+
+   RenderStats GetRenderStats() const { return _stats; }
 
 private:
    void ClearRenderPass(CommandEncoder* encoder, TextureView* surfaceTextureView);

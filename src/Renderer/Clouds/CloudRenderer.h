@@ -34,9 +34,6 @@ public:
    CloudRenderSettings Settings;
 
 private:
-   Device* _device;
-   Queue* _queue;
-
    RenderPipeline* _pipeline;
    BindGroup* _texturesBindGroup;
    BindGroup* _dataBindGroup;
@@ -53,10 +50,10 @@ private:
    CloudsModel* _cloudsModel;
 
 public:
-   CloudRenderer(Device* device, Queue* queue);
+   CloudRenderer(Renderer* renderer);
    ~CloudRenderer();
 
-   [[nodiscard]] bool Initialize();
+   [[nodiscard]] bool Initialize(Renderer* renderer);
    void Terminate();
-   void Render(CommandEncoder* encoder, TextureView* surfaceTextureView);
+   void Render(Renderer* renderer, CommandEncoder* encoder, TextureView* surfaceTextureView);
 };

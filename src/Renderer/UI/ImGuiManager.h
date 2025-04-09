@@ -6,26 +6,25 @@ class UIRenderer;
 class ImGuiManager
 {
 public:
-   static bool CreateInstance(GLFWwindow* window);
-   static ImGuiManager& GetInstance();
+   static bool CreateInstance(Renderer* renderer);
    static void DestroyInstance();
+   static ImGuiManager& GetInstance();
 
 private:
    static ImGuiManager* _instance;
-   GLFWwindow* _window;
    WGPUTextureFormat _renderTargetFormat = WGPUTextureFormat_Undefined;
 
    // UI renderers
    std::vector<UIRenderer*> _uiRenderers;
 
-   ImGuiManager(GLFWwindow* window);
+   ImGuiManager(Renderer* renderer);
    ~ImGuiManager();
 
 public:
-   void Configure(Device* device, WGPUTextureFormat renderTargetFormat);
+   void Configure(Renderer* renderer);
    void Shutdown();
 
-   void Render(CommandEncoder* encoder, TextureView* surfaceTextureView);
+   void Render(Renderer* renderer, CommandEncoder* encoder, TextureView* surfaceTextureView);
 
    void AddUIRenderer(UIRenderer* uiRenderer);
    bool RemoveUIRenderer(UIRenderer* uiRenderer);

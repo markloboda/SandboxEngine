@@ -85,12 +85,12 @@ bool Renderer::Initialize()
    });
 
    // Set up ImGui.
-   ImGuiManager::CreateInstance(_window);
-   ImGuiManager::GetInstance().Configure(&_device, _surface.GetFormat());
+   ImGuiManager::CreateInstance(this);
+   ImGuiManager::GetInstance().Configure(this);
 
    // Set up renderers.
-   _gridRenderer = new GridRenderer(&_device);
-   _cloudRenderer = new CloudRenderer(&_device, &_queue);
+   _gridRenderer = new GridRenderer(this);
+   _cloudRenderer = new CloudRenderer(this);
 
    return true;
 }
@@ -125,23 +125,23 @@ void Renderer::Render()
       bool renderGrid = Application::GetInstance().GetEditor()->GetRenderGrid();
       if (renderGrid)
       {
-         _gridRenderer->Render(&encoder, &textureView);
+         _gridRenderer->Render(this, &encoder, &textureView);
       }
       end = std::chrono::high_resolution_clock::now();
       _stats.gridTime = std::chrono::duration<float, std::milli>(end - start).count();
-      
+
       start = std::chrono::high_resolution_clock::now();
       bool renderClouds = Application::GetInstance().GetEditor()->GetRenderClouds();
       if (renderClouds)
       {
-         _cloudRenderer->Render(&encoder, &textureView);
+         _cloudRenderer->Render(this, &encoder, &textureView);
       }
       end = std::chrono::high_resolution_clock::now();
       _stats.cloudTime = std::chrono::duration<float, std::milli>(end - start).count();
-      
+
       // ImGui.
       start = std::chrono::high_resolution_clock::now();
-      ImGuiManager::GetInstance().Render(&encoder, &textureView);
+      ImGuiManager::GetInstance().Render(this, &encoder, &textureView);
       end = std::chrono::high_resolution_clock::now();
       _stats.uiTime = std::chrono::duration<float, std::milli>(end - start).count();
    }
@@ -162,6 +162,29 @@ bool Renderer::ShouldClose() const
 void Renderer::OnWindowResize(int width, int height)
 {
    _surface.Resize(width, height);
+}
+
+void Renderer::UploadTextureData(Texture* texture, const void* data, size_t dataSize, const WGPUExtent3D* writeSize)
+{
+   WGPUTexelCopyTextureInfo destination = {};
+   destination.texture = texture->Get();
+   destination.mipLevel = 0;
+   destination.origin = { 0, 0, 0 };
+   WGPUTexelCopyBufferLayout bufferLayout = {};
+   bufferLayout.offset = 0;
+   bufferLayout.bytesPerRow = static_cast<uint32_t>(dataSize / (writeSize->height * writeSize->depthOrArrayLayers));
+   bufferLayout.rowsPerImage = writeSize->height;
+   wgpuQueueWriteTexture(_queue.Get(), &destination, data, dataSize, &bufferLayout, writeSize);
+}
+
+void Renderer::UploadBufferData(Buffer* buffer, const void* data, size_t size)
+{
+   if (size > buffer->GetSize())
+   {
+      throw std::runtime_error("Data size exceeds buffer capacity");
+   }
+
+   wgpuQueueWriteBuffer(_queue.Get(), buffer->Get(), 0, data, size);
 }
 
 void Renderer::ClearRenderPass(CommandEncoder* encoder, TextureView* surfaceTextureView)

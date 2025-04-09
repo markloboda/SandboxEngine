@@ -113,7 +113,6 @@ void Editor::RenderImGuiUI()
       }
       ImGui::End();
    }
-
 }
 
 void Editor::Update(float dt)

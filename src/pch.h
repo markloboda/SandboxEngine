@@ -44,3 +44,5 @@ using namespace glm;
 #include <Renderer/Components/Queue.h>
 #include <Renderer/Components/Texture.h>
 #include <Renderer/Components/TextureView.h>
+
+#include <Renderer/Renderer.h>

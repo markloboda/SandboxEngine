@@ -5,12 +5,11 @@
 // Define the static member
 ImGuiManager* ImGuiManager::_instance = nullptr;
 
-ImGuiManager::ImGuiManager(GLFWwindow* window) :
-   _window(window)
+ImGuiManager::ImGuiManager(Renderer* renderer)
 {
    // Create ImGui context and setup backend bindings.
    ImGui::CreateContext();
-   ImGui_ImplGlfw_InitForOther(_window, true);
+   ImGui_ImplGlfw_InitForOther(renderer->GetWindow(), true);
    ImGui::StyleColorsClassic();
 }
 
@@ -20,14 +19,20 @@ ImGuiManager::~ImGuiManager()
    ImGui::DestroyContext();
 }
 
-bool ImGuiManager::CreateInstance(GLFWwindow* window)
+bool ImGuiManager::CreateInstance(Renderer* renderer)
 {
    if (_instance != nullptr)
    {
       throw std::runtime_error("ImGuiManager instance already exists.");
    }
-   _instance = new ImGuiManager(window);
+   _instance = new ImGuiManager(renderer);
    return true;
+}
+
+void ImGuiManager::DestroyInstance()
+{
+   delete _instance;
+   _instance = nullptr;
 }
 
 ImGuiManager& ImGuiManager::GetInstance()
@@ -40,19 +45,13 @@ ImGuiManager& ImGuiManager::GetInstance()
    return *_instance;
 }
 
-void ImGuiManager::DestroyInstance()
+void ImGuiManager::Configure(Renderer* renderer)
 {
-   delete _instance;
-   _instance = nullptr;
-}
-
-void ImGuiManager::Configure(Device* device, WGPUTextureFormat renderTargetFormat)
-{
-   _renderTargetFormat = renderTargetFormat;
+   _renderTargetFormat = renderer->GetSurface()->GetFormat();
 
    // Initialize WGPU ImGui backend
    ImGui_ImplWGPU_InitInfo initInfo = {};
-   initInfo.Device = device->Get();
+   initInfo.Device = renderer->GetDevice()->Get();
    initInfo.NumFramesInFlight = 3;
    initInfo.RenderTargetFormat = _renderTargetFormat;
    initInfo.DepthStencilFormat = WGPUTextureFormat_Undefined;
@@ -69,7 +68,7 @@ void ImGuiManager::Shutdown()
    ImGui_ImplWGPU_Shutdown();
 }
 
-void ImGuiManager::Render(CommandEncoder* encoder, TextureView* surfaceTextureView)
+void ImGuiManager::Render(Renderer*, CommandEncoder* encoder, TextureView* surfaceTextureView)
 {
    // Render pass
    WGPURenderPassDescriptor renderPassDesc = {};

@@ -3,12 +3,10 @@
 
 #include <FastNoiseLite.h>
 
-CloudsModel::CloudsModel(Device* device, Queue* queue) :
-   _device(device),
-   _queue(queue)
+CloudsModel::CloudsModel(Renderer* renderer)
 {
-   GenerateWeatherMapTexture();
-   GenerateBaseNoiseTexture();
+   GenerateWeatherMapTexture(renderer);
+   GenerateBaseNoiseTexture(renderer);
 }
 
 CloudsModel::~CloudsModel()
@@ -17,7 +15,7 @@ CloudsModel::~CloudsModel()
    delete _weatherMapTexture;
 }
 
-void CloudsModel::GenerateWeatherMapTexture()
+void CloudsModel::GenerateWeatherMapTexture(Renderer* renderer)
 {
    _weatherMapTextureDimensions = { 128u, 128u };
 
@@ -77,7 +75,7 @@ void CloudsModel::GenerateWeatherMapTexture()
    textureDesc.format = WGPUTextureFormat_RGBA8Unorm;
    textureDesc.mipLevelCount = 1;
    textureDesc.sampleCount = 1;
-   _weatherMapTexture = new Texture(_device, &textureDesc);
+   _weatherMapTexture = new Texture(renderer->GetDevice(), &textureDesc);
    if (!_weatherMapTexture->IsValid())
    {
       std::cerr << "Failed to create weather map texture." << std::endl;
@@ -86,10 +84,10 @@ void CloudsModel::GenerateWeatherMapTexture()
 
    // Upload data to the texture
    WGPUExtent3D copyExtent = { _weatherMapTextureDimensions.x, _weatherMapTextureDimensions.y, 1 };
-   _weatherMapTexture->UploadData(_queue, noiseData.data(), noiseData.size() * sizeof(uint8_t), &copyExtent);
+   renderer->UploadTextureData(_weatherMapTexture, noiseData.data(), noiseData.size() * sizeof(uint8_t), &copyExtent);
 }
 
-void CloudsModel::GenerateBaseNoiseTexture()
+void CloudsModel::GenerateBaseNoiseTexture(Renderer* renderer)
 {
    _baseNoiseTextureDimensions = { 128u, 128u, 128u };
 
@@ -133,7 +131,7 @@ void CloudsModel::GenerateBaseNoiseTexture()
    textureDesc.format = WGPUTextureFormat_RGBA8Unorm;
    textureDesc.mipLevelCount = 1;
    textureDesc.sampleCount = 1;
-   _baseNoiseTexture = new Texture(_device, &textureDesc);
+   _baseNoiseTexture = new Texture(renderer->GetDevice(), &textureDesc);
    if (!_baseNoiseTexture->IsValid())
    {
       std::cerr << "Failed to create base noise texture." << std::endl;
@@ -142,5 +140,5 @@ void CloudsModel::GenerateBaseNoiseTexture()
 
    // Upload data to the texture
    WGPUExtent3D copyExtent = { _baseNoiseTextureDimensions.x,_baseNoiseTextureDimensions.y,_baseNoiseTextureDimensions.z };
-   _baseNoiseTexture->UploadData(_queue, noiseData.data(), noiseData.size() * sizeof(uint8_t), &copyExtent);
+   renderer->UploadTextureData(_baseNoiseTexture, noiseData.data(), noiseData.size() * sizeof(uint8_t), &copyExtent);
 }
