@@ -17,7 +17,7 @@ WGPULogCallback GetLogCallback()
             break;
          case WGPULogLevel_Error:
             std::cerr << "WGPU Error: " << message.data << "\n";
-         __debugbreak();
+         DEBUG_BREAK();
          break;
          case WGPULogLevel_Warn:
             std::cerr << "WGPU Warning: " << message.data << "\n";
@@ -33,7 +33,7 @@ WGPULogCallback GetLogCallback()
          break;
          case WGPULogLevel_Force32:
             std::cerr << "WGPU Force32: " << message.data << "\n";
-         __debugbreak();
+         DEBUG_BREAK();
          break;
       }
    };

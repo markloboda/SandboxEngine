@@ -15,4 +15,7 @@ public:
 
    static std::string GetShaderPath(const std::string& shaderName);
    static ShaderModule& LoadShaderModule(Device* device, const std::string& shaderName);
+
+private:
+   static ShaderModule& LoadSPIRVShaderModule(Device* device, const std::string& shaderName);
 };

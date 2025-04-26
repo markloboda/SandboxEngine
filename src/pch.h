@@ -18,6 +18,18 @@
 #include <glm/ext.hpp>
 using namespace glm;
 
+// Debug break define.
+#if defined(_MSC_VER)
+// MSVC (Windows)
+#define DEBUG_BREAK() __debugbreak()
+#elif defined(__linux__) || defined(__APPLE__)
+// Linux and macOS
+#include <signal.h>
+#define DEBUG_BREAK() raise(SIGTRAP)
+#else
+#define DEBUG_BREAK() ((void)0)
+#endif
+
 // Core components.
 #include <Core/Core.h>
 #include <Core/Node.h>

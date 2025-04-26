@@ -25,6 +25,16 @@ std::string inline ShaderModule::GetShaderPath(const std::string& shaderName)
 
 ShaderModule& ShaderModule::LoadShaderModule(Device* device, const std::string& shaderName)
 {
+   if (shaderName.ends_with(".frag") || shaderName.ends_with(".vert") || shaderName.ends_with(".spv"))
+   {
+      return LoadSPIRVShaderModule(device, shaderName);
+   }
+
+   throw std::runtime_error("Unsupported shader file extension: " + shaderName);
+}
+
+ShaderModule & ShaderModule::LoadSPIRVShaderModule(Device *device, const std::string &shaderName)
+{
    std::string path = GetShaderPath(shaderName);
 
    // Open file

@@ -4,19 +4,19 @@ WGPUDeviceLostCallback deviceLostCallback = [](WGPUDevice const* /*device*/, WGP
 {
    std::cerr << "Device lost: reason " << reason;
    std::cerr << ", message: " << (message.data ? message.data : "Unknown error") << "\n";
-   __debugbreak();
+   DEBUG_BREAK();
 };
 
 WGPUPopErrorScopeCallback popErrorScopeCallback = [](WGPUPopErrorScopeStatus /*status*/, WGPUErrorType /*type*/, WGPUStringView message, void*, void*)
 {
    std::cerr << "Error: " << (message.data ? message.data : "Unknown error") << "\n";
-   __debugbreak();
+   DEBUG_BREAK();
 };
 
 WGPUUncapturedErrorCallback uncapturedErrorCallback = [](WGPUDevice const* /*device*/, WGPUErrorType /*type*/, WGPUStringView message, void*, void*)
 {
    std::cerr << "Uncaptured error: " << (message.data ? message.data : "Unknown error") << "\n";
-   __debugbreak();
+   DEBUG_BREAK();
 };
 
 Device::Device()
@@ -134,7 +134,7 @@ Device::~Device()
    }
 }
 
-WGPUShaderModule Device::CreateShaderModule(const std::vector<uint32_t>& spirvCode) const
+WGPUShaderModule Device::CreateShaderModuleSpirV(const std::vector<uint32_t>& spirvCode) const
 {
    WGPUShaderSourceSPIRV spirvDesc{};
    spirvDesc.chain.sType = WGPUSType_ShaderSourceSPIRV;

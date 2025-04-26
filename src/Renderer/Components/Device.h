@@ -13,7 +13,7 @@ public:
 
    WGPUDevice Get() const { return _device; }
    WGPUInstance GetInstance() const { return _instance; }
-   WGPUShaderModule CreateShaderModule(const std::vector<uint32_t>& spirvCode) const;
+   WGPUShaderModule CreateShaderModuleSpirV(const std::vector<uint32_t>& spirvCode) const;
    void Poll() const;
 
 private:
