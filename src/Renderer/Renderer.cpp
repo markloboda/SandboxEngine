@@ -185,7 +185,7 @@ void Renderer::UploadBufferData(Buffer* buffer, const void* data, size_t size)
 {
    if (size > buffer->GetSize())
    {
-      throw std::runtime_error("Data size exceeds buffer capacity");
+      std::cerr << ("Data size exceeds buffer capacity");
    }
 
    wgpuQueueWriteBuffer(_queue.Get(), buffer->Get(), 0, data, size);

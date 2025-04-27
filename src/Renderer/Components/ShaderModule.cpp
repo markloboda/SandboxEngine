@@ -5,7 +5,7 @@ ShaderModule::ShaderModule(WGPUShaderModule shaderModule)
 {
    if (_shaderModule == nullptr)
    {
-      throw std::runtime_error("Failed to create shader module");
+      std::cerr << ("Failed to create shader module");
    }
 }
 
@@ -30,10 +30,11 @@ ShaderModule& ShaderModule::LoadShaderModule(Device* device, const std::string& 
       return LoadSPIRVShaderModule(device, shaderName);
    }
 
-   throw std::runtime_error("Unsupported shader file extension: " + shaderName);
+   std::cerr << ("Unsupported shader file extension: " + shaderName);
+   return *new ShaderModule(nullptr);
 }
 
-ShaderModule & ShaderModule::LoadSPIRVShaderModule(Device *device, const std::string &shaderName)
+ShaderModule& ShaderModule::LoadSPIRVShaderModule(Device* device, const std::string& shaderName)
 {
    std::string path = GetShaderPath(shaderName);
 
@@ -41,7 +42,7 @@ ShaderModule & ShaderModule::LoadSPIRVShaderModule(Device *device, const std::st
    std::ifstream file(path, std::ios::binary | std::ios::ate);
    if (!file.is_open())
    {
-      throw std::runtime_error("Failed to open shader file: " + path);
+      std::cerr << ("Failed to open shader file: " + path);
    }
 
    // Read file
@@ -59,7 +60,7 @@ ShaderModule & ShaderModule::LoadSPIRVShaderModule(Device *device, const std::st
    WGPUShaderModule shaderModule = wgpuDeviceCreateShaderModuleSpirV(device->Get(), &descriptor);
    if (!shaderModule)
    {
-      throw std::runtime_error("Failed to create shader module: " + path);
+      std::cerr << ("Failed to create shader module: " + path);
    }
 
    return *new ShaderModule(shaderModule);

@@ -5,7 +5,7 @@ RenderPassEncoder::RenderPassEncoder(WGPURenderPassEncoder encoder) :
 {
    if (!_encoder)
    {
-      throw std::runtime_error("Failed to begin render pass");
+      std::cerr << ("Failed to begin render pass");
    }
 }
 

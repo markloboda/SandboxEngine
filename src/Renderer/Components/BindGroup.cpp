@@ -12,7 +12,7 @@ BindGroup::BindGroup(Device* device, BindGroupDesc desc)
       _bindGroupLayout = wgpuDeviceCreateBindGroupLayout(device->Get(), &bindGroupLayoutDesc);
       if (!_bindGroupLayout)
       {
-         throw std::runtime_error("Failed to create WebGPU BindGroupLayout");
+         std::cerr << ("Failed to create WebGPU BindGroupLayout");
       }
    }
 
@@ -25,7 +25,7 @@ BindGroup::BindGroup(Device* device, BindGroupDesc desc)
       _bindGroup = wgpuDeviceCreateBindGroup(device->Get(), &bindGroupDesc);
       if (!_bindGroup)
       {
-         throw std::runtime_error("Failed to create WebGPU BindGroup");
+         std::cerr << ("Failed to create WebGPU BindGroup");
       }
    }
 }

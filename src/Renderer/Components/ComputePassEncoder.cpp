@@ -5,7 +5,7 @@ ComputePassEncoder::ComputePassEncoder(WGPUComputePassEncoder encoder) :
 {
    if (!_encoder)
    {
-      throw std::runtime_error("Failed to begin compute pass");
+      std::cerr << "Failed to begin compute pass";
    }
 }
 

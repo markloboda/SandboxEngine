@@ -5,7 +5,7 @@ RenderPipeline::RenderPipeline(Device* device, WGPURenderPipelineDescriptor* des
 {
    if (!_renderPipeline)
    {
-      throw std::runtime_error("Failed to create render pipeline");
+      std::cerr << ("Failed to create render pipeline");
    }
 }
 

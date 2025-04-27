@@ -5,7 +5,7 @@ CommandEncoder::CommandEncoder(Device* device, WGPUCommandEncoderDescriptor* des
 {
    if (!_encoder)
    {
-      throw std::runtime_error("Failed to create command encoder");
+      std::cerr << ("Failed to create command encoder");
    }
 }
 

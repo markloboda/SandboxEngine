@@ -31,7 +31,7 @@ Device::Device()
       _instance = wgpuCreateInstance(&instanceDesc);
       if (!_instance)
       {
-         throw std::runtime_error("Failed to create WebGPU instance");
+         std::cerr << ("Failed to create WebGPU instance");
       }
 
       // Request adapter.
@@ -61,7 +61,7 @@ Device::Device()
       _adapter = adapterFuture.get();
       if (!_adapter)
       {
-         throw std::runtime_error("Failed to obtain WebGPU adapter");
+         std::cerr << ("Failed to obtain WebGPU adapter");
       }
 
       WGPUAdapterInfo info = {};
@@ -113,7 +113,7 @@ Device::Device()
       _device = deviceFuture.get();
       if (!_device)
       {
-         throw std::runtime_error("Failed to create WebGPU device");
+         std::cerr << ("Failed to create WebGPU device");
       }
    }
 }

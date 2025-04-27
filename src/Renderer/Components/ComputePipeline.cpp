@@ -5,7 +5,7 @@ ComputePipeline::ComputePipeline(Device* device, WGPUComputePipelineDescriptor* 
 {
    if (!_pipeline)
    {
-      throw std::runtime_error("Failed to create compute pipeline");
+      std::cerr << ("Failed to create compute pipeline");
    }
 }
 

@@ -5,7 +5,7 @@ TextureView::TextureView(WGPUTexture texture, WGPUTextureViewDescriptor* descrip
 {
    if (!_textureView)
    {
-      throw std::runtime_error("Failed to create texture view");
+      std::cerr << ("Failed to create texture view");
    }
 }
 

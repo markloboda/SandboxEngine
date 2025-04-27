@@ -23,7 +23,7 @@ bool ImGuiManager::CreateInstance(Renderer* renderer)
 {
    if (_instance != nullptr)
    {
-      throw std::runtime_error("ImGuiManager instance already exists.");
+      std::cerr << ("ImGuiManager instance already exists.");
    }
    _instance = new ImGuiManager(renderer);
    return true;
@@ -39,7 +39,7 @@ ImGuiManager& ImGuiManager::GetInstance()
 {
    if (_instance == nullptr)
    {
-      throw std::runtime_error("ImGuiManager instance has not been created.");
+      std::cerr << ("ImGuiManager instance has not been created.");
    }
 
    return *_instance;

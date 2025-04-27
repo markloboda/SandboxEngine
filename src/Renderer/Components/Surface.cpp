@@ -6,7 +6,7 @@ Surface::Surface(Device* device, GLFWwindow* window) :
 {
    if (!_surface)
    {
-      throw std::runtime_error("Failed to create surface");
+      std::cerr << ("Failed to create surface");
    }
 }
 
@@ -61,7 +61,7 @@ void Surface::GetNextSurfaceTexture(WGPUSurfaceTexture* surfaceTexture) const
    }
    else if (surfaceTexture->status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
    {
-      throw std::runtime_error("Failed to get surface texture in optimal way.");
+      std::cerr << ("Failed to get surface texture in optimal way.");
    }
 }
 
@@ -70,6 +70,6 @@ void Surface::Present() const
    WGPUStatus status = wgpuSurfacePresent(_surface);
    if (status != WGPUStatus_Success)
    {
-      throw std::runtime_error("Failed to present surface.");
+      std::cerr << ("Failed to present surface.");
    }
 }

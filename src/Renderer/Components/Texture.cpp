@@ -6,7 +6,7 @@ Texture::Texture(Device* device, WGPUTextureDescriptor* desc) :
 {
    if (_texture == nullptr)
    {
-      throw std::runtime_error("Failed to create texture");
+      std::cerr << ("Failed to create texture");
    }
 }
 

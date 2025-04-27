@@ -5,7 +5,7 @@ Sampler::Sampler(Device* device, WGPUSamplerDescriptor* desc) :
 {
    if (!_sampler)
    {
-      throw std::runtime_error("Failed to create sampler");
+      std::cerr << ("Failed to create sampler");
    }
 }
 

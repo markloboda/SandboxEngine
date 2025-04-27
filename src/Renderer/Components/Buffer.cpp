@@ -10,7 +10,7 @@ Buffer::Buffer(Device* device, WGPUBufferUsage usage, size_t size) :
    _buffer = wgpuDeviceCreateBuffer(device->Get(), &bufferDesc);
    if (!_buffer)
    {
-      throw std::runtime_error("Failed to create WebGPU buffer");
+      std::cerr << "Failed to create WebGPU buffer";
    }
 }
 
