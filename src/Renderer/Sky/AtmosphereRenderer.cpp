@@ -1,23 +1,23 @@
 #include <pch.h>
 #include <Renderer/Sky/AtmosphereRenderer.h>
 
-AtmosphereRenderer::AtmosphereRenderer(Renderer *renderer) {
-
+AtmosphereRenderer::AtmosphereRenderer(Renderer *renderer)
+{
 }
 
-AtmosphereRenderer::~AtmosphereRenderer() {
-
+AtmosphereRenderer::~AtmosphereRenderer()
+{
 }
 
-bool AtmosphereRenderer::Initialize(Renderer *renderer) {
+bool AtmosphereRenderer::Initialize(Renderer *renderer)
+{
    return true;
 }
 
-void AtmosphereRenderer::Terminate() {
-
+void AtmosphereRenderer::Terminate()
+{
 }
 
-void AtmosphereRenderer::Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView) {
-
+void AtmosphereRenderer::Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView)
+{
 }
-

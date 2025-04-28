@@ -18,12 +18,12 @@ ShaderModule::~ShaderModule()
 }
 
 
-std::string inline ShaderModule::GetShaderPath(const std::string& shaderName)
+std::string inline ShaderModule::GetShaderPath(const std::string &shaderName)
 {
    return "shaders/" + shaderName;
 }
 
-ShaderModule& ShaderModule::LoadShaderModule(Device* device, const std::string& shaderName)
+ShaderModule &ShaderModule::LoadShaderModule(Device *device, const std::string &shaderName)
 {
    if (shaderName.ends_with(".frag") || shaderName.ends_with(".vert") || shaderName.ends_with(".spv"))
    {
@@ -34,7 +34,7 @@ ShaderModule& ShaderModule::LoadShaderModule(Device* device, const std::string& 
    return *new ShaderModule(nullptr);
 }
 
-ShaderModule& ShaderModule::LoadSPIRVShaderModule(Device* device, const std::string& shaderName)
+ShaderModule &ShaderModule::LoadSPIRVShaderModule(Device *device, const std::string &shaderName)
 {
    std::string path = GetShaderPath(shaderName);
 
@@ -49,7 +49,7 @@ ShaderModule& ShaderModule::LoadSPIRVShaderModule(Device* device, const std::str
    size_t fileSize = file.tellg();
    file.seekg(0);
    std::vector<uint32_t> spirv(fileSize / sizeof(uint32_t));
-   file.read(reinterpret_cast<char*>(spirv.data()), fileSize);
+   file.read(reinterpret_cast<char *>(spirv.data()), fileSize);
    file.close();
 
    // Create shader module

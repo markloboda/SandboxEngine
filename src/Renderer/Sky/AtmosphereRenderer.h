@@ -1,17 +1,19 @@
 #pragma once
 
-class AtmosphereRenderer 
+class AtmosphereRenderer
 {
 private:
 
 public:
-   AtmosphereRenderer(Renderer* renderer);
+   AtmosphereRenderer(Renderer *renderer);
+
    ~AtmosphereRenderer();
 
 private:
-   bool Initialize(Renderer* renderer);
+   bool Initialize(Renderer *renderer);
+
    void Terminate();
 
 public:
-   void Render(Renderer* renderer, CommandEncoder* encoder, TextureView* surfaceTextureView);
+   void Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView);
 };

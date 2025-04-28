@@ -1,7 +1,6 @@
 #include <pch.h>
 
-RenderPassEncoder::RenderPassEncoder(WGPURenderPassEncoder encoder) :
-   _encoder(encoder)
+RenderPassEncoder::RenderPassEncoder(WGPURenderPassEncoder encoder) : _encoder(encoder)
 {
    if (!_encoder)
    {
@@ -17,17 +16,17 @@ RenderPassEncoder::~RenderPassEncoder()
    }
 }
 
-void RenderPassEncoder::SetPipeline(RenderPipeline* pipeline)
+void RenderPassEncoder::SetPipeline(RenderPipeline *pipeline)
 {
    wgpuRenderPassEncoderSetPipeline(_encoder, pipeline->Get());
 }
 
-void RenderPassEncoder::SetVertexBuffer(uint32_t slot, Buffer* buffer)
+void RenderPassEncoder::SetVertexBuffer(uint32_t slot, Buffer *buffer)
 {
    wgpuRenderPassEncoderSetVertexBuffer(_encoder, slot, buffer->Get(), 0, buffer->GetSize());
 }
 
-void RenderPassEncoder::SetBindGroup(uint32_t index, BindGroup* bindGroup)
+void RenderPassEncoder::SetBindGroup(uint32_t index, BindGroup *bindGroup)
 {
    wgpuRenderPassEncoderSetBindGroup(_encoder, index, *bindGroup->Get(), 0, 0);
 }

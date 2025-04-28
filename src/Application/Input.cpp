@@ -3,17 +3,17 @@
 
 #include <Application/Application.h>
 
-void Input::CursorPosChanged(GLFWwindow* /*window*/, double xpos, double ypos)
+void Input::CursorPosChanged(GLFWwindow * /*window*/, double xpos, double ypos)
 {
-   for (auto& callback : GetInstance()._cursorPositionCallback)
+   for (auto &callback: GetInstance()._cursorPositionCallback)
    {
       callback(xpos, ypos);
    }
 }
 
-void Input::MouseWheelChanged(GLFWwindow* /*window*/, double /*xoffset*/, double yoffset)
+void Input::MouseWheelChanged(GLFWwindow * /*window*/, double /*xoffset*/, double yoffset)
 {
-   for (auto& callback : GetInstance()._mouseWheelCallback)
+   for (auto &callback: GetInstance()._mouseWheelCallback)
    {
       callback(yoffset);
    }
@@ -33,7 +33,7 @@ void Input::Terminate()
 
 bool Input::IsKeyPressed(EInputKey key)
 {
-   GLFWwindow* window = Application::GetInstance().GetWindow();
+   GLFWwindow *window = Application::GetInstance().GetWindow();
 
    if (key >= 0 && key <= 7)
    {

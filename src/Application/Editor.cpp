@@ -38,8 +38,7 @@ void Editor::RenderImGuiUI()
 {
    int windowHeight = Application::GetInstance().GetWindowHeight();
 
-   Renderer* renderer = Application::GetInstance().GetRenderer();
-
+   Renderer *renderer = Application::GetInstance().GetRenderer();
 
    // Editor settings
    {
@@ -89,7 +88,7 @@ void Editor::RenderImGuiUI()
    {
       ImGui::Begin("Clouds", nullptr);
       {
-         CloudRenderer::CloudRenderSettings* settings = &renderer->GetCloudRenderer()->Settings;
+         CloudRenderer::CloudRenderSettings *settings = &renderer->GetCloudRenderer()->Settings;
 
          // Cloud settings
          if (ImGui::CollapsingHeader("Position", ImGuiTreeNodeFlags_DefaultOpen))

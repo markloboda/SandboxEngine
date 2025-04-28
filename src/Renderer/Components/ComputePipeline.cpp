@@ -1,7 +1,6 @@
 #include <pch.h>
 
-ComputePipeline::ComputePipeline(Device* device, WGPUComputePipelineDescriptor* desc) :
-   _pipeline(wgpuDeviceCreateComputePipeline(device->Get(), desc))
+ComputePipeline::ComputePipeline(Device *device, WGPUComputePipelineDescriptor *desc) : _pipeline(wgpuDeviceCreateComputePipeline(device->Get(), desc))
 {
    if (!_pipeline)
    {

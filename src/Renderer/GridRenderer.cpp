@@ -4,7 +4,7 @@
 #include <Application/Editor.h>
 #include <Utils/FreeCamera.h>
 
-GridRenderer::GridRenderer(Renderer* renderer)
+GridRenderer::GridRenderer(Renderer *renderer)
 {
    bool success = Initialize(renderer);
    assert(success);
@@ -15,9 +15,9 @@ GridRenderer::~GridRenderer()
    Terminate();
 }
 
-bool GridRenderer::Initialize(Renderer* renderer)
+bool GridRenderer::Initialize(Renderer *renderer)
 {
-   Device* device = renderer->GetDevice();
+   Device *device = renderer->GetDevice();
 
    // Shader modules
    ShaderModule vertexShader = ShaderModule::LoadShaderModule(device, "grid.vert");
@@ -25,7 +25,7 @@ bool GridRenderer::Initialize(Renderer* renderer)
 
    // Buffers
    {
-      float vertexData[] = { -0.5, 0.5f };
+      float vertexData[] = {-0.5, 0.5f};
       _vertexBuffer = new Buffer(device, WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst, sizeof(vertexData));
       renderer->UploadBufferData(_vertexBuffer, vertexData, sizeof(vertexData));
       _uniformBuffer = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(GridUniforms));
@@ -49,19 +49,19 @@ bool GridRenderer::Initialize(Renderer* renderer)
       bgEntries[0].offset = 0;
       bgEntries[0].size = sizeof(GridUniforms);
 
-      _uniformsBindGroup = new BindGroup(device, { bglEntries, bgEntries });
+      _uniformsBindGroup = new BindGroup(device, {bglEntries, bgEntries});
    }
 
    // Create render pipeline
    {
       WGPUPipelineLayoutDescriptor plDesc = {};
-      plDesc.label = WGPUStringView{ "GridRenderer Pipeline Layout", WGPU_STRLEN };
+      plDesc.label = WGPUStringView{"GridRenderer Pipeline Layout", WGPU_STRLEN};
       plDesc.bindGroupLayoutCount = 1;
       plDesc.bindGroupLayouts = _uniformsBindGroup->GetLayout();
       WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device->Get(), &plDesc);
 
       WGPURenderPipelineDescriptor rpDesc = {};
-      rpDesc.label = WGPUStringView{ "GridRenderer Render Pipeline", WGPU_STRLEN };
+      rpDesc.label = WGPUStringView{"GridRenderer Render Pipeline", WGPU_STRLEN};
       rpDesc.layout = pipelineLayout;
       rpDesc.primitive.topology = WGPUPrimitiveTopology_LineList;
       rpDesc.primitive.stripIndexFormat = WGPUIndexFormat_Undefined;
@@ -85,7 +85,7 @@ bool GridRenderer::Initialize(Renderer* renderer)
       vbl.attributes = &va;
       WGPUVertexState vs = {};
       vs.module = vertexShader.Get();
-      vs.entryPoint = WGPUStringView{ "main", WGPU_STRLEN };
+      vs.entryPoint = WGPUStringView{"main", WGPU_STRLEN};
       vs.bufferCount = 1;
       vs.buffers = &vbl;
       rpDesc.vertex = vs;
@@ -96,7 +96,7 @@ bool GridRenderer::Initialize(Renderer* renderer)
       cts.writeMask = WGPUColorWriteMask_All;
       WGPUFragmentState fs = {};
       fs.module = fragmentShader.Get();
-      fs.entryPoint = WGPUStringView{ "main", WGPU_STRLEN };
+      fs.entryPoint = WGPUStringView{"main", WGPU_STRLEN};
       fs.targetCount = 1;
       fs.targets = &cts;
       rpDesc.fragment = &fs;
@@ -115,7 +115,7 @@ void GridRenderer::Terminate()
    delete _uniformBuffer;
 }
 
-void GridRenderer::Render(Renderer* renderer, CommandEncoder* encoder, TextureView* surfaceTextureView)
+void GridRenderer::Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView)
 {
    WGPURenderPassDescriptor rpDesc = {};
    rpDesc.colorAttachmentCount = 1;
@@ -128,7 +128,7 @@ void GridRenderer::Render(Renderer* renderer, CommandEncoder* encoder, TextureVi
    rpDesc.depthStencilAttachment = nullptr;
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder->BeginRenderPass(&rpDesc));
 
-   FreeCamera& camera = Application::GetInstance().GetEditor()->GetCamera();
+   FreeCamera &camera = Application::GetInstance().GetEditor()->GetCamera();
 
    // Update uniforms.
    _uniforms.view = camera.GetViewMatrix();
@@ -142,4 +142,3 @@ void GridRenderer::Render(Renderer* renderer, CommandEncoder* encoder, TextureVi
    renderPassEncoder.Draw(2, _uniforms.numHorizontal + _uniforms.numVertical, 0, 0);
    renderPassEncoder.EndPass();
 }
-

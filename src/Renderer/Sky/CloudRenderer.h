@@ -34,26 +34,29 @@ public:
    CloudRenderSettings Settings;
 
 private:
-   RenderPipeline* _pipeline;
-   BindGroup* _texturesBindGroup;
-   BindGroup* _dataBindGroup;
-   TextureView* _weatherMapTextureView;
-   Sampler* _weatherMapSampler;
-   TextureView* _cloudBaseTextureView;
-   Sampler* _uCloudBaseSampler;
-   Buffer* _uCameraData;
-   Buffer* _uResolution;
-   Buffer* _uCloudRenderSettings;
+   RenderPipeline *_pipeline;
+   BindGroup *_texturesBindGroup;
+   BindGroup *_dataBindGroup;
+   TextureView *_weatherMapTextureView;
+   Sampler *_weatherMapSampler;
+   TextureView *_cloudBaseTextureView;
+   Sampler *_uCloudBaseSampler;
+   Buffer *_uCameraData;
+   Buffer *_uResolution;
+   Buffer *_uCloudRenderSettings;
 
    CameraData _shaderParams;
 
-   CloudsModel* _cloudsModel;
+   CloudsModel *_cloudsModel;
 
 public:
-   CloudRenderer(Renderer* renderer);
+   CloudRenderer(Renderer *renderer);
+
    ~CloudRenderer();
 
-   [[nodiscard]] bool Initialize(Renderer* renderer);
+   [[nodiscard]] bool Initialize(Renderer *renderer);
+
    void Terminate();
-   void Render(Renderer* renderer, CommandEncoder* encoder, TextureView* surfaceTextureView);
+
+   void Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView);
 };

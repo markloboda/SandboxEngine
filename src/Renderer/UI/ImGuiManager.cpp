@@ -3,9 +3,9 @@
 #include <Renderer/UI/UIRenderer.h>
 
 // Define the static member
-ImGuiManager* ImGuiManager::_instance = nullptr;
+ImGuiManager *ImGuiManager::_instance = nullptr;
 
-ImGuiManager::ImGuiManager(Renderer* renderer)
+ImGuiManager::ImGuiManager(Renderer *renderer)
 {
    // Create ImGui context and setup backend bindings.
    ImGui::CreateContext();
@@ -19,7 +19,7 @@ ImGuiManager::~ImGuiManager()
    ImGui::DestroyContext();
 }
 
-bool ImGuiManager::CreateInstance(Renderer* renderer)
+bool ImGuiManager::CreateInstance(Renderer *renderer)
 {
    if (_instance != nullptr)
    {
@@ -35,7 +35,7 @@ void ImGuiManager::DestroyInstance()
    _instance = nullptr;
 }
 
-ImGuiManager& ImGuiManager::GetInstance()
+ImGuiManager &ImGuiManager::GetInstance()
 {
    if (_instance == nullptr)
    {
@@ -45,7 +45,7 @@ ImGuiManager& ImGuiManager::GetInstance()
    return *_instance;
 }
 
-void ImGuiManager::Configure(Renderer* renderer)
+void ImGuiManager::Configure(Renderer *renderer)
 {
    _renderTargetFormat = renderer->GetSurface()->GetFormat();
 
@@ -68,13 +68,12 @@ void ImGuiManager::Shutdown()
    ImGui_ImplWGPU_Shutdown();
 }
 
-void ImGuiManager::Render(Renderer*, CommandEncoder* encoder, TextureView* surfaceTextureView)
+void ImGuiManager::Render(Renderer *, CommandEncoder *encoder, TextureView *surfaceTextureView)
 {
    // Render pass
    WGPURenderPassDescriptor renderPassDesc = {};
    renderPassDesc.colorAttachmentCount = 1;
-   WGPURenderPassColorAttachment ca = {};
-   {
+   WGPURenderPassColorAttachment ca = {}; {
       ca.view = surfaceTextureView->Get();
       ca.loadOp = WGPULoadOp_Load;
       ca.storeOp = WGPUStoreOp_Store;
@@ -93,14 +92,14 @@ void ImGuiManager::Render(Renderer*, CommandEncoder* encoder, TextureView* surfa
 
 void ImGuiManager::SetupStyle()
 {
-   ImGuiStyle& style = ImGui::GetStyle();
+   ImGuiStyle &style = ImGui::GetStyle();
    style.WindowRounding = 5.0f;
    style.FrameRounding = 4.0f;
    style.GrabRounding = 3.0f;
    style.WindowBorderSize = 1.0f;
    style.FrameBorderSize = 1.0f;
 
-   ImVec4 bgColor = ImVec4(0.1f, 0.1f, 0.1f, 0.85f);  // Semi-transparent dark
+   ImVec4 bgColor = ImVec4(0.1f, 0.1f, 0.1f, 0.85f); // Semi-transparent dark
    ImVec4 accentColor = ImVec4(0.9f, 0.3f, 0.3f, 1.0f); // Red accent
 
    style.Colors[ImGuiCol_WindowBg] = bgColor;
@@ -118,7 +117,7 @@ void ImGuiManager::NewFrame()
    ImGui::NewFrame();
 }
 
-void ImGuiManager::EndFrame(RenderPassEncoder* encoder)
+void ImGuiManager::EndFrame(RenderPassEncoder *encoder)
 {
    ImGui::Render();
    ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder->Get());
@@ -126,18 +125,18 @@ void ImGuiManager::EndFrame(RenderPassEncoder* encoder)
 
 void ImGuiManager::RenderUI()
 {
-   for (UIRenderer* uiRenderer : _uiRenderers)
+   for (UIRenderer *uiRenderer: _uiRenderers)
    {
       uiRenderer->RenderImGuiUI();
    }
 }
 
-void ImGuiManager::AddUIRenderer(UIRenderer* uiRenderer)
+void ImGuiManager::AddUIRenderer(UIRenderer *uiRenderer)
 {
    _uiRenderers.push_back(uiRenderer);
 }
 
-bool ImGuiManager::RemoveUIRenderer(UIRenderer* uiRenderer)
+bool ImGuiManager::RemoveUIRenderer(UIRenderer *uiRenderer)
 {
    auto it = std::find(_uiRenderers.begin(), _uiRenderers.end(), uiRenderer);
    if (it != _uiRenderers.end())

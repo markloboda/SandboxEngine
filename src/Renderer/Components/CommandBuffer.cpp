@@ -1,7 +1,6 @@
 #include <pch.h>
 
-CommandBuffer::CommandBuffer(WGPUCommandBuffer cmdBuffer) :
-   _cmdBuffer(cmdBuffer)
+CommandBuffer::CommandBuffer(WGPUCommandBuffer cmdBuffer) : _cmdBuffer(cmdBuffer)
 {
    if (!_cmdBuffer)
    {

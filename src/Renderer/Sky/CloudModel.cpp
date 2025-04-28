@@ -3,7 +3,7 @@
 
 #include <FastNoiseLite.h>
 
-CloudsModel::CloudsModel(Renderer* renderer)
+CloudsModel::CloudsModel(Renderer *renderer)
 {
    GenerateWeatherMapTexture(renderer);
    GenerateBaseNoiseTexture(renderer);
@@ -15,9 +15,9 @@ CloudsModel::~CloudsModel()
    delete _weatherMapTexture;
 }
 
-void CloudsModel::GenerateWeatherMapTexture(Renderer* renderer)
+void CloudsModel::GenerateWeatherMapTexture(Renderer *renderer)
 {
-   _weatherMapTextureDimensions = { 128u, 128u };
+   _weatherMapTextureDimensions = {128u, 128u};
 
    // Perlin noise
    FastNoiseLite perlinGenerator;
@@ -48,8 +48,8 @@ void CloudsModel::GenerateWeatherMapTexture(Renderer* renderer)
    {
       for (uint32_t x = 0; x < _weatherMapTextureDimensions.x; ++x)
       {
-         float perlin = perlinGenerator.GetNoise((float)x, (float)y);
-         float worley = worleyGenerator.GetNoise((float)x, (float)y);
+         float perlin = perlinGenerator.GetNoise((float) x, (float) y);
+         float worley = worleyGenerator.GetNoise((float) x, (float) y);
          // remap from [-1, 1] to [0, 255]
          perlin = (perlin + 1.0f) * 0.5f;
          worley = (worley + 1.0f) * 0.5f;
@@ -83,13 +83,13 @@ void CloudsModel::GenerateWeatherMapTexture(Renderer* renderer)
    }
 
    // Upload data to the texture
-   WGPUExtent3D copyExtent = { _weatherMapTextureDimensions.x, _weatherMapTextureDimensions.y, 1 };
+   WGPUExtent3D copyExtent = {_weatherMapTextureDimensions.x, _weatherMapTextureDimensions.y, 1};
    renderer->UploadTextureData(_weatherMapTexture, noiseData.data(), noiseData.size() * sizeof(uint8_t), &copyExtent);
 }
 
-void CloudsModel::GenerateBaseNoiseTexture(Renderer* renderer)
+void CloudsModel::GenerateBaseNoiseTexture(Renderer *renderer)
 {
-   _baseNoiseTextureDimensions = { 128u, 128u, 128u };
+   _baseNoiseTextureDimensions = {128u, 128u, 128u};
 
    FastNoiseLite noise;
 
@@ -139,6 +139,6 @@ void CloudsModel::GenerateBaseNoiseTexture(Renderer* renderer)
    }
 
    // Upload data to the texture
-   WGPUExtent3D copyExtent = { _baseNoiseTextureDimensions.x,_baseNoiseTextureDimensions.y,_baseNoiseTextureDimensions.z };
+   WGPUExtent3D copyExtent = {_baseNoiseTextureDimensions.x, _baseNoiseTextureDimensions.y, _baseNoiseTextureDimensions.z};
    renderer->UploadTextureData(_baseNoiseTexture, noiseData.data(), noiseData.size() * sizeof(uint8_t), &copyExtent);
 }

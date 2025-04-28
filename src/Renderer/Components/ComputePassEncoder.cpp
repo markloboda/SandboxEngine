@@ -1,7 +1,6 @@
 #include <pch.h>
 
-ComputePassEncoder::ComputePassEncoder(WGPUComputePassEncoder encoder) :
-   _encoder(encoder)
+ComputePassEncoder::ComputePassEncoder(WGPUComputePassEncoder encoder) : _encoder(encoder)
 {
    if (!_encoder)
    {
@@ -17,12 +16,12 @@ ComputePassEncoder::~ComputePassEncoder()
    }
 }
 
-void ComputePassEncoder::SetPipeline(ComputePipeline* pipeline)
+void ComputePassEncoder::SetPipeline(ComputePipeline *pipeline)
 {
    wgpuComputePassEncoderSetPipeline(_encoder, pipeline->Get());
 }
 
-void ComputePassEncoder::SetBindGroup(uint32_t index, BindGroup* bindGroup)
+void ComputePassEncoder::SetBindGroup(uint32_t index, BindGroup *bindGroup)
 {
    wgpuComputePassEncoderSetBindGroup(_encoder, index, *bindGroup->Get(), 0, 0);
 }

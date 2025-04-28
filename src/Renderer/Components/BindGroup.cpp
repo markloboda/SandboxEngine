@@ -1,6 +1,6 @@
 #include <pch.h>
 
-BindGroup::BindGroup(Device* device, BindGroupDesc desc)
+BindGroup::BindGroup(Device *device, BindGroupDesc desc)
 {
    assert(desc.layoutEntries.size() == desc.entries.size());
 

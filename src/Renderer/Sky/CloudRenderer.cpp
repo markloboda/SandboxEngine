@@ -8,7 +8,7 @@
 #include <Utils/FreeCamera.h>
 #include <Utils/Noise.h>
 
-CloudRenderer::CloudRenderer(Renderer* renderer)
+CloudRenderer::CloudRenderer(Renderer *renderer)
 {
    bool success = Initialize(renderer);
    assert(success);
@@ -19,9 +19,9 @@ CloudRenderer::~CloudRenderer()
    Terminate();
 }
 
-bool CloudRenderer::Initialize(Renderer* renderer)
+bool CloudRenderer::Initialize(Renderer *renderer)
 {
-   Device* device = renderer->GetDevice();
+   Device *device = renderer->GetDevice();
 
    // Shader modules
    ShaderModule vertexShader = ShaderModule::LoadShaderModule(device, "clouds.vert");
@@ -61,7 +61,7 @@ bool CloudRenderer::Initialize(Renderer* renderer)
    // Texture views
    {
       {
-         Texture* weatherMap = _cloudsModel->GetWeatherMapTexture();
+         Texture *weatherMap = _cloudsModel->GetWeatherMapTexture();
          WGPUTextureViewDescriptor viewDesc = {};
          viewDesc.format = weatherMap->GetFormat();
          viewDesc.dimension = WGPUTextureViewDimension_2D;
@@ -70,10 +70,8 @@ bool CloudRenderer::Initialize(Renderer* renderer)
          viewDesc.baseArrayLayer = 0;
          viewDesc.arrayLayerCount = 1;
          _weatherMapTextureView = new TextureView(weatherMap->Get(), &viewDesc);
-      }
-
-      {
-         Texture* cloudBaseTexture = _cloudsModel->GetBaseNoiseTexture();
+      } {
+         Texture *cloudBaseTexture = _cloudsModel->GetBaseNoiseTexture();
          WGPUTextureViewDescriptor viewDesc = {};
          viewDesc.format = cloudBaseTexture->GetFormat();
          viewDesc.dimension = WGPUTextureViewDimension_3D;
@@ -125,10 +123,8 @@ bool CloudRenderer::Initialize(Renderer* renderer)
          bgEntries[3].binding = 3;
          bgEntries[3].sampler = _uCloudBaseSampler->Get();
 
-         _texturesBindGroup = new BindGroup(device, { bglEntries, bgEntries });
-      }
-
-      {
+         _texturesBindGroup = new BindGroup(device, {bglEntries, bgEntries});
+      } {
          std::vector<WGPUBindGroupLayoutEntry> bglEntries(3);
 
          // camera (binding 0)
@@ -161,7 +157,7 @@ bool CloudRenderer::Initialize(Renderer* renderer)
          bgEntries[2].buffer = _uCloudRenderSettings->Get();
          bgEntries[2].size = sizeof(CloudRenderSettings);
 
-         _dataBindGroup = new BindGroup(device, { bglEntries, bgEntries });
+         _dataBindGroup = new BindGroup(device, {bglEntries, bgEntries});
       }
    }
 
@@ -178,7 +174,7 @@ bool CloudRenderer::Initialize(Renderer* renderer)
       WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device->Get(), &plDesc);
 
       WGPURenderPipelineDescriptor rpDesc = {};
-      rpDesc.label = WGPUStringView{ "CloudRenderer Render Pipeline", WGPU_STRLEN };
+      rpDesc.label = WGPUStringView{"CloudRenderer Render Pipeline", WGPU_STRLEN};
       rpDesc.layout = pipelineLayout;
       rpDesc.primitive.topology = WGPUPrimitiveTopology_TriangleList;
       rpDesc.primitive.stripIndexFormat = WGPUIndexFormat_Undefined;
@@ -192,16 +188,15 @@ bool CloudRenderer::Initialize(Renderer* renderer)
       // Vertex state
       WGPUVertexState vs = {};
       vs.module = vertexShader.Get();
-      vs.entryPoint = WGPUStringView{ "main", WGPU_STRLEN };
+      vs.entryPoint = WGPUStringView{"main", WGPU_STRLEN};
       rpDesc.vertex = vs;
 
       // Fragment state
       WGPUFragmentState fs = {};
       fs.module = fragmentShader.Get();
-      fs.entryPoint = WGPUStringView{ "main", WGPU_STRLEN };
+      fs.entryPoint = WGPUStringView{"main", WGPU_STRLEN};
       fs.targetCount = 1;
-      WGPUColorTargetState cts = {};
-      {
+      WGPUColorTargetState cts = {}; {
          WGPUBlendState blend = {};
          blend.color.srcFactor = WGPUBlendFactor_SrcAlpha;
          blend.color.dstFactor = WGPUBlendFactor_OneMinusSrcAlpha;
@@ -234,12 +229,12 @@ void CloudRenderer::Terminate()
    delete _uCloudRenderSettings;
 }
 
-void CloudRenderer::Render(Renderer* renderer, CommandEncoder* encoder, TextureView* surfaceTextureView)
+void CloudRenderer::Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView)
 {
    // Collect CloudBounds nodes
-   Application* app = &Application::GetInstance();
-   ResolutionData resolution = { vec2(app->GetWindowWidth(), app->GetWindowHeight()) };
-   FreeCamera& camera = app->GetEditor()->GetCamera();
+   Application *app = &Application::GetInstance();
+   ResolutionData resolution = {vec2(app->GetWindowWidth(), app->GetWindowHeight())};
+   FreeCamera &camera = app->GetEditor()->GetCamera();
 
    _shaderParams.view = camera.GetViewMatrix();
    _shaderParams.proj = camera.GetProjectionMatrix();
@@ -249,12 +244,11 @@ void CloudRenderer::Render(Renderer* renderer, CommandEncoder* encoder, TextureV
    renderer->UploadBufferData(_uCloudRenderSettings, &Settings, sizeof(CloudRenderSettings));
 
    WGPURenderPassDescriptor rpDesc = {};
-   WGPURenderPassColorAttachment cp{};
-   {
+   WGPURenderPassColorAttachment cp{}; {
       cp.view = surfaceTextureView->Get();
       cp.loadOp = WGPULoadOp_Load;
       cp.storeOp = WGPUStoreOp_Store;
-      cp.clearValue = { 0.0f, 0.0f, 0.0f, 0.0f };
+      cp.clearValue = {0.0f, 0.0f, 0.0f, 0.0f};
       cp.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
    }
    rpDesc.colorAttachmentCount = 1;

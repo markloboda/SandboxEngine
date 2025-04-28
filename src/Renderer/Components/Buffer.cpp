@@ -1,7 +1,6 @@
 #include <pch.h>
 
-Buffer::Buffer(Device* device, WGPUBufferUsage usage, size_t size) :
-   _size(size)
+Buffer::Buffer(Device *device, WGPUBufferUsage usage, size_t size) : _size(size)
 {
    WGPUBufferDescriptor bufferDesc = {};
    bufferDesc.size = _size;

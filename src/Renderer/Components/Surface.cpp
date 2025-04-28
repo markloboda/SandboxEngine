@@ -1,8 +1,7 @@
 #include <pch.h>
 
-Surface::Surface(Device* device, GLFWwindow* window) :
-   _surface(glfwGetWGPUSurface(device->GetInstance(), window)),
-   _config(WGPUSurfaceConfiguration{})
+Surface::Surface(Device *device, GLFWwindow *window) : _surface(glfwGetWGPUSurface(device->GetInstance(), window)),
+                                                       _config(WGPUSurfaceConfiguration{})
 {
    if (!_surface)
    {
@@ -51,7 +50,7 @@ void Surface::UnConfigureSurface()
    wgpuSurfaceUnconfigure(_surface);
 }
 
-void Surface::GetNextSurfaceTexture(WGPUSurfaceTexture* surfaceTexture) const
+void Surface::GetNextSurfaceTexture(WGPUSurfaceTexture *surfaceTexture) const
 {
    wgpuSurfaceGetCurrentTexture(_surface, surfaceTexture);
 

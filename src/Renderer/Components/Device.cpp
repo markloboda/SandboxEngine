@@ -1,33 +1,34 @@
 #include <pch.h>
 
-WGPUDeviceLostCallback deviceLostCallback = [](WGPUDevice const* /*device*/, WGPUDeviceLostReason reason, WGPUStringView message, void*, void*)
+WGPUDeviceLostCallback deviceLostCallback = [](WGPUDevice const * /*device*/, WGPUDeviceLostReason reason, WGPUStringView message, void *, void *)
 {
    std::cerr << "Device lost: reason " << reason;
    std::cerr << ", message: " << (message.data ? message.data : "Unknown error") << "\n";
    DEBUG_BREAK();
 };
 
-WGPUPopErrorScopeCallback popErrorScopeCallback = [](WGPUPopErrorScopeStatus /*status*/, WGPUErrorType /*type*/, WGPUStringView message, void*, void*)
+WGPUPopErrorScopeCallback popErrorScopeCallback = [](WGPUPopErrorScopeStatus /*status*/, WGPUErrorType /*type*/, WGPUStringView message, void *, void *)
 {
    std::cerr << "Error: " << (message.data ? message.data : "Unknown error") << "\n";
    DEBUG_BREAK();
 };
 
-WGPUUncapturedErrorCallback uncapturedErrorCallback = [](WGPUDevice const* /*device*/, WGPUErrorType /*type*/, WGPUStringView message, void*, void*)
+WGPUUncapturedErrorCallback uncapturedErrorCallback = [](WGPUDevice const * /*device*/, WGPUErrorType /*type*/, WGPUStringView message, void *, void *)
 {
    std::cerr << "Uncaptured error: " << (message.data ? message.data : "Unknown error") << "\n";
    DEBUG_BREAK();
 };
 
 Device::Device()
-{   // Create the instance.
+{
+   // Create the instance.
    {
       WGPUInstanceExtras extras = {};
-      extras.chain.sType = (WGPUSType)WGPUSType_InstanceExtras;
+      extras.chain.sType = (WGPUSType) WGPUSType_InstanceExtras;
       extras.flags = WGPUInstanceFlag_Validation | WGPUInstanceFlag_Debug;
 
       WGPUInstanceDescriptor instanceDesc = {};
-      instanceDesc.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&extras);
+      instanceDesc.nextInChain = reinterpret_cast<WGPUChainedStruct *>(&extras);
       _instance = wgpuCreateInstance(&instanceDesc);
       if (!_instance)
       {
@@ -44,9 +45,9 @@ Device::Device()
 
       WGPURequestAdapterCallbackInfo adapterCallbackInfo = {};
       adapterCallbackInfo.userdata1 = &adapterPromise;
-      adapterCallbackInfo.callback = [](WGPURequestAdapterStatus status, WGPUAdapter adapter, WGPUStringView message, void* userdata1, void*)
+      adapterCallbackInfo.callback = [](WGPURequestAdapterStatus status, WGPUAdapter adapter, WGPUStringView message, void *userdata1, void *)
       {
-         std::promise<WGPUAdapter>* promise = reinterpret_cast<std::promise<WGPUAdapter>*>(userdata1);
+         std::promise<WGPUAdapter> *promise = reinterpret_cast<std::promise<WGPUAdapter> *>(userdata1);
          if (status == WGPURequestAdapterStatus_Success)
          {
             promise->set_value(adapter);
@@ -83,10 +84,10 @@ Device::Device()
       WGPUDeviceDescriptor deviceDesc = {};
       deviceDesc.deviceLostCallbackInfo = deviceLostCallbackInfo;
       deviceDesc.uncapturedErrorCallbackInfo = uncapturedErrorCallbackInfo;
-      deviceDesc.label = WGPUStringView{ "My Device", WGPU_STRLEN };
+      deviceDesc.label = WGPUStringView{"My Device", WGPU_STRLEN};
 
       WGPUFeatureName features[] = {
-          static_cast<WGPUFeatureName>(WGPUNativeFeature_SpirvShaderPassthrough)
+         static_cast<WGPUFeatureName>(WGPUNativeFeature_SpirvShaderPassthrough)
       };
 
       deviceDesc.requiredFeatures = features;
@@ -94,9 +95,9 @@ Device::Device()
 
       WGPURequestDeviceCallbackInfo deviceCallbackInfo = {};
       deviceCallbackInfo.nextInChain = nullptr;
-      deviceCallbackInfo.callback = [](WGPURequestDeviceStatus status, WGPUDevice device, WGPUStringView message, void* userdata1, void*)
+      deviceCallbackInfo.callback = [](WGPURequestDeviceStatus status, WGPUDevice device, WGPUStringView message, void *userdata1, void *)
       {
-         std::promise<WGPUDevice>* promise = reinterpret_cast<std::promise<WGPUDevice>*>(userdata1);
+         std::promise<WGPUDevice> *promise = reinterpret_cast<std::promise<WGPUDevice> *>(userdata1);
          if (status == WGPURequestDeviceStatus_Success)
          {
             promise->set_value(device);
@@ -133,7 +134,7 @@ Device::~Device()
    }
 }
 
-WGPUShaderModule Device::CreateShaderModuleSpirV(const std::vector<uint32_t>& spirvCode) const
+WGPUShaderModule Device::CreateShaderModuleSpirV(const std::vector<uint32_t> &spirvCode) const
 {
    WGPUShaderSourceSPIRV spirvDesc{};
    spirvDesc.chain.sType = WGPUSType_ShaderSourceSPIRV;
@@ -141,7 +142,7 @@ WGPUShaderModule Device::CreateShaderModuleSpirV(const std::vector<uint32_t>& sp
    spirvDesc.code = spirvCode.data();
 
    WGPUShaderModuleDescriptor desc{};
-   desc.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&spirvDesc);
+   desc.nextInChain = reinterpret_cast<WGPUChainedStruct *>(&spirvDesc);
 
    return wgpuDeviceCreateShaderModule(_device, &desc);
 }

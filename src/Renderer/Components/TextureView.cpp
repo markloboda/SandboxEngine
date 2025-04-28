@@ -1,7 +1,6 @@
 #include <pch.h>
 
-TextureView::TextureView(WGPUTexture texture, WGPUTextureViewDescriptor* descriptor) :
-   _textureView(wgpuTextureCreateView(texture, descriptor))
+TextureView::TextureView(WGPUTexture texture, WGPUTextureViewDescriptor *descriptor) : _textureView(wgpuTextureCreateView(texture, descriptor))
 {
    if (!_textureView)
    {
