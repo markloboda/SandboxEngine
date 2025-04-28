@@ -29,7 +29,8 @@ private:
    };
 
 public:
-   GridRenderer(Renderer* renderer);
+   GridRenderer(Renderer *renderer);
+
    ~GridRenderer();
 
 private:

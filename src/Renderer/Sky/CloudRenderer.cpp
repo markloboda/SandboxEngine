@@ -227,6 +227,9 @@ void CloudRenderer::Terminate()
    delete _uResolution;
    delete _cloudsModel;
    delete _uCloudRenderSettings;
+   delete _weatherMapSampler;
+   delete _weatherMapTextureView;
+   delete _dataBindGroup;
 }
 
 void CloudRenderer::Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView)

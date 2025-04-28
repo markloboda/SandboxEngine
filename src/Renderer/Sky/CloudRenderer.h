@@ -45,9 +45,9 @@ private:
    Buffer *_uResolution;
    Buffer *_uCloudRenderSettings;
 
+   CloudsModel *_cloudsModel;
    CameraData _shaderParams;
 
-   CloudsModel *_cloudsModel;
 
 public:
    CloudRenderer(Renderer *renderer);

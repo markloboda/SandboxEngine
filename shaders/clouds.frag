@@ -7,7 +7,7 @@ layout(set = 0, binding = 1) uniform sampler weatherMapSampler;
 layout(set = 0, binding = 2) uniform texture3D cloudBaseTexture;
 layout(set = 0, binding = 3) uniform sampler cloudBaseSampler;
 
-layout(set = 1, binding = 0) uniform CameraData 
+layout(set = 1, binding = 0) uniform CameraData
 {
    mat4 view;
    mat4 proj;
@@ -21,7 +21,7 @@ layout(set = 1, binding = 1) uniform ResolutionData
 
 layout(set = 1, binding = 2) uniform CloudRenderSettings
 {
-   float cloudStartHeight; 
+   float cloudStartHeight;
    float cloudEndHeight;
 
    float densityMultiplier;

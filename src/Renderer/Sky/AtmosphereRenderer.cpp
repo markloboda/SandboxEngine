@@ -3,14 +3,22 @@
 
 AtmosphereRenderer::AtmosphereRenderer(Renderer *renderer)
 {
+   bool success = Initialize(renderer);
+   assert(success);
 }
 
 AtmosphereRenderer::~AtmosphereRenderer()
 {
+   Terminate();
 }
 
 bool AtmosphereRenderer::Initialize(Renderer *renderer)
 {
+   Device *device = renderer->GetDevice();
+
+   // Shader modules
+   ShaderModule fragmentShader = ShaderModule::LoadShaderModule(device, "atmosphere.frag");
+
    return true;
 }
 
