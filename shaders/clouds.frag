@@ -32,6 +32,14 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    float cloudMaxStepSize;
 } uSettings;
 
+#define CLOUD_START_HEIGHT uSettings.cloudStartHeight
+#define CLOUD_END_HEIGHT uSettings.cloudEndHeight
+#define DENSITY_MULTIPLIER uSettings.densityMultiplier
+#define DENSITY_THRESHOLD uSettings.densityThreshold
+#define CLOUD_MARCH_STEPS_COUNT uSettings.cloudNumSteps
+#define LIGHT_MARCH_STEPS_COUNT uSettings.lightNumSteps
+#define CLOUD_MAX_STEP_SIZE uSettings.cloudMaxStepSize
+
 layout(location = 0) in vec2 uv;
 
 // outputs
@@ -41,19 +49,13 @@ layout(location = 0) out vec4 fragCol;
 #define EPSILON 1e-5
 
 // define settings
-#define CLOUD_START_HEIGHT uSettings.cloudStartHeight
-#define CLOUD_END_HEIGHT uSettings.cloudEndHeight
-
-#define DENSITY_MULTIPLIER uSettings.densityMultiplier
-#define DENSITY_THRESHOLD uSettings.densityThreshold
-
-#define CLOUD_MARCH_STEPS_COUNT uSettings.cloudNumSteps
-#define LIGHT_MARCH_STEPS_COUNT uSettings.lightNumSteps
+#define CLOUD_HEIGHT_GRADIENT 0.2
 
 // constant settings
 #define WEATHER_MAP_SCALING_FACTOR 1.0 / 10000.0 // covers 10km x 10km
 #define SUN_DIR vec3(0.577, -0.577, 0.577)
 #define CLOUD_BASE_DENSITY_MULTIPLIER 0.1
+#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR 1 / 1000.0
 
 // helper functions
 vec3 getStartRayDirection(vec2 uv)
@@ -65,6 +67,8 @@ vec3 getStartRayDirection(vec2 uv)
    return rayDir;
 }
 
+// Calculate the distance to the cloud layer
+// to entry point
 float getCloudEntryDistance(vec3 rayOrigin, vec3 rayDir)
 {
    float res = 0.0;
@@ -73,37 +77,29 @@ float getCloudEntryDistance(vec3 rayOrigin, vec3 rayDir)
    {
       // Ray starts below the cloud layer
       if (rayDir.y < EPSILON)
-      {
          // no intersection
          res = -1.0;
-      }
-      else 
-      {
+      else
          res = (CLOUD_START_HEIGHT - rayOrigin.y) / rayDir.y;
-      }
    }
    else if (rayOrigin.y > CLOUD_END_HEIGHT)
    {
       // Ray starts above the cloud layer
       if (rayDir.y > -EPSILON)
-      {
          // no intersection
          res = -1.0;
-      }
       else
-      {
          res = (CLOUD_END_HEIGHT - rayOrigin.y) / rayDir.y;
-      }
    }
    else
-   {
       // Ray starts inside the cloud layer
       res = 0.0;
-   }
 
    return res;
 }
 
+// Calculate the distance inside the cloud layer
+// from entry point to the exit point
 float getCloudInsideDistance(vec3 rayOrigin, vec3 rayDir)
 {
    float res = 0.0;
@@ -112,48 +108,34 @@ float getCloudInsideDistance(vec3 rayOrigin, vec3 rayDir)
    {
       // Ray starts below the cloud layer
       if (rayDir.y < EPSILON)
-      {
          // No intersection
          res = -1.0;
-      }
       else
-      {
          // Ray is going up
          res = (CLOUD_END_HEIGHT - CLOUD_START_HEIGHT) / rayDir.y;
-      }
    }
    else if (rayOrigin.y > CLOUD_END_HEIGHT)
    {
       // Ray starts above the cloud layer
       if (rayDir.y > -EPSILON)
-      {
          // No intersection
          res = -1.0;
-      }
       else
-      {
          // Ray is going down
          res = (CLOUD_START_HEIGHT - CLOUD_END_HEIGHT) / rayDir.y;
-      }
    }
    else
    {
       // Ray starts inside the cloud layer
       if (abs(rayDir.y) < EPSILON)
-      {
          // Ray is parallel to the cloud layer, default distance
          res = 5000.0;
-      }
       else if (rayDir.y > 0)
-      {
          // Ray is going up
          res = (CLOUD_END_HEIGHT - rayOrigin.y) / rayDir.y;
-      }
       else
-      {
          // Ray is going down
          res = (CLOUD_START_HEIGHT - rayOrigin.y) / rayDir.y;
-      }
    }
 
    return res;
@@ -173,12 +155,17 @@ float sampleDensity(vec3 pos)
       weatherMapValue = texture(sampler2D(weatherMap, weatherMapSampler), weatherMapCoord).r;
    }
 
-   float density = max(0.0, weatherMapValue - DENSITY_THRESHOLD)* CLOUD_BASE_DENSITY_MULTIPLIER * DENSITY_MULTIPLIER;
-
    // height gradient
-   float heightGradient = smoothstep(CLOUD_START_HEIGHT, CLOUD_START_HEIGHT + 100.0, pos.y) * 
-                          (1.0 - smoothstep(CLOUD_END_HEIGHT - 100.0, CLOUD_END_HEIGHT, pos.y));
-   density *= heightGradient;
+   float gradientHeight = (CLOUD_END_HEIGHT - CLOUD_START_HEIGHT) * CLOUD_HEIGHT_GRADIENT;
+   float heightGradient = smoothstep(CLOUD_START_HEIGHT, CLOUD_START_HEIGHT + gradientHeight, pos.y) *
+                          (1.0 - smoothstep(CLOUD_END_HEIGHT - gradientHeight, CLOUD_END_HEIGHT, pos.y));
+
+   // Detail texture
+   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR;
+   float detailTextureValue = texture(sampler3D(cloudBaseTexture, cloudBaseSampler), detailTextureCoord).x;
+
+   // Calculate density
+   float density = max(0.0, weatherMapValue * heightGradient * detailTextureValue - DENSITY_THRESHOLD) * CLOUD_BASE_DENSITY_MULTIPLIER * DENSITY_MULTIPLIER;
 
    return density;
 }
@@ -187,7 +174,7 @@ float raymarchToLight(vec3 rayOrigin, vec3 rayDir)
 {
    float dstInsideCloud = getCloudInsideDistance(rayOrigin, rayDir);
    float stepSize = dstInsideCloud / float(LIGHT_MARCH_STEPS_COUNT);
-   
+
    float totalDensity = 0.0;
    for (int i = 0; i < LIGHT_MARCH_STEPS_COUNT; i++)
    {
@@ -204,7 +191,7 @@ void main()
 {
    vec3 rayOrigin = uCamera.pos;
    vec3 rayDir = getStartRayDirection(uv);
-   
+
    int numSteps = CLOUD_MARCH_STEPS_COUNT;
 
    float dstToCloud = getCloudEntryDistance(rayOrigin, rayDir);
@@ -212,7 +199,7 @@ void main()
    float dstInsideCloud = getCloudInsideDistance(rayOrigin, rayDir);
    float dstLimit = dstInsideCloud;
    float stepSize = dstLimit / float(numSteps);
-   stepSize = min(stepSize, uSettings.cloudMaxStepSize); // Prevent too large step size
+   stepSize = min(stepSize, CLOUD_MAX_STEP_SIZE); // Prevent too large step size
 
    float dstTravelled = 0.0;
    float transmittance = 1.0;
@@ -221,7 +208,7 @@ void main()
    {
       // Ray does not intersect the cloud layer
    }
-   else 
+   else
    {
       // Ray march cloud.
       for (int i = 0; i < numSteps; i++)
@@ -235,10 +222,8 @@ void main()
             transmittance *= exp(-density * stepSize);
 
             if (transmittance < 0.01)
-            {
                // Early exit if transmittance is very low
                break;
-            }
          }
 
          dstTravelled += stepSize;

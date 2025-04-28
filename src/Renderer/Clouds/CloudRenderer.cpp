@@ -178,8 +178,7 @@ bool CloudRenderer::Initialize(Renderer* renderer)
       WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device->Get(), &plDesc);
 
       WGPURenderPipelineDescriptor rpDesc = {};
-      std::string rpLabel = "CloudRenderer Render Pipeline";
-      rpDesc.label = WGPUStringView{ rpLabel.data(), rpLabel.length() };
+      rpDesc.label = WGPUStringView{ "CloudRenderer Render Pipeline", WGPU_STRLEN };
       rpDesc.layout = pipelineLayout;
       rpDesc.primitive.topology = WGPUPrimitiveTopology_TriangleList;
       rpDesc.primitive.stripIndexFormat = WGPUIndexFormat_Undefined;
@@ -193,15 +192,13 @@ bool CloudRenderer::Initialize(Renderer* renderer)
       // Vertex state
       WGPUVertexState vs = {};
       vs.module = vertexShader.Get();
-      std::string vsEntryPoint = "main";
-      vs.entryPoint = WGPUStringView{ vsEntryPoint.data(), vsEntryPoint.length() };
+      vs.entryPoint = WGPUStringView{ "main", WGPU_STRLEN };
       rpDesc.vertex = vs;
 
       // Fragment state
       WGPUFragmentState fs = {};
       fs.module = fragmentShader.Get();
-      std::string fsEntryPoint = "main";
-      fs.entryPoint = WGPUStringView{ fsEntryPoint.data(), fsEntryPoint.length() };
+      fs.entryPoint = WGPUStringView{ "main", WGPU_STRLEN };
       fs.targetCount = 1;
       WGPUColorTargetState cts = {};
       {

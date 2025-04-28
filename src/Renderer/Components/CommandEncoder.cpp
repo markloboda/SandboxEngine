@@ -30,8 +30,7 @@ WGPURenderPassEncoder CommandEncoder::BeginRenderPass(WGPURenderPassDescriptor* 
 WGPUCommandBuffer CommandEncoder::Finish()
 {
    WGPUCommandBufferDescriptor desc = {};
-   std::string label = "My Command Buffer";
-   desc.label = WGPUStringView{ label.c_str(), label.size() };
+   desc.label = WGPUStringView{ "My Command Buffer", WGPU_STRLEN };
    return wgpuCommandEncoderFinish(_encoder, &desc);
 }
 

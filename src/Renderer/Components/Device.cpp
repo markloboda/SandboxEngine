@@ -83,8 +83,7 @@ Device::Device()
       WGPUDeviceDescriptor deviceDesc = {};
       deviceDesc.deviceLostCallbackInfo = deviceLostCallbackInfo;
       deviceDesc.uncapturedErrorCallbackInfo = uncapturedErrorCallbackInfo;
-      std::string label = "My Device";
-      deviceDesc.label = WGPUStringView{ label.c_str(), static_cast<uint32_t>(label.size()) };
+      deviceDesc.label = WGPUStringView{ "My Device", WGPU_STRLEN };
 
       WGPUFeatureName features[] = {
           static_cast<WGPUFeatureName>(WGPUNativeFeature_SpirvShaderPassthrough)

@@ -55,15 +55,13 @@ bool GridRenderer::Initialize(Renderer* renderer)
    // Create render pipeline
    {
       WGPUPipelineLayoutDescriptor plDesc = {};
-      std::string plLabel = "GridRenderer Pipeline Layout";
-      plDesc.label = WGPUStringView{ plLabel.data(), plLabel.length() };
+      plDesc.label = WGPUStringView{ "GridRenderer Pipeline Layout", WGPU_STRLEN };
       plDesc.bindGroupLayoutCount = 1;
       plDesc.bindGroupLayouts = _uniformsBindGroup->GetLayout();
       WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device->Get(), &plDesc);
 
       WGPURenderPipelineDescriptor rpDesc = {};
-      std::string rpLabel = "GridRenderer Render Pipeline";
-      rpDesc.label = WGPUStringView{ rpLabel.data(), rpLabel.length() };
+      rpDesc.label = WGPUStringView{ "GridRenderer Render Pipeline", WGPU_STRLEN };
       rpDesc.layout = pipelineLayout;
       rpDesc.primitive.topology = WGPUPrimitiveTopology_LineList;
       rpDesc.primitive.stripIndexFormat = WGPUIndexFormat_Undefined;
@@ -87,8 +85,7 @@ bool GridRenderer::Initialize(Renderer* renderer)
       vbl.attributes = &va;
       WGPUVertexState vs = {};
       vs.module = vertexShader.Get();
-      std::string vsEntryPoint = "main";
-      vs.entryPoint = WGPUStringView{ vsEntryPoint.data(), vsEntryPoint.length() };
+      vs.entryPoint = WGPUStringView{ "main", WGPU_STRLEN };
       vs.bufferCount = 1;
       vs.buffers = &vbl;
       rpDesc.vertex = vs;
@@ -99,8 +96,7 @@ bool GridRenderer::Initialize(Renderer* renderer)
       cts.writeMask = WGPUColorWriteMask_All;
       WGPUFragmentState fs = {};
       fs.module = fragmentShader.Get();
-      std::string fsEntryPoint = "main";
-      fs.entryPoint = WGPUStringView{ fsEntryPoint.data(), fsEntryPoint.length() };
+      fs.entryPoint = WGPUStringView{ "main", WGPU_STRLEN };
       fs.targetCount = 1;
       fs.targets = &cts;
       rpDesc.fragment = &fs;
