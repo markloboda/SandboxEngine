@@ -28,8 +28,6 @@ set(SOURCE_FILES
   ${SRC_ROOT}/Application/Editor.cpp
   ${SRC_ROOT}/Application/Input.cpp
 
-  ${SRC_ROOT}/Renderer/Clouds/CloudModel.cpp
-  ${SRC_ROOT}/Renderer/Clouds/CloudRenderer.cpp
   ${SRC_ROOT}/Renderer/Components/BindGroup.cpp
   ${SRC_ROOT}/Renderer/Components/Buffer.cpp
   ${SRC_ROOT}/Renderer/Components/CommandBuffer.cpp
@@ -45,6 +43,9 @@ set(SOURCE_FILES
   ${SRC_ROOT}/Renderer/Components/Surface.cpp
   ${SRC_ROOT}/Renderer/Components/Texture.cpp
   ${SRC_ROOT}/Renderer/Components/TextureView.cpp
+  ${SRC_ROOT}/Renderer/Sky/AtmosphereRenderer.cpp
+  ${SRC_ROOT}/Renderer/Sky/CloudModel.cpp
+  ${SRC_ROOT}/Renderer/Sky/CloudRenderer.cpp
   ${SRC_ROOT}/Renderer/UI/ImGuiManager.cpp
   ${SRC_ROOT}/Renderer/GridRenderer.cpp
   ${SRC_ROOT}/Renderer/Renderer.cpp

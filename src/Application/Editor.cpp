@@ -5,7 +5,7 @@
 #include <Renderer/UI/ImGuiManager.h>
 #include <Utils/FreeCamera.h>
 
-#include <Renderer/Clouds/CloudRenderer.h>
+#include <Renderer/Sky/CloudRenderer.h>
 
 #include "Renderer/Renderer.h"
 
@@ -104,7 +104,7 @@ void Editor::RenderImGuiUI()
             ImGui::SliderFloat("Density Threshold", &settings->densityThreshold, 0.01f, 1.0f);
          }
 
-         if (ImGui::CollapsingHeader("Technical"))
+         if (ImGui::CollapsingHeader("Technical", ImGuiTreeNodeFlags_DefaultOpen))
          {
             ImGui::SliderInt("Cloud Steps", &settings->cloudNumSteps, 1, 512);
             ImGui::SliderInt("Light Steps", &settings->lightNumSteps, 1, 128);

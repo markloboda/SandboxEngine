@@ -5,7 +5,7 @@
 #include <Renderer/UI/ImGuiManager.h>
 
 #include <Renderer/GridRenderer.h>
-#include <Renderer/Clouds/CloudRenderer.h>
+#include <Renderer/Sky/CloudRenderer.h>
 
 WGPULogCallback GetLogCallback()
 {

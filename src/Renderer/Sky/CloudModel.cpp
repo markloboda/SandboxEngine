@@ -1,5 +1,5 @@
 #include <pch.h>
-#include <Renderer/Clouds/CloudModel.h>
+#include <Renderer/Sky/CloudModel.h>
 
 #include <FastNoiseLite.h>
 
