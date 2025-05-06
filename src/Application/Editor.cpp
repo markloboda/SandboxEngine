@@ -50,6 +50,9 @@ void Editor::RenderImGuiUI()
       ImGui::Text("Editor Settings");
 
       ImGui::Separator();
+      ImGui::Checkbox("Show Atmosphere", &_showAtmosphere);
+
+      ImGui::Separator();
       ImGui::Checkbox("Show Grid", &_showGrid);
 
       ImGui::Separator();
@@ -76,6 +79,7 @@ void Editor::RenderImGuiUI()
 
       if (ImGui::CollapsingHeader("Rendering Stats", ImGuiTreeNodeFlags_DefaultOpen))
       {
+         ImGui::Text("Atmosphere: %.1f ms", stats.atmosphereTime);
          ImGui::Text("Grid: %.1f ms", stats.gridTime);
          ImGui::Text("Cloud: %.1f ms", stats.cloudTime);
          ImGui::Text("UI: %.1f ms", stats.uiTime);

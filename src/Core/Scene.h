@@ -16,7 +16,7 @@ public:
 
    bool RemoveNode(Node* node)
    {
-      auto it = std::find_if(Nodes.begin(), Nodes.end(), [node](const std::unique_ptr<Node>& n) { return n.get() == node; });
+      auto it = std::ranges::find_if(Nodes, [node](const std::unique_ptr<Node> &n) { return n.get() == node; });
       if (it != Nodes.end())
       {
          Nodes.erase(it);

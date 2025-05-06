@@ -1,16 +1,9 @@
 #pragma once
 
-struct AtmosphereUniforms
-{
-};
-
 class AtmosphereRenderer
 {
 private:
-   BindGroup *_uniformsBindGroup;
    RenderPipeline *_renderPipeline;
-
-   AtmosphereUniforms _uniforms = {};
 
 public:
    AtmosphereRenderer(Renderer *renderer);

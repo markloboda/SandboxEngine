@@ -1,5 +1,6 @@
 #pragma once
 
+class AtmosphereRenderer;
 class CloudRenderer;
 class GridRenderer;
 struct GLFWwindow;
@@ -9,6 +10,7 @@ class Renderer
 public:
    struct RenderStats
    {
+      float atmosphereTime = 0.0f;
       float gridTime = 0.0f;
       float cloudTime = 0.0f;
       float uiTime = 0.0f;
@@ -21,6 +23,7 @@ private:
    Queue _queue;
 
    GridRenderer* _gridRenderer;
+   AtmosphereRenderer *_atmosphereRenderer;
    CloudRenderer* _cloudRenderer;
 
    RenderStats _stats;

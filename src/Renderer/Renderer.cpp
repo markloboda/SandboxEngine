@@ -5,6 +5,7 @@
 #include <Renderer/UI/ImGuiManager.h>
 
 #include <Renderer/GridRenderer.h>
+#include <Renderer/Sky/AtmosphereRenderer.h>
 #include <Renderer/Sky/CloudRenderer.h>
 
 WGPULogCallback GetLogCallback()
@@ -93,6 +94,7 @@ bool Renderer::Initialize()
 
    // Set up renderers.
    _gridRenderer = new GridRenderer(this);
+   _atmosphereRenderer = new AtmosphereRenderer(this);
    _cloudRenderer = new CloudRenderer(this);
 
    return true;
@@ -124,6 +126,15 @@ void Renderer::Render()
    // Renderers
    {
       ClearRenderPass(&encoder, &textureView);
+
+      start = std::chrono::high_resolution_clock::now();
+      bool renderAtmosphere = Application::GetInstance().GetEditor()->GetRenderAtmosphere();
+      if (renderAtmosphere)
+      {
+         _atmosphereRenderer->Render(this, &encoder, &textureView);
+      }
+      end = std::chrono::high_resolution_clock::now();
+      _stats.atmosphereTime = std::chrono::duration<float, std::milli>(end - start).count();
 
       start = std::chrono::high_resolution_clock::now();
       bool renderGrid = Application::GetInstance().GetEditor()->GetRenderGrid();
