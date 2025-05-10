@@ -48,10 +48,9 @@ layout(location = 0) out vec4 fragCol;
 // constants
 #define EPSILON 1e-5
 
-// define settings
-#define CLOUD_HEIGHT_GRADIENT 0.2
-
-// constant settings
+//  settings
+#define CLOUD_HEIGHT_GRADIENT 200.0
+#define LIGHT_ABSORPTION 0.1
 #define WEATHER_MAP_SCALING_FACTOR 1.0 / 10000.0 // covers 10km x 10km
 #define SUN_DIR vec3(0.577, -0.577, 0.577)
 #define CLOUD_BASE_DENSITY_MULTIPLIER 0.1
@@ -156,8 +155,8 @@ float sampleDensity(vec3 pos)
    }
 
    // height gradient
-   float gradientHeight = (CLOUD_END_HEIGHT - CLOUD_START_HEIGHT) * CLOUD_HEIGHT_GRADIENT;
-   float heightGradient = smoothstep(CLOUD_START_HEIGHT, CLOUD_START_HEIGHT + gradientHeight, pos.y) *
+   float gradientHeight = CLOUD_HEIGHT_GRADIENT;
+   float gradient = smoothstep(CLOUD_START_HEIGHT, CLOUD_START_HEIGHT + gradientHeight, pos.y) *
                           (1.0 - smoothstep(CLOUD_END_HEIGHT - gradientHeight, CLOUD_END_HEIGHT, pos.y));
 
    // Detail texture
@@ -165,7 +164,7 @@ float sampleDensity(vec3 pos)
    float detailTextureValue = texture(sampler3D(cloudBaseTexture, cloudBaseSampler), detailTextureCoord).x;
 
    // Calculate density
-   float density = max(0.0, weatherMapValue * heightGradient * detailTextureValue - DENSITY_THRESHOLD) * CLOUD_BASE_DENSITY_MULTIPLIER * DENSITY_MULTIPLIER;
+   float density = max(0.0, weatherMapValue * gradient * detailTextureValue - DENSITY_THRESHOLD) * CLOUD_BASE_DENSITY_MULTIPLIER * DENSITY_MULTIPLIER;
 
    return density;
 }

@@ -91,14 +91,19 @@ void CloudsModel::GenerateBaseNoiseTexture(Renderer *renderer)
 {
    _baseNoiseTextureDimensions = {128u, 128u, 128u};
 
-   FastNoiseLite noise;
+   // R-channel
+   FastNoiseLite noise0;
+   noise0.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Perlin);
+   noise0.SetSeed(0);
+   noise0.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
+   noise0.SetFrequency(0.1f);
 
-   // R-channel (Perlin-Worley noise)
-   noise.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Perlin);
-   noise.SetSeed(0);
-   noise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
-
-   noise.SetFrequency(0.1f);
+   // B-channel
+   FastNoiseLite noise1;
+   noise1.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Perlin);
+   noise1.SetSeed(0);
+   noise1.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
+   noise1.SetFrequency(0.01f);
 
    // Generate the noise texture
    std::vector<uint8_t> noiseData(_baseNoiseTextureDimensions.x * _baseNoiseTextureDimensions.y * _baseNoiseTextureDimensions.z * 4);
@@ -108,12 +113,12 @@ void CloudsModel::GenerateBaseNoiseTexture(Renderer *renderer)
       {
          for (uint32_t x = 0; x < _baseNoiseTextureDimensions.x; ++x)
          {
-            float noiseValue = noise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+            float noiseValue0 = noise0.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
             // remap from [-1, 1] to [0, 255]
-            noiseValue = (noiseValue + 1.0f) * 0.5f;
+            noiseValue0 = (noiseValue0 + 1.0f) * 0.5f;
 
             uint32_t idx = (z * _baseNoiseTextureDimensions.x * _baseNoiseTextureDimensions.y + y * _baseNoiseTextureDimensions.x + x) * 4;
-            noiseData[idx + 0] = static_cast<uint8_t>(noiseValue * 255.0f); // R channel
+            noiseData[idx + 0] = 255; // R channel
             noiseData[idx + 1] = 0; // G channel
             noiseData[idx + 2] = 0; // B channel
             noiseData[idx + 3] = 0; // A channel
