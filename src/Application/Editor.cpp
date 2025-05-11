@@ -81,6 +81,7 @@ void Editor::RenderImGuiUI()
       {
          ImGui::Text("Atmosphere: %.1f ms", stats.atmosphereTime);
          ImGui::Text("Grid: %.1f ms", stats.gridTime);
+         ImGui::Text("Cloth: %.1f ms", stats.clothTime);
          ImGui::Text("Cloud: %.1f ms", stats.cloudTime);
          ImGui::Text("UI: %.1f ms", stats.uiTime);
       }

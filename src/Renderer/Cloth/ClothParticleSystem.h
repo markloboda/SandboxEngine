@@ -47,10 +47,13 @@ public:
 private:
    std::vector<ParticleData> _particles;
    std::vector<DistanceConstraint> _constraints;
+   vec2 _dimensions;
 
 public:
    void InitializeDemo(size_t width, size_t height)
    {
+      _dimensions = vec2(width, height);
+
       _particles.clear();
       _particles.reserve(width * height);
       for (size_t i = 0; i < width; ++i)
@@ -147,10 +150,8 @@ public:
       _constraints.push_back(constraint);
    }
 
-   void GetVertexPositions(std::vector<vec3> &out) const
+   vec2 GetDimensions() const
    {
-      out.resize(_particles.size());
-      for (size_t i = 0; i < _particles.size(); ++i)
-         out[i] = _particles[i].position;
+      return _dimensions;
    }
 };

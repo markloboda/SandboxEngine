@@ -21,7 +21,9 @@ ClothRenderer::~ClothRenderer()
 bool ClothRenderer::Initialize(Renderer *renderer)
 {
    // Initialize particles and constraints
-   _clothParticleSystem->InitializeDemo(15, 15);
+   int width = 10;
+   int height = 10;
+   _clothParticleSystem->InitializeDemo(width, height);
 
    Device *device = renderer->GetDevice();
 
@@ -29,21 +31,16 @@ bool ClothRenderer::Initialize(Renderer *renderer)
    ShaderModule vertexShader = ShaderModule::LoadShaderModule(device, "cloth.vert");
    ShaderModule fragmentShader = ShaderModule::LoadShaderModule(device, "cloth.frag");
 
-   const ClothParticleSystem::ParticleData* particles;
-   size_t particleCount = 0;
-   _clothParticleSystem->GetParticles(particles, particleCount);
+   std::vector<VertexData> vertices;
+   std::vector<uint32_t> indices;
+   GenerateVertexData(vertices, indices);
    // Buffers
    {
-      _vertexBuffer = new Buffer(device, WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst, sizeof(vec3) * particleCount);
-      // upload particle positions
-      std::vector<vec3> vertexData;
-      vertexData.reserve(particleCount * 3);
-      for (size_t i = 0; i < particleCount; ++i)
-      {
-         const ClothParticleSystem::ParticleData &particle = particles[i];
-         vertexData.push_back(particle.position);
-      }
-      renderer->UploadBufferData(_vertexBuffer, vertexData.data(), sizeof(vec3) * vertexData.size());
+      _vertexBuffer = new Buffer(device, WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst, sizeof(VertexData) * vertices.size());
+      renderer->UploadBufferData(_vertexBuffer, vertices.data(), sizeof(VertexData) * vertices.size());
+
+      _indexBuffer = new Buffer(device, WGPUBufferUsage_Index | WGPUBufferUsage_CopyDst, sizeof(uint32_t) * indices.size());
+      renderer->UploadBufferData(_indexBuffer, indices.data(), sizeof(uint32_t) * indices.size());
 
       _cameraUniformBuffer = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CameraUniform));
       renderer->UploadBufferData(_cameraUniformBuffer, &_cameraUniform, sizeof(CameraUniform));
@@ -80,7 +77,7 @@ bool ClothRenderer::Initialize(Renderer *renderer)
       WGPURenderPipelineDescriptor rpDesc = {};
       rpDesc.label = WGPUStringView{"ClothRenderer Render Pipeline", WGPU_STRLEN};
       rpDesc.layout = pipelineLayout;
-      rpDesc.primitive.topology = WGPUPrimitiveTopology_PointList;
+      rpDesc.primitive.topology = WGPUPrimitiveTopology_TriangleList;
       rpDesc.primitive.stripIndexFormat = WGPUIndexFormat_Undefined;
       rpDesc.primitive.frontFace = WGPUFrontFace_CW;
       rpDesc.primitive.cullMode = WGPUCullMode_None;
@@ -91,16 +88,22 @@ bool ClothRenderer::Initialize(Renderer *renderer)
       rpDesc.depthStencil = nullptr;
 
       // Vertex state
-      WGPUVertexAttribute va = {};
-      va.format = WGPUVertexFormat_Float32x3;
-      va.offset = 0;
-      va.shaderLocation = 0;
+      std::vector<WGPUVertexAttribute> vas = {};
+      vas.resize(2);
+      // Position
+      vas[0].format = WGPUVertexFormat_Float32x3;
+      vas[0].offset = 0;
+      vas[0].shaderLocation = 0;
+      // Normal
+      vas[1].format = WGPUVertexFormat_Float32x3;
+      vas[1].offset = sizeof(VertexData::position);
+      vas[1].shaderLocation = 1;
 
       WGPUVertexBufferLayout vbl = {};
-      vbl.arrayStride = sizeof(vec3);
+      vbl.arrayStride = sizeof(VertexData);
       vbl.stepMode = WGPUVertexStepMode_Vertex;
-      vbl.attributeCount = 1;
-      vbl.attributes = &va;
+      vbl.attributeCount = 2;
+      vbl.attributes = vas.data();
       WGPUVertexState vs = {};
       vs.module = vertexShader.Get();
       vs.entryPoint = WGPUStringView{"main", WGPU_STRLEN};
@@ -131,6 +134,8 @@ void ClothRenderer::Terminate()
    delete _cameraUniformBindGroup;
    delete _cameraUniformBuffer;
    delete _vertexBuffer;
+   delete _indexBuffer;
+   delete _clothParticleSystem;
 }
 
 void ClothRenderer::Update(float dt)
@@ -154,9 +159,11 @@ void ClothRenderer::Render(Renderer *renderer, CommandEncoder *encoder, TextureV
    FreeCamera &camera = Application::GetInstance().GetEditor()->GetCamera();
 
    // Update vertex buffer with new particle positions
-   std::vector<vec3> positions;
-   _clothParticleSystem->GetVertexPositions(positions);
-   renderer->UploadBufferData(_vertexBuffer, positions.data(), sizeof(vec3) * positions.size());
+   std::vector<VertexData> vertices;
+   std::vector<uint32_t> indices;
+   GenerateVertexData(vertices, indices);
+   renderer->UploadBufferData(_vertexBuffer, vertices.data(), sizeof(VertexData) * vertices.size());
+   renderer->UploadBufferData(_indexBuffer, indices.data(), sizeof(uint32_t) * indices.size());
 
    // Update uniforms.
    _cameraUniform.view = camera.GetViewMatrix();
@@ -166,7 +173,69 @@ void ClothRenderer::Render(Renderer *renderer, CommandEncoder *encoder, TextureV
    // Render
    renderPassEncoder.SetPipeline(_renderPipeline);
    renderPassEncoder.SetVertexBuffer(0, _vertexBuffer);
+   renderPassEncoder.SetIndexBuffer(_indexBuffer, WGPUIndexFormat_Uint32);
    renderPassEncoder.SetBindGroup(0, _cameraUniformBindGroup);
-   renderPassEncoder.Draw((uint32_t)positions.size(), 1, 0, 0);
+   renderPassEncoder.DrawIndexed((uint32_t) indices.size(), 1, 0, 0, 0);
    renderPassEncoder.EndPass();
 }
+
+void ClothRenderer::GenerateVertexData(std::vector<VertexData> &outVertices, std::vector<uint32_t> &outIndices)
+{
+   vec2 dimensions = _clothParticleSystem->GetDimensions();
+   size_t width = (size_t) dimensions.x;
+   size_t height = (size_t) dimensions.y;
+
+   const ClothParticleSystem::ParticleData *particles;
+   size_t particleCount = 0;
+   _clothParticleSystem->GetParticles(particles, particleCount);
+
+   outVertices.resize(particleCount);
+   for (size_t i = 0; i < particleCount; ++i)
+   {
+      outVertices[i].position = particles[i].position;
+      outVertices[i].normal = vec3(0.0f);
+   }
+
+   outIndices.clear();
+   for (size_t i = 0; i < width - 1; ++i)
+   {
+      for (size_t j = 0; j < height - 1; ++j)
+      {
+         size_t i0 = i * height + j;
+         size_t i1 = (i + 1) * height + j;
+         size_t i2 = i * height + (j + 1);
+         size_t i3 = (i + 1) * height + (j + 1);
+
+         // Triangle 1
+         outIndices.push_back((uint32_t) i0);
+         outIndices.push_back((uint32_t) i1);
+         outIndices.push_back((uint32_t) i2);
+
+         // Triangle 2
+         outIndices.push_back((uint32_t) i2);
+         outIndices.push_back((uint32_t) i1);
+         outIndices.push_back((uint32_t) i3);
+
+         // Face normals
+         vec3 n1 = normalize(cross(outVertices[i1].position - outVertices[i0].position,
+                                   outVertices[i2].position - outVertices[i0].position));
+         vec3 n2 = normalize(cross(outVertices[i1].position - outVertices[i2].position,
+                                   outVertices[i3].position - outVertices[i2].position));
+
+         outVertices[i0].normal += n1;
+         outVertices[i1].normal += n1;
+         outVertices[i2].normal += n1;
+
+         outVertices[i2].normal += n2;
+         outVertices[i1].normal += n2;
+         outVertices[i3].normal += n2;
+      }
+   }
+
+   // Normalize accumulated normals
+   for (auto &v: outVertices)
+   {
+      v.normal = normalize(v.normal);
+   }
+}
+
