@@ -5,7 +5,7 @@
         "commandLine": "",
         "environment": [
         ],
-        "executable": "C:\\Git\\School\\FRI2425\\NRG\\VolumetricClouds\\bin\\build\\x64-Debug\\VolumetricClouds.exe",
+        "executable": "C:\\Git\\School\\FRI2425\\NRG\\SandboxEngine\\bin\\build\\x64-Debug\\SandboxEngine.exe",
         "inject": false,
         "numQueuedFrames": 0,
         "options": {

@@ -15,7 +15,7 @@ bool Application::Initialize()
    // Open window.
    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-   _window = glfwCreateWindow(_windowWidth, _windowHeight, "Volumetric Clouds", nullptr, nullptr);
+   _window = glfwCreateWindow(_windowWidth, _windowHeight, "Sandbox Engine", nullptr, nullptr);
    if (!_window)
    {
       std::cerr << "Could not open window!\n";

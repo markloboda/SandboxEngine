@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(VolumetricClouds)
+project(SandboxEngine)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -76,7 +76,7 @@ endif()
 function(compile_shader SHADER_PATH)
   get_filename_component(SHADER_NAME ${SHADER_PATH} NAME)
   set(SPIRV_OUTPUT "${BIN_ROOT}/shaders/${SHADER_NAME}")
-  
+
   # Create output directory
   file(MAKE_DIRECTORY "${BIN_ROOT}/shaders")
 
@@ -87,21 +87,21 @@ function(compile_shader SHADER_PATH)
    COMMENT "Compiling shader: ${SHADER_NAME}"
    VERBATIM
   )
-  
+
   # Add to global list of shader outputs
   set(SHADER_SPIRV_FILES ${SHADER_SPIRV_FILES} ${SPIRV_OUTPUT} PARENT_SCOPE)
 endfunction()
 
 # Find glslangValidator
-find_program(GLSLANG_VALIDATOR 
+find_program(GLSLANG_VALIDATOR
   NAMES glslangValidator
   HINTS "$ENV{VULKAN_SDK}/Bin"
   REQUIRED
 )
 
 # Compile all shaders
-file(GLOB SHADER_FILES 
-  "${SHADER_ROOT}/*.vert" 
+file(GLOB SHADER_FILES
+  "${SHADER_ROOT}/*.vert"
   "${SHADER_ROOT}/*.frag"
   "${SHADER_ROOT}/*.comp"
 )
@@ -114,8 +114,8 @@ endforeach()
 add_custom_target(Shaders ALL DEPENDS ${SHADER_SPIRV_FILES})
 
 # Create executable with shader outputs as dependencies
-add_executable(${PROJECT_NAME} 
-  ${SOURCE_FILES} 
+add_executable(${PROJECT_NAME}
+  ${SOURCE_FILES}
   ${SHADER_FILES}
   ${SHADER_SPIRV_FILES}  # Explicitly list SPIR-V outputs
 )
