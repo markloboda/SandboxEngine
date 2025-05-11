@@ -21,6 +21,7 @@ add_subdirectory(${LIBS_ROOT}/glm)
 add_subdirectory(${LIBS_ROOT}/webgpu)
 add_subdirectory(${LIBS_ROOT}/glfw3webgpu)
 add_subdirectory(${LIBS_ROOT}/imgui)
+add_subdirectory(${LIBS_ROOT}/imguizmo)
 
 # Source files
 set(SOURCE_FILES
@@ -121,7 +122,7 @@ add_executable(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_ROOT})
-target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu imgui FastNoiseLite)
+target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu imgui FastNoiseLite ImGuizmo)
 
 # Enable precompiled headers
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${SRC_ROOT}/pch.h)

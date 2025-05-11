@@ -7,6 +7,7 @@
 #pragma warning(disable: 26495)
 #include <imgui/backends/imgui_impl_wgpu.h>
 #pragma warning(pop)
+#include <imguizmo/imguizmo.h>
 
 #include <GLFW/glfw3.h>
 
