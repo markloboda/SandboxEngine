@@ -28,6 +28,7 @@ set(SOURCE_FILES
   ${SRC_ROOT}/Application/Editor.cpp
   ${SRC_ROOT}/Application/Input.cpp
 
+  ${SRC_ROOT}/Renderer/Cloth/ClothRenderer.cpp
   ${SRC_ROOT}/Renderer/Components/BindGroup.cpp
   ${SRC_ROOT}/Renderer/Components/Buffer.cpp
   ${SRC_ROOT}/Renderer/Components/CommandBuffer.cpp

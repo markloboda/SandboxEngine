@@ -62,7 +62,7 @@ void FreeCamera::Update(float dt)
    if (Input::IsKeyPressed(Input::MOUSE_BUTTON_RIGHT) || Input::IsKeyPressed(Input::KEY_RIGHT_CONTROL))
    {
       // Mouse wheel speed increase
-      _speed = clamp(mouseWheel_ > 0 ? _speed * 1.01f : _speed * 0.99f, 0.5f, 1000.0f);
+      _speed = clamp(mouseWheel_ > 0 ? _speed * 1.001f : _speed * 0.999f, 0.5f, 1000.0f);
 
       float speed = _speed;
       if (Input::IsKeyPressed(Input::KEY_LEFT_SHIFT))

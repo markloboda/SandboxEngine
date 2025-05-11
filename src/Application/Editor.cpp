@@ -90,31 +90,33 @@ void Editor::RenderImGuiUI()
 
    // Clouds
    {
-      ImGui::Begin("Clouds", nullptr);
+      if (_renderClouds)
       {
-         CloudRenderer::CloudRenderSettings *settings = &renderer->GetCloudRenderer()->Settings;
+         ImGui::Begin("Clouds", nullptr); {
+            CloudRenderer::CloudRenderSettings *settings = &renderer->GetCloudRenderer()->Settings;
 
-         // Cloud settings
-         if (ImGui::CollapsingHeader("Position", ImGuiTreeNodeFlags_DefaultOpen))
-         {
-            ImGui::InputFloat("Start Height", &settings->cloudStartHeight);
-            ImGui::InputFloat("End Height", &settings->cloudEndHeight);
-         }
+            // Cloud settings
+            if (ImGui::CollapsingHeader("Position", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+               ImGui::InputFloat("Start Height", &settings->cloudStartHeight);
+               ImGui::InputFloat("End Height", &settings->cloudEndHeight);
+            }
 
-         if (ImGui::CollapsingHeader("Visuals", ImGuiTreeNodeFlags_DefaultOpen))
-         {
-            ImGui::SliderFloat("Density Multiplier", &settings->densityMultiplier, 0.01f, 5.0f);
-            ImGui::SliderFloat("Density Threshold", &settings->densityThreshold, 0.01f, 1.0f);
-         }
+            if (ImGui::CollapsingHeader("Visuals", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+               ImGui::SliderFloat("Density Multiplier", &settings->densityMultiplier, 0.01f, 5.0f);
+               ImGui::SliderFloat("Density Threshold", &settings->densityThreshold, 0.01f, 1.0f);
+            }
 
-         if (ImGui::CollapsingHeader("Technical", ImGuiTreeNodeFlags_DefaultOpen))
-         {
-            ImGui::SliderInt("Cloud Steps", &settings->cloudNumSteps, 1, 512);
-            ImGui::SliderInt("Light Steps", &settings->lightNumSteps, 1, 128);
-            ImGui::SliderFloat("Max Step Size", &settings->cloudMaxStepSize, 0.01f, 100.0f);
+            if (ImGui::CollapsingHeader("Technical", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+               ImGui::SliderInt("Cloud Steps", &settings->cloudNumSteps, 1, 512);
+               ImGui::SliderInt("Light Steps", &settings->lightNumSteps, 1, 128);
+               ImGui::SliderFloat("Max Step Size", &settings->cloudMaxStepSize, 0.01f, 100.0f);
+            }
          }
+         ImGui::End();
       }
-      ImGui::End();
    }
 }
 

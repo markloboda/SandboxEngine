@@ -6,7 +6,6 @@
 
 #include <Renderer/Sky/CloudModel.h>
 #include <Utils/FreeCamera.h>
-#include <Utils/Noise.h>
 
 CloudRenderer::CloudRenderer(Renderer *renderer)
 {

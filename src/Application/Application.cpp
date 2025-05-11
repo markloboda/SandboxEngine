@@ -61,6 +61,7 @@ void Application::Run()
 
       // Update.
       _editor->Update(dt);
+      _renderer->Update(dt);
 
       // Render.
       _renderer->Render();

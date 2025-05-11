@@ -1,5 +1,7 @@
 #pragma once
 
+class ClothRenderer;
+
 class AtmosphereRenderer;
 class CloudRenderer;
 class GridRenderer;
@@ -12,6 +14,7 @@ public:
    {
       float atmosphereTime = 0.0f;
       float gridTime = 0.0f;
+      float clothTime = 0.0f;
       float cloudTime = 0.0f;
       float uiTime = 0.0f;
    };
@@ -25,6 +28,7 @@ private:
    GridRenderer* _gridRenderer;
    AtmosphereRenderer *_atmosphereRenderer;
    CloudRenderer* _cloudRenderer;
+   ClothRenderer *_clothRenderer;
 
    RenderStats _stats;
 
@@ -37,6 +41,8 @@ private:
    void Terminate();
 
 public:
+   void Update(float dt);
+
    void Render();
    bool ShouldClose() const;
 

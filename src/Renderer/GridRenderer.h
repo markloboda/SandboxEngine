@@ -15,8 +15,8 @@ class GridRenderer
 {
 private:
    BindGroup* _uniformsBindGroup;
-   Buffer* _vertexBuffer;
    Buffer* _uniformBuffer;
+   Buffer* _vertexBuffer;
 
    RenderPipeline* _renderPipeline;
 
