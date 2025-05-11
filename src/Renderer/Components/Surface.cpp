@@ -1,6 +1,6 @@
 #include <pch.h>
 
-Surface::Surface(Device *device, GLFWwindow *window) : _surface(glfwGetWGPUSurface(device->GetInstance(), window)),
+Surface::Surface(Device *device, GLFWwindow *window) : _surface(glfwCreateWindowWGPUSurface(device->GetInstance(), window)),
                                                        _config(WGPUSurfaceConfiguration{})
 {
    if (!_surface)
