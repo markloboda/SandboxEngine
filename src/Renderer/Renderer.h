@@ -28,7 +28,7 @@ private:
    GridRenderer* _gridRenderer;
    AtmosphereRenderer *_atmosphereRenderer;
    CloudRenderer* _cloudRenderer;
-   ClothRenderer *_clothRenderer;
+   // ClothRenderer *_clothRenderer;
 
    RenderStats _stats;
 

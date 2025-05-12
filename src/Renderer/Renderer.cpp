@@ -96,7 +96,7 @@ bool Renderer::Initialize()
    // Set up renderers.
    _gridRenderer = new GridRenderer(this);
    _atmosphereRenderer = new AtmosphereRenderer(this);
-   _clothRenderer = new ClothRenderer(this);
+   // _clothRenderer = new ClothRenderer(this);
    _cloudRenderer = new CloudRenderer(this);
 
    return true;
@@ -114,7 +114,8 @@ void Renderer::Terminate()
 
 void Renderer::Update(float dt)
 {
-   _clothRenderer->Update(dt);
+   dt;
+   // _clothRenderer->Update(dt);
 }
 
 void Renderer::Render()
@@ -152,13 +153,13 @@ void Renderer::Render()
       end = std::chrono::high_resolution_clock::now();
       _stats.gridTime = std::chrono::duration<float, std::milli>(end - start).count();
 
-      start = std::chrono::high_resolution_clock::now();
-      if (true)
-      {
-         _clothRenderer->Render(this, &encoder, &textureView);
-      }
-      end = std::chrono::high_resolution_clock::now();
-      _stats.clothTime = std::chrono::duration<float, std::milli>(end - start).count();
+      // start = std::chrono::high_resolution_clock::now();
+      // if (true)
+      // {
+      //    _clothRenderer->Render(this, &encoder, &textureView);
+      // }
+      // end = std::chrono::high_resolution_clock::now();
+      // _stats.clothTime = std::chrono::duration<float, std::milli>(end - start).count();
 
       start = std::chrono::high_resolution_clock::now();
       bool renderClouds = Application::GetInstance().GetEditor()->GetRenderClouds();

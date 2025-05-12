@@ -6,9 +6,9 @@ class FreeCamera;
 class Editor : public UIRenderer
 {
 private:
-   bool _showAtmosphere = false;
+   bool _showAtmosphere = true;
    bool _showGrid = true;
-   bool _renderClouds = false;
+   bool _renderClouds = true;
 
    FreeCamera* _camera;
 
