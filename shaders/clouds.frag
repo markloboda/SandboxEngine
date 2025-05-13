@@ -51,6 +51,11 @@ layout(location = 0) out vec4 fragCol;
 #define SUN_COLOR vec3(1.0, 1.0, 1.0)
 #define AMBIENT_COLOR vec3(0.1, 0.1, 0.1)
 
+// Cloud type functions
+#define STRATUS_OFFSET vec2(0.0, 0.2)
+#define STRATOCUMULUS_OFFSET vec2(0.0, 0.5)
+#define CUMULUS_OFFSET vec2(0.0, 0.8)
+
 // helper functions
 vec3 getStartRayDirection(vec2 uv)
 {
@@ -59,6 +64,72 @@ vec3 getStartRayDirection(vec2 uv)
    worldPos /= worldPos.w;
    vec3 rayDir = normalize((inverse(uCamera.view) * vec4(worldPos.xyz, 0.0)).xyz);
    return rayDir;
+}
+
+// Calculate the cloud height fraction for the given position and cloud type
+float getCloudHeightFraction(float height, float cloudType)
+{
+   // Cloud type float from 0.0 to 1.0
+   // 0.0 = stratus
+   // 0.5 = stratocumulus
+   // 1.0 = cumulus
+
+   if (height < uSettings.cloudStartHeight || height > uSettings.cloudEndHeight)
+   {
+      return 0.0;
+   }
+
+   vec2 cloudTypeHeight = vec2(0.0, 0.0);
+   if (cloudType < 0.5)
+   {
+      // Stratus or stratocumulus
+      cloudTypeHeight = mix(STRATUS_OFFSET, STRATOCUMULUS_OFFSET, cloudType);
+   }
+   else
+   {
+      // Stratocumulus or cumulus
+      cloudTypeHeight = mix(STRATOCUMULUS_OFFSET, CUMULUS_OFFSET, cloudType - 0.5);
+   }
+
+   float mappedHeight = (height - uSettings.cloudStartHeight) / (uSettings.cloudEndHeight - uSettings.cloudStartHeight);
+
+   // Smooth step from heigh 0.0 to 0.2
+   // and from 0.8 to 1.0
+   float fadeIn = smoothstep(cloudTypeHeight.x, cloudTypeHeight.x + 0.2, mappedHeight);
+   float fadeOut = 1.0 - smoothstep(cloudTypeHeight.y - 0.2, cloudTypeHeight.y, mappedHeight);
+   float heightFraction = fadeIn * fadeOut;
+
+   return heightFraction;
+}
+
+float sampleDensity(vec3 pos)
+{
+   if (pos.y < uSettings.cloudStartHeight || pos.y > uSettings.cloudEndHeight)
+      return 0.0;
+
+   // Sample weather map.
+   vec2 weatherMapCoord = pos.xz * WEATHER_MAP_SCALING_FACTOR;
+   float cloudCoverage = 0.0;
+   float cloudType = 0.0;
+   if (weatherMapCoord.x > 0.0 && weatherMapCoord.x < 1 && weatherMapCoord.y > 0.0 && weatherMapCoord.y < 1)
+   {
+      vec4 weatherMapSample = texture(sampler2D(weatherMap, weatherMapSampler), weatherMapCoord);
+      cloudCoverage = weatherMapSample.r;
+      cloudType = weatherMapSample.g;
+   }
+
+   // Sample detail texture (3D texture).
+   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR;
+   vec4 detailTextureSample = texture(sampler3D(cloudBaseTexture, cloudBaseSampler), detailTextureCoord);
+
+   // Height fraction
+   float heightFraction = getCloudHeightFraction(pos.y, cloudType);
+
+   float lowFreqDensity = detailTextureSample.r;
+
+   float density = max(0.0, heightFraction * lowFreqDensity * cloudCoverage - uSettings.densityThreshold) * CLOUD_BASE_DENSITY_MULTIPLIER * uSettings.densityMultiplier;
+
+   return density;
 }
 
 // Calculate the distance to the cloud layer to entry point
@@ -70,23 +141,23 @@ float getCloudEntryDistance(vec3 rayOrigin, vec3 rayDir)
    {
       // Ray starts below the cloud layer
       if (rayDir.y < EPSILON)
-         // no intersection
-         res = -1.0;
+      // no intersection
+      res = -1.0;
       else
-         res = (uSettings.cloudStartHeight - rayOrigin.y) / rayDir.y;
+      res = (uSettings.cloudStartHeight - rayOrigin.y) / rayDir.y;
    }
    else if (rayOrigin.y > uSettings.cloudEndHeight)
    {
       // Ray starts above the cloud layer
       if (rayDir.y > -EPSILON)
-         // no intersection
-         res = -1.0;
+      // no intersection
+      res = -1.0;
       else
-         res = (uSettings.cloudEndHeight - rayOrigin.y) / rayDir.y;
+      res = (uSettings.cloudEndHeight - rayOrigin.y) / rayDir.y;
    }
    else
-      // Ray starts inside the cloud layer
-      res = 0.0;
+   // Ray starts inside the cloud layer
+   res = 0.0;
 
    return res;
 }
@@ -100,66 +171,37 @@ float getCloudInsideDistance(vec3 rayOrigin, vec3 rayDir)
    {
       // Ray starts below the cloud layer
       if (rayDir.y < EPSILON)
-         // No intersection
-         res = -1.0;
+      // No intersection
+      res = -1.0;
       else
-         // Ray is going up
-         res = (uSettings.cloudEndHeight - uSettings.cloudStartHeight) / rayDir.y;
+      // Ray is going up
+      res = (uSettings.cloudEndHeight - uSettings.cloudStartHeight) / rayDir.y;
    }
    else if (rayOrigin.y > uSettings.cloudEndHeight)
    {
       // Ray starts above the cloud layer
       if (rayDir.y > -EPSILON)
-         // No intersection
-         res = -1.0;
+      // No intersection
+      res = -1.0;
       else
-         // Ray is going down
-         res = (uSettings.cloudStartHeight - uSettings.cloudEndHeight) / rayDir.y;
+      // Ray is going down
+      res = (uSettings.cloudStartHeight - uSettings.cloudEndHeight) / rayDir.y;
    }
    else
    {
       // Ray starts inside the cloud layer
       if (abs(rayDir.y) < EPSILON)
-         // Ray is parallel to the cloud layer, default distance
-         res = 5000.0;
+      // Ray is parallel to the cloud layer, default distance
+      res = 5000.0;
       else if (rayDir.y > 0)
-         // Ray is going up
-         res = (uSettings.cloudEndHeight - rayOrigin.y) / rayDir.y;
+      // Ray is going up
+      res = (uSettings.cloudEndHeight - rayOrigin.y) / rayDir.y;
       else
-         // Ray is going down
-         res = (uSettings.cloudStartHeight - rayOrigin.y) / rayDir.y;
+      // Ray is going down
+      res = (uSettings.cloudStartHeight - rayOrigin.y) / rayDir.y;
    }
 
    return res;
-}
-
-float sampleDensity(vec3 pos)
-{
-   if (pos.y < uSettings.cloudStartHeight || pos.y > uSettings.cloudEndHeight)
-      return 0.0;
-
-   // Sample weatherMap
-   vec2 weatherMapCoord = pos.xz * WEATHER_MAP_SCALING_FACTOR;
-
-   float weatherMapValue = 0.0;
-   if (weatherMapCoord.x > 0.0 && weatherMapCoord.x < 1 && weatherMapCoord.y > 0.0 && weatherMapCoord.y < 1)
-   {
-      weatherMapValue = texture(sampler2D(weatherMap, weatherMapSampler), weatherMapCoord).r;
-   }
-
-   // height gradient
-   float gradientHeight = CLOUD_HEIGHT_GRADIENT;
-   float gradient = smoothstep(uSettings.cloudStartHeight, uSettings.cloudStartHeight + gradientHeight, pos.y) *
-                          (1.0 - smoothstep(uSettings.cloudEndHeight - gradientHeight, uSettings.cloudEndHeight, pos.y));
-
-   // Detail texture
-   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR;
-   float detailTextureValue = texture(sampler3D(cloudBaseTexture, cloudBaseSampler), detailTextureCoord).x;
-
-   // Calculate density
-   float density = max(0.0, weatherMapValue * gradient * detailTextureValue - uSettings.densityThreshold) * CLOUD_BASE_DENSITY_MULTIPLIER * uSettings.densityMultiplier;
-
-   return density;
 }
 
 float raymarchToLight(vec3 rayOrigin, vec3 rayDir)
@@ -198,8 +240,10 @@ vec4 raymarch(vec3 start, vec3 end)
    float curStepSize = baseStepSize;
    float remainingDst = rayLength;
    int curSteps = 0;
-   while (remainingDst > 0.0 && curSteps < uSettings.cloudNumSteps)
+   while (remainingDst > 0.0)
    {
+      if (curSteps >= uSettings.cloudNumSteps)
+         break;
       curSteps++;
 
       float density = sampleDensity(rayPos);
@@ -213,7 +257,7 @@ vec4 raymarch(vec3 start, vec3 end)
 
          transmittance *= exp(-density * curStepSize * CLOUD_ABSORBTION);
       }
-      
+
       // early exit
       if (transmittance < 0.001)
          break;

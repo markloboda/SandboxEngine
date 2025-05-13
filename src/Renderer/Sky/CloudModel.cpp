@@ -56,11 +56,11 @@ void CloudsModel::GenerateWeatherMapTexture(Renderer *renderer)
          float invWorley = 1.0f - worley;
 
          // Combine values into (subtract worley noise from low density regions of perlin noise)
-         float noise = perlin - invWorley;
+         float coverage = perlin - invWorley;
 
          uint32_t idx = (y * _weatherMapTextureDimensions.x + x) * 4;
-         noiseData[idx + 0] = static_cast<uint8_t>(noise * 255.0f); // R channel
-         noiseData[idx + 1] = 0; // G channel
+         noiseData[idx + 0] = static_cast<uint8_t>(coverage * 255.0f); // R channel (cloud coverage)
+         noiseData[idx + 1] = static_cast<uint8_t>(255); // G channel (cloud type)
          noiseData[idx + 2] = 0; // B channel
          noiseData[idx + 3] = 0; // A channel
       }
@@ -92,11 +92,11 @@ void CloudsModel::GenerateBaseNoiseTexture(Renderer *renderer)
    _baseNoiseTextureDimensions = {128u, 128u, 128u};
 
    // R-channel
-   FastNoiseLite noise0;
-   noise0.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Perlin);
-   noise0.SetSeed(0);
-   noise0.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
-   noise0.SetFrequency(0.1f);
+   FastNoiseLite lowFrequencyNoise;
+   lowFrequencyNoise.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Perlin);
+   lowFrequencyNoise.SetSeed(0);
+   lowFrequencyNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
+   lowFrequencyNoise.SetFrequency(0.1f);
 
    // B-channel
    FastNoiseLite noise1;
@@ -113,7 +113,7 @@ void CloudsModel::GenerateBaseNoiseTexture(Renderer *renderer)
       {
          for (uint32_t x = 0; x < _baseNoiseTextureDimensions.x; ++x)
          {
-            float noiseValue = noise0.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+            float noiseValue = lowFrequencyNoise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
             // remap from [-1, 1] to [0, 255]
             noiseValue = (noiseValue + 1.0f) * 0.5f;
 

@@ -20,8 +20,8 @@ private:
 public:
    struct CloudRenderSettings
    {
-      float cloudStartHeight = 1000.0;
-      float cloudEndHeight = 1400.0;
+      float cloudStartHeight = 2000.0;
+      float cloudEndHeight = 4000.0;
 
       float densityMultiplier = 1.0;
       float densityThreshold = 0.291f;
