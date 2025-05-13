@@ -16,6 +16,7 @@ public:
    ~CloudsModel();
 
    Texture* GetWeatherMapTexture() const { return _weatherMapTexture; }
+   void LoadWeatherMapTexture(Renderer *renderer, const std::string &filePath);
    Texture* GetBaseNoiseTexture() const { return _baseNoiseTexture; }
 private:
    void GenerateWeatherMapTexture(Renderer* renderer);

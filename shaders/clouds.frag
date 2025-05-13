@@ -46,7 +46,7 @@ layout(location = 0) out vec4 fragCol;
 #define WEATHER_MAP_SCALING_FACTOR 1.0 / 10000.0 // covers 10km x 10km
 #define SUN_DIR vec3(0.577, -0.577, 0.577)
 #define CLOUD_BASE_DENSITY_MULTIPLIER 0.1
-#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR 1 / 1000.0
+#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR 1 / 5000.0
 
 #define SUN_COLOR vec3(1.0, 1.0, 1.0)
 #define AMBIENT_COLOR vec3(0.1, 0.1, 0.1)

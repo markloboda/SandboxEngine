@@ -22,6 +22,7 @@ add_subdirectory(${LIBS_ROOT}/webgpu)
 add_subdirectory(${LIBS_ROOT}/glfw3webgpu)
 add_subdirectory(${LIBS_ROOT}/imgui)
 add_subdirectory(${LIBS_ROOT}/imguizmo)
+add_subdirectory(${LIBS_ROOT}/stb)
 
 # Source files
 set(SOURCE_FILES
@@ -122,8 +123,14 @@ add_executable(${PROJECT_NAME}
   ${SHADER_SPIRV_FILES}  # Explicitly list SPIR-V outputs
 )
 
+# Copy assets to build directory
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
+)
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${SRC_ROOT})
-target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu imgui FastNoiseLite ImGuizmo)
+target_link_libraries(${PROJECT_NAME} PRIVATE webgpu glfw glm glfw3webgpu imgui FastNoiseLite ImGuizmo stb)
 
 # Enable precompiled headers
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${SRC_ROOT}/pch.h)
