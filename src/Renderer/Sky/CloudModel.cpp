@@ -113,12 +113,12 @@ void CloudsModel::GenerateBaseNoiseTexture(Renderer *renderer)
       {
          for (uint32_t x = 0; x < _baseNoiseTextureDimensions.x; ++x)
          {
-            float noiseValue0 = noise0.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+            float noiseValue = noise0.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
             // remap from [-1, 1] to [0, 255]
-            noiseValue0 = (noiseValue0 + 1.0f) * 0.5f;
+            noiseValue = (noiseValue + 1.0f) * 0.5f;
 
             uint32_t idx = (z * _baseNoiseTextureDimensions.x * _baseNoiseTextureDimensions.y + y * _baseNoiseTextureDimensions.x + x) * 4;
-            noiseData[idx + 0] = 255; // R channel
+            noiseData[idx + 0] = static_cast<uint8_t>(noiseValue * 255.0f); // R channel
             noiseData[idx + 1] = 0; // G channel
             noiseData[idx + 2] = 0; // B channel
             noiseData[idx + 3] = 0; // A channel
