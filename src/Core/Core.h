@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <functional>
 #include <future>
+#include <algorithm>
 
 #define PI 3.14159265359f
 

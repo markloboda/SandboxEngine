@@ -112,9 +112,8 @@ void Renderer::Terminate()
    _surface.UnConfigureSurface();
 }
 
-void Renderer::Update(float dt)
+void Renderer::Update(float )
 {
-   dt;
    // _clothRenderer->Update(dt);
 }
 
