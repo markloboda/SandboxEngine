@@ -20,15 +20,11 @@ private:
 public:
    struct CloudRenderSettings
    {
-      float cloudStartHeight = 2000.0;
-      float cloudEndHeight = 4000.0;
+      float cloudStartHeight = 6100.0;
+      float cloudEndHeight = 18300.0;
 
       float densityMultiplier = 1.0;
       float densityThreshold = 0.291f;
-
-      int cloudNumSteps = 128;
-      int lightNumSteps = 6;
-      float cloudMaxStepSize = 25.0f;
    };
 
    CloudRenderSettings Settings;
