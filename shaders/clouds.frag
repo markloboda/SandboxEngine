@@ -35,12 +35,13 @@ layout(location = 0) out vec4 fragCol;
 
 // constants
 #define EPSILON 1e-5
+#define M_PI 3.14159265358979323846
 
 //  settings
 #define CLOUD_ABSORBTION 1.0
 #define CLOUD_MAP_SCALING_FACTOR 1.0 / 512000.0 // covers 512km x 512km
 #define SUN_DIR vec3(0.577, -0.577, 0.577)
-#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR (1.0 / 20000.0)
+#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR (1.0 / 80000.0)
 #define MAX_RAYMARCH_DISTANCE 500000.0
 
 #define SUN_COLOR vec3(1.0, 1.0, 1.0)
@@ -55,6 +56,12 @@ layout(location = 0) out vec4 fragCol;
 float remap(float originalValue, float originalMin, float originalMax, float newMin, float newMax)
 {
    return newMin + (((originalValue - originalMin) / (originalMax - originalMin)) * (newMax - newMin));
+}
+
+float clampRemap(float originalValue, float originalMin, float originalMax, float newMin, float newMax)
+{
+   float remappedValue = remap(originalValue, originalMin, originalMax, newMin, newMax);
+   return clamp(remappedValue, newMin, newMax);
 }
 
 vec3 getStartRayDirection(vec2 uv)
@@ -225,23 +232,16 @@ vec4 getCloudDetailSample(vec3 pos)
    return detailSample;
 }
 
-//float raymarchToLight(vec3 rayOrigin, vec3 rayDir)
-//{
-//   int lightNumSteps = 6;
-//   float dstInsideCloud = min(100.0, getCloudInsideDistance(rayOrigin, rayDir));
-//   float stepSize = dstInsideCloud / lightNumSteps;
-//
-//   float totalDensity = 0.0;
-//   for (int i = 0; i < lightNumSteps; i++)
-//   {
-//      vec3 rayPos = rayOrigin + rayDir * (i * stepSize);
-//      float density = getCloudDensity(rayPos, 0);
-//      totalDensity += density * stepSize;
-//   }
-//
-//   float transmittance = exp(-totalDensity * CLOUD_ABSORBTION);
-//   return transmittance;
-//}
+// HenyeyGreenstein phase function
+float henyeyGreenstein(float cos, float eccentricity)
+{
+   return ((1.0 - eccentricity * eccentricity) / pow(1.0 + eccentricity * eccentricity - 2.0 * eccentricity * cos, 1.5)) / (4.0 * M_PI);
+}
+
+float raymarchToLight(vec3 rayOrigin, vec3 rayDir)
+{
+   return 0.0;
+}
 
 vec4 raymarch(vec3 start, vec3 end)
 {
@@ -252,21 +252,16 @@ vec4 raymarch(vec3 start, vec3 end)
 
    // Volumetric state
    float transmittance    = 1.0;
-   float inscatteredLight = 0.0;
 
    // Log‑biased steps parameters
    const int   numSteps   = 120;
    const float biasPower  = 2.0;    // >1 biases samples toward the camera
 
-   float tPrev = 0.0;
    for (int i = 0; i < numSteps; ++i)
    {
-      // normalized [0…1]
+      // update raymarching position
       float stepIndex = float(i + 1) / float(numSteps);
       float stepDist  = pow(stepIndex, biasPower) * rayLength;
-      float delta     = stepDist - tPrev;
-      tPrev           = stepDist;
-
       vec3 rayPos = start + rayDir * stepDist;
 
       // cheap map sampling
@@ -280,20 +275,32 @@ vec4 raymarch(vec3 start, vec3 end)
       if (coverageDensity < uSettings.densityThreshold * 0.5)
          continue;
 
-      // expensive detail
+      // expensive detail sampling
       vec4  detailSample    = getCloudDetailSample(rayPos);
-      float perlinWorley    = detailSample.r;
-      float lowFreqWorley   = detailSample.g;
-      float highFreqWorley1 = detailSample.b;
-      float highFreqWorley2 = detailSample.a;
+      float perlinWorley        = detailSample.r;
+      float worley1             = detailSample.g;
+      float worley2             = detailSample.b;
+      float worley3             = detailSample.a;
 
-      float baseCloudDensity = remap(lowFreqWorley, highFreqWorley1, 1.0, 0.0, 1.0);
-      float cloudDensity     = remap(baseCloudDensity * heightFraction, cloudCoverage, 1.0, 0.0, 1.0) * uSettings.densityMultiplier;
-      cloudDensity = max(0.0, cloudDensity - uSettings.densityThreshold);
+      // base cloud density
+      float lowFreqNoise = perlinWorley;
+      float highFreqNoise = dot(vec3(worley1, worley2, worley3), vec3(0.625, 0.25, 0.125));
+      float baseDensity = clampRemap(lowFreqNoise, highFreqNoise, 1.0, 0.0, 1.0);
 
-      // accumulate raymarhing parameters
-      transmittance *= exp(-cloudDensity * delta * CLOUD_ABSORBTION);
-      // inscatteredLight += cloudDensity * delta * transmittance;
+      float cloudDensity = max(0.0, coverageDensity * baseDensity - uSettings.densityThreshold) * uSettings.densityMultiplier;
+
+
+
+//      float cloudDensity = max(0.0, cloudCoverage * heightFraction * perlinWorley * worley1 - uSettings.densityThreshold) * uSettings.densityMultiplier;
+
+//      const float eccentricity = 0.6;
+//      const float silverIntensity = 0.5;
+//      const float silverSpread = 0.5;
+//      float cos = dot(normalize(SUN_DIR), rayDir);
+//      float hg = max(henyeyGreenstein(cos, eccentricity), silverIntensity * henyeyGreenstein(cos, 0.99 - silverSpread));
+
+      // Accumulate raymarching parameters
+      transmittance *= exp(-cloudDensity * stepDist * CLOUD_ABSORBTION);
 
       if (transmittance < 0.001)
          break;

@@ -34,7 +34,7 @@ void CloudsModel::GenerateWeatherMapTexture(Renderer *)
 
 void CloudsModel::GenerateBaseNoiseTexture(Renderer *renderer)
 {
-   _baseNoiseTextureDimensions = {64u, 64u, 64u};
+   _baseNoiseTextureDimensions = {128u, 128u, 128u};
 
    // Base cloud density
    // Generate a low frequency Perlin Worlye (Perlin - Worley) noise and
