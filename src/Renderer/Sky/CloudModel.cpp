@@ -34,21 +34,65 @@ void CloudsModel::GenerateWeatherMapTexture(Renderer *)
 
 void CloudsModel::GenerateBaseNoiseTexture(Renderer *renderer)
 {
-   _baseNoiseTextureDimensions = {128u, 128u, 128u};
+   _baseNoiseTextureDimensions = {64u, 64u, 64u};
 
    // Base cloud density
    // Generate a low frequency Perlin Worlye (Perlin - Worley) noise and
    // a low frequency Worley noise
-   FastNoiseLite lowFrequencyPerlinNoise;
-   lowFrequencyPerlinNoise.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Perlin);
-   lowFrequencyPerlinNoise.SetSeed(0);
-   lowFrequencyPerlinNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
-   lowFrequencyPerlinNoise.SetFrequency(0.1f);
+   FastNoiseLite perlinNoise;
+   perlinNoise.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Perlin);
+   perlinNoise.SetSeed(0);
+   perlinNoise.SetFrequency(0.046f);
+   perlinNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
+   perlinNoise.SetFractalOctaves(3);
+   perlinNoise.SetFractalLacunarity(2.88f);
+   perlinNoise.SetFractalGain(0.36f);
+   perlinNoise.SetFractalWeightedStrength(0.0f);
 
-   FastNoiseLite lowFrequencyWorleyNoise;
-   lowFrequencyWorleyNoise.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Cellular);
-   lowFrequencyWorleyNoise.SetSeed(0);
-   lowFrequencyWorleyNoise.SetFrequency(0.1f);
+   FastNoiseLite worleyNoise;
+   worleyNoise.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Cellular);
+   worleyNoise.SetSeed(0);
+   worleyNoise.SetFrequency(0.075f);
+   worleyNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_Ridged);
+   worleyNoise.SetFractalOctaves(3);
+   worleyNoise.SetFractalLacunarity(2.68f);
+   worleyNoise.SetFractalGain(0.3f);
+   worleyNoise.SetFractalWeightedStrength(0.1f);
+   worleyNoise.SetCellularDistanceFunction(FastNoiseLite::CellularDistanceFunction::CellularDistanceFunction_EuclideanSq);
+   worleyNoise.SetCellularReturnType(FastNoiseLite::CellularReturnType::CellularReturnType_Distance);
+   worleyNoise.SetCellularJitter(1.6f);
+   worleyNoise.SetDomainWarpType(FastNoiseLite::DomainWarpType_OpenSimplex2);
+   worleyNoise.SetDomainWarpAmp(1.0f);
+
+   FastNoiseLite highFreqWorleyNoise1;
+   highFreqWorleyNoise1.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Cellular);
+   highFreqWorleyNoise1.SetSeed(512);
+   highFreqWorleyNoise1.SetFrequency(0.13f);
+   highFreqWorleyNoise1.SetFractalType(FastNoiseLite::FractalType::FractalType_Ridged);
+   highFreqWorleyNoise1.SetFractalOctaves(3);
+   highFreqWorleyNoise1.SetFractalLacunarity(2.68f);
+   highFreqWorleyNoise1.SetFractalGain(0.3f);
+   highFreqWorleyNoise1.SetFractalWeightedStrength(0.1f);
+   highFreqWorleyNoise1.SetCellularDistanceFunction(FastNoiseLite::CellularDistanceFunction::CellularDistanceFunction_EuclideanSq);
+   highFreqWorleyNoise1.SetCellularReturnType(FastNoiseLite::CellularReturnType::CellularReturnType_Distance);
+   highFreqWorleyNoise1.SetCellularJitter(1.6f);
+   highFreqWorleyNoise1.SetDomainWarpType(FastNoiseLite::DomainWarpType_OpenSimplex2);
+   highFreqWorleyNoise1.SetDomainWarpAmp(1.0f);
+
+   FastNoiseLite highFreqWorleyNoise2;
+   highFreqWorleyNoise2.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Cellular);
+   highFreqWorleyNoise2.SetSeed(124);
+   highFreqWorleyNoise2.SetFrequency(0.18f);
+   highFreqWorleyNoise2.SetFractalType(FastNoiseLite::FractalType::FractalType_Ridged);
+   highFreqWorleyNoise2.SetFractalOctaves(3);
+   highFreqWorleyNoise2.SetFractalLacunarity(2.68f);
+   highFreqWorleyNoise2.SetFractalGain(0.3f);
+   highFreqWorleyNoise2.SetFractalWeightedStrength(0.1f);
+   highFreqWorleyNoise2.SetCellularDistanceFunction(FastNoiseLite::CellularDistanceFunction::CellularDistanceFunction_EuclideanSq);
+   highFreqWorleyNoise2.SetCellularReturnType(FastNoiseLite::CellularReturnType::CellularReturnType_Distance);
+   highFreqWorleyNoise2.SetCellularJitter(1.6f);
+   highFreqWorleyNoise2.SetDomainWarpType(FastNoiseLite::DomainWarpType_OpenSimplex2);
+   highFreqWorleyNoise2.SetDomainWarpAmp(1.0f);
 
    // Generate the 3D noise texture
    std::vector<uint8_t> noiseData(_baseNoiseTextureDimensions.x * _baseNoiseTextureDimensions.y * _baseNoiseTextureDimensions.z * 4);
@@ -58,17 +102,29 @@ void CloudsModel::GenerateBaseNoiseTexture(Renderer *renderer)
       {
          for (uint32_t x = 0; x < _baseNoiseTextureDimensions.x; ++x)
          {
-            float perlin = lowFrequencyPerlinNoise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
-            float worley = lowFrequencyWorleyNoise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
-            float invWorley = 1.0f - worley;
-
-            float perlinWorley = perlin - invWorley;
+            float perlinWorley = 0.0; {
+               float perlin = Math::Remap(perlinNoise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
+               // float worley = Math::Remap(worleyNoise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
+               perlinWorley = Math::Clamp(perlin, 0.0f, 1.0f);
+            }
+            float worley = Math::Clamp(
+               Math::Remap(worleyNoise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)),
+                           -1.0f, 1.0f, 0.0f, 1.0f),
+               0.0f, 1.0f);
+            float highFreqWorley1 = Math::Clamp(
+               Math::Remap(highFreqWorleyNoise1.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)),
+                           -1.0f, 1.0f, 0.0f, 1.0f),
+               0.0f, 1.0f);
+            float highFreqWorley2 = Math::Clamp(
+               Math::Remap(highFreqWorleyNoise2.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)),
+                           -1.0f, 1.0f, 0.0f, 1.0f),
+               0.0f, 1.0f);
 
             uint32_t idx = (z * _baseNoiseTextureDimensions.x * _baseNoiseTextureDimensions.y + y * _baseNoiseTextureDimensions.x + x) * 4;
             noiseData[idx + 0] = static_cast<uint8_t>(perlinWorley * 255.0f); // R channel
-            noiseData[idx + 1] = 0; // G channel
-            noiseData[idx + 2] = 0; // B channel
-            noiseData[idx + 3] = 0; // A channel
+            noiseData[idx + 1] = static_cast<uint8_t>(1.0f - worley * 255.0f); // G channel
+            noiseData[idx + 2] = static_cast<uint8_t>(1.0f - highFreqWorley1 * 255.0f); // B channel
+            noiseData[idx + 3] = static_cast<uint8_t>(1.0f - highFreqWorley2 * 255.0f); // A channel
          }
       }
    }

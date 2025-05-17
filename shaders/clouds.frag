@@ -38,23 +38,23 @@ layout(location = 0) out vec4 fragCol;
 
 //  settings
 #define CLOUD_ABSORBTION 1.0
-#define CLOUD_MAP_SCALING_FACTOR 1.0 / 10240.0 // covers 10.24km x 10.24km
+#define CLOUD_MAP_SCALING_FACTOR 1.0 / 512000.0 // covers 512km x 512km
 #define SUN_DIR vec3(0.577, -0.577, 0.577)
-#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR (1.0 / 50000.0)
-#define MAX_RAYMARCH_DISTANCE 10000.0
+#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR (1.0 / 20000.0)
+#define MAX_RAYMARCH_DISTANCE 500000.0
 
 #define SUN_COLOR vec3(1.0, 1.0, 1.0)
 #define AMBIENT_COLOR vec3(0.1, 0.1, 0.1)
 
 // Cloud type functions
-#define STRATUS_OFFSET vec2(0.0, 0.2)
-#define STRATOCUMULUS_OFFSET vec2(0.0, 0.5)
-#define CUMULUS_OFFSET vec2(0.0, 1.0)
+#define STRATUS_OFFSET       vec3(0.1, 0.2, 0.3)
+#define STRATOCUMULUS_OFFSET vec3(0.1, 0.5, 0.6)
+#define CUMULUS_OFFSET       vec3(0.1, 0.9, 1.0)
 
 // helper functions
-float remap(float inMin, float inMax, float outMin, float outMax, float value) {
-   float t = clamp((value - inMin) / (inMax - inMin), 0.0, 1.0);
-   return mix(outMin, outMax, t);
+float remap(float originalValue, float originalMin, float originalMax, float newMin, float newMax)
+{
+   return newMin + (((originalValue - originalMin) / (originalMax - originalMin)) * (newMax - newMin));
 }
 
 vec3 getStartRayDirection(vec2 uv)
@@ -162,6 +162,11 @@ float getCloudInsideDistance(vec3 rayOrigin, vec3 rayDir)
    return res;
 }
 
+float heightGradient(float mappedHeight, float min, float center, float max)
+{
+   return clamp(remap(mappedHeight, 0.0, min, 0.0, 1.0), 0.0, 1.0) * clamp(remap(mappedHeight, center, max, 1.0, 0.0), 0.0, 1.0);
+}
+
 // Calculate the cloud height fraction for the given position and cloud type
 float getCloudHeightFraction(float height, float cloudType)
 {
@@ -175,26 +180,20 @@ float getCloudHeightFraction(float height, float cloudType)
       return 0.0;
    }
 
-   vec2 cloudTypeHeight = vec2(0.0, 0.0);
+   vec3 cloudTypeHeight = vec3(0.0);
    if (cloudType < 0.5)
    {
-      // Stratus or stratocumulus
-      cloudTypeHeight.x = mix(STRATUS_OFFSET.x, STRATOCUMULUS_OFFSET.x, cloudType * 2.0);
+      // stratus or stratocumulus
+      cloudTypeHeight = mix(STRATUS_OFFSET, STRATOCUMULUS_OFFSET, cloudType * 2.0);
    }
    else
    {
-      // Stratocumulus or cumulus
+      // stratocumulus or cumulus
       cloudTypeHeight = mix(STRATOCUMULUS_OFFSET, CUMULUS_OFFSET, (cloudType - 0.5) * 2.0);
    }
 
-   float mappedHeight = (height - uSettings.cloudStartHeight) / (uSettings.cloudEndHeight - uSettings.cloudStartHeight);
-
-   // Smooth step from heigh 0.0 to 0.1
-   // and from 0.9 to 1.0
-   float fadeIn = smoothstep(cloudTypeHeight.x, cloudTypeHeight.x + 0.1, mappedHeight);
-   float fadeOut = 1.0 - smoothstep(cloudTypeHeight.y - 0.1, cloudTypeHeight.y, mappedHeight);
-   float heightFraction = fadeIn * fadeOut;
-
+   float mappedHeight = remap(height, uSettings.cloudStartHeight, uSettings.cloudEndHeight, 0.0, 1.0); // is already between cloudStartHeight and cloudEndHeight
+   float heightFraction = heightGradient(mappedHeight, cloudTypeHeight.x, cloudTypeHeight.y, cloudTypeHeight.z);
    return heightFraction;
 }
 
@@ -246,89 +245,58 @@ vec4 getCloudDetailSample(vec3 pos)
 
 vec4 raymarch(vec3 start, vec3 end)
 {
-   // Ray
-   vec3  ray = end - start;
-   vec3  rayDir = normalize(ray);
+   // Ray setup
+   vec3  ray       = end - start;
    float rayLength = length(ray);
+   vec3  rayDir    = ray / rayLength;
 
-   // Raymarching parameters
-   float transmittance = 1.0;
+   // Volumetric state
+   float transmittance    = 1.0;
+   float inscatteredLight = 0.0;
 
-   // Start raymarching
-   vec3  rayPos = start;
+   // Log‑biased steps parameters
+   const int   numSteps   = 120;
+   const float biasPower  = 2.0;    // >1 biases samples toward the camera
 
-   int         lodCurrent       = 1;
-   const float lodStepSize[2]   = float[2](20.0, 60.0);
-   const int   lodSwitchMiss    = int(lodStepSize[1] / lodStepSize[0]);
-   int         lodSwitchCounter = 0;
-   float       lodDensityLimit  = uSettings.densityThreshold + 0.12;
-
-   int   maxSteps = 120;
-   int   stepCount = 0;
-   float remainingDst = rayLength;
-   while (remainingDst > 0.0)
+   float tPrev = 0.0;
+   for (int i = 0; i < numSteps; ++i)
    {
-      if (stepCount++ >= maxSteps)
-      {
+      // normalized [0…1]
+      float stepIndex = float(i + 1) / float(numSteps);
+      float stepDist  = pow(stepIndex, biasPower) * rayLength;
+      float delta     = stepDist - tPrev;
+      tPrev           = stepDist;
+
+      vec3 rayPos = start + rayDir * stepDist;
+
+      // cheap map sampling
+      vec4  mapSample      = getCloudMapSample(rayPos);
+      float cloudCoverage  = mapSample.r;
+      float cloudType      = mapSample.b;
+
+      float heightFraction  = getCloudHeightFraction(rayPos.y, cloudType);
+      float coverageDensity = cloudCoverage * heightFraction;
+
+      if (coverageDensity < uSettings.densityThreshold * 0.5)
+         continue;
+
+      // expensive detail
+      vec4  detailSample    = getCloudDetailSample(rayPos);
+      float perlinWorley    = detailSample.r;
+      float lowFreqWorley   = detailSample.g;
+      float highFreqWorley1 = detailSample.b;
+      float highFreqWorley2 = detailSample.a;
+
+      float baseCloudDensity = remap(lowFreqWorley, highFreqWorley1, 1.0, 0.0, 1.0);
+      float cloudDensity     = remap(baseCloudDensity * heightFraction, cloudCoverage, 1.0, 0.0, 1.0) * uSettings.densityMultiplier;
+      cloudDensity = max(0.0, cloudDensity - uSettings.densityThreshold);
+
+      // accumulate raymarhing parameters
+      transmittance *= exp(-cloudDensity * delta * CLOUD_ABSORBTION);
+      // inscatteredLight += cloudDensity * delta * transmittance;
+
+      if (transmittance < 0.001)
          break;
-      }
-
-      float stepSize = lodStepSize[lodCurrent];
-
-      if (lodCurrent == 0)
-      {
-         vec4 weatherMapSample = getCloudMapSample(rayPos);
-         float coverage1 = weatherMapSample.r;
-         float cloudType = weatherMapSample.b;
-
-         float weatherMapDensity = coverage1 * getCloudHeightFraction(rayPos.y, cloudType);
-         if (weatherMapDensity < lodDensityLimit)
-         {
-            if (++lodSwitchCounter >= lodSwitchMiss)
-            {
-               // Switch to lod=1 (density too low)
-               lodSwitchCounter = 0;
-               lodCurrent = 1;
-               continue;
-            }
-         }
-
-         lodSwitchCounter = 0;
-
-         // Process clouds (DETAILED)
-         vec4 detailSample = getCloudDetailSample(rayPos);
-         float perlinWorley = detailSample.r;
-
-         float cloudDensity = max(0.0, weatherMapDensity * perlinWorley - uSettings.densityThreshold) * uSettings.densityMultiplier;
-         transmittance *= exp(-cloudDensity * stepSize * CLOUD_ABSORBTION);
-
-         // Early exit if transmittance is low
-         if (transmittance < 0.01)
-         {
-            transmittance = 0.0;
-            break;
-         }
-      }
-      else
-      {
-         vec4 weatherMapSample = getCloudMapSample(rayPos);
-         float coverage1 = weatherMapSample.r;
-         float cloudType = weatherMapSample.b;
-
-         float weatherMapDensity = coverage1 * getCloudHeightFraction(rayPos.y, cloudType);
-         if (weatherMapDensity > lodDensityLimit)
-         {
-            // Take a step back and switch to lod=0
-            rayPos -= rayDir * stepSize;
-            remainingDst += stepSize;
-            lodCurrent = 0;
-            continue;
-         }
-      }
-
-      // Move forward
-      rayPos += rayDir * stepSize;
-      remainingDst -= stepSize;
    }
 
    float alpha = 1.0 - transmittance;

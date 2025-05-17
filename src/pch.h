@@ -33,6 +33,7 @@ using namespace glm;
 
 // Core components.
 #include <Core/Core.h>
+#include <Core/Math.h>
 #include <Core/Node.h>
 #include <Core/Scene.h>
 
