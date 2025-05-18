@@ -39,6 +39,7 @@ set(SOURCE_FILES
   ${SRC_ROOT}/Renderer/Components/ComputePassEncoder.cpp
   ${SRC_ROOT}/Renderer/Components/ComputePipeline.cpp
   ${SRC_ROOT}/Renderer/Components/Device.cpp
+  ${SRC_ROOT}/Renderer/Components/QuerySet.cpp
   ${SRC_ROOT}/Renderer/Components/Queue.cpp
   ${SRC_ROOT}/Renderer/Components/RenderPassEncoder.cpp
   ${SRC_ROOT}/Renderer/Components/RenderPipeline.cpp

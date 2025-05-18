@@ -45,7 +45,9 @@ Renderer::Renderer(GLFWwindow *window)
    : _window(window),
      _device(Device()),
      _surface(Surface(&_device, window)),
-     _queue(&_device)
+     _queue(&_device),
+     _querySet(&_device, WGPUQueryType_Timestamp, _statsCount * 2),
+     _queryResultBuffer(&_device, WGPUBufferUsage_QueryResolve | WGPUBufferUsage_CopyDst | WGPUBufferUsage_MapRead, _querySet.GetCount() * sizeof(uint64_t))
 {
    bool success = Initialize();
    assert(success);
@@ -96,7 +98,7 @@ bool Renderer::Initialize()
    // Set up renderers.
    _gridRenderer = new GridRenderer(this);
    _atmosphereRenderer = new AtmosphereRenderer(this);
-   // _clothRenderer = new ClothRenderer(this);
+   _clothRenderer = new ClothRenderer(this);
    _cloudRenderer = new CloudRenderer(this);
 
    return true;
@@ -104,6 +106,12 @@ bool Renderer::Initialize()
 
 void Renderer::Terminate()
 {
+   // Destroy renderers.
+   delete _gridRenderer;
+   delete _atmosphereRenderer;
+   delete _cloudRenderer;
+   delete _clothRenderer;
+
    // Destroy ImGui.
    ImGuiManager::GetInstance().Shutdown();
    ImGuiManager::DestroyInstance();
@@ -112,9 +120,9 @@ void Renderer::Terminate()
    _surface.UnConfigureSurface();
 }
 
-void Renderer::Update(float )
+void Renderer::Update(float dt)
 {
-   // _clothRenderer->Update(dt);
+   _clothRenderer->Update(dt);
 }
 
 void Renderer::Render()
@@ -129,51 +137,46 @@ void Renderer::Render()
    _surface.GetNextSurfaceTexture(&surfaceTexture);
    TextureView textureView = TextureView(surfaceTexture.texture, nullptr);
 
-   std::chrono::high_resolution_clock::time_point start, end;
+   int queryIndex = 0;
    // Renderers
    {
       ClearRenderPass(&encoder, &textureView);
 
-      start = std::chrono::high_resolution_clock::now();
+      _querySet.WriteTimestamp(&encoder, queryIndex++);
       bool renderAtmosphere = Application::GetInstance().GetEditor()->GetRenderAtmosphere();
       if (renderAtmosphere)
       {
          _atmosphereRenderer->Render(this, &encoder, &textureView);
       }
-      end = std::chrono::high_resolution_clock::now();
-      _stats.atmosphereTime = std::chrono::duration<float, std::milli>(end - start).count();
+      _querySet.WriteTimestamp(&encoder, queryIndex++);
 
-      start = std::chrono::high_resolution_clock::now();
+      _querySet.WriteTimestamp(&encoder, queryIndex++);
       bool renderGrid = Application::GetInstance().GetEditor()->GetRenderGrid();
       if (renderGrid)
       {
          _gridRenderer->Render(this, &encoder, &textureView);
       }
-      end = std::chrono::high_resolution_clock::now();
-      _stats.gridTime = std::chrono::duration<float, std::milli>(end - start).count();
+      _querySet.WriteTimestamp(&encoder, queryIndex++);
 
-      // start = std::chrono::high_resolution_clock::now();
-      // if (true)
-      // {
-      //    _clothRenderer->Render(this, &encoder, &textureView);
-      // }
-      // end = std::chrono::high_resolution_clock::now();
-      // _stats.clothTime = std::chrono::duration<float, std::milli>(end - start).count();
+      _querySet.WriteTimestamp(&encoder, queryIndex++);
+      if (true)
+      {
+         _clothRenderer->Render(this, &encoder, &textureView);
+      }
+      _querySet.WriteTimestamp(&encoder, queryIndex++);
 
-      start = std::chrono::high_resolution_clock::now();
+      _querySet.WriteTimestamp(&encoder, queryIndex++);
       bool renderClouds = Application::GetInstance().GetEditor()->GetRenderClouds();
       if (renderClouds)
       {
          _cloudRenderer->Render(this, &encoder, &textureView);
       }
-      end = std::chrono::high_resolution_clock::now();
-      _stats.cloudTime = std::chrono::duration<float, std::milli>(end - start).count();
+      _querySet.WriteTimestamp(&encoder, queryIndex++);
 
       // ImGui.
-      start = std::chrono::high_resolution_clock::now();
+      _querySet.WriteTimestamp(&encoder, queryIndex++);
       ImGuiManager::GetInstance().Render(this, &encoder, &textureView);
-      end = std::chrono::high_resolution_clock::now();
-      _stats.uiTime = std::chrono::duration<float, std::milli>(end - start).count();
+      _querySet.WriteTimestamp(&encoder, queryIndex++);
    }
 
    CommandBuffer cmdBuffer = CommandBuffer(encoder.Finish());

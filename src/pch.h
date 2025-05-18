@@ -48,6 +48,7 @@ using namespace glm;
 #include <Renderer/Components/ComputePassEncoder.h>
 #include <Renderer/Components/ComputePipeline.h>
 #include <Renderer/Components/Device.h>
+#include <Renderer/Components/QuerySet.h>
 #include <Renderer/Components/Queue.h>
 #include <Renderer/Components/RenderPassEncoder.h>
 #include <Renderer/Components/RenderPipeline.h>

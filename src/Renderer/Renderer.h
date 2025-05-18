@@ -28,9 +28,12 @@ private:
    GridRenderer* _gridRenderer;
    AtmosphereRenderer *_atmosphereRenderer;
    CloudRenderer* _cloudRenderer;
-   // ClothRenderer *_clothRenderer;
+   ClothRenderer *_clothRenderer;
 
+   QuerySet _querySet;
+   Buffer _queryResultBuffer;
    RenderStats _stats;
+   uint32_t _statsCount = 5;
 
 public:
    Renderer(GLFWwindow* window);
@@ -38,6 +41,7 @@ public:
 
 private:
    bool Initialize();
+   void InitializeTimestampResources();
    void Terminate();
 
 public:

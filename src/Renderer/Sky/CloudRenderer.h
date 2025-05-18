@@ -24,7 +24,6 @@ public:
       float cloudEndHeight = 18300.0;
 
       float densityMultiplier = 1.0;
-      float densityThreshold = 0.291f;
    };
 
    CloudRenderSettings Settings;

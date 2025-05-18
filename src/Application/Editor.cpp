@@ -106,7 +106,6 @@ void Editor::RenderImGuiUI()
             if (ImGui::CollapsingHeader("Visuals", ImGuiTreeNodeFlags_DefaultOpen))
             {
                ImGui::SliderFloat("Density Multiplier", &settings->densityMultiplier, 0.01f, 5.0f);
-               ImGui::SliderFloat("Density Threshold", &settings->densityThreshold, 0.01f, 1.0f);
             }
          }
          ImGui::End();
