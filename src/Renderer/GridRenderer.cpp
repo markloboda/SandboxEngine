@@ -122,11 +122,13 @@ void GridRenderer::Render(const Renderer &renderer, const CommandEncoder &encode
    ca.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
    rpDesc.colorAttachments = &ca;
    rpDesc.depthStencilAttachment = nullptr;
-   renderer.GetProfiler().SetupTimestamps(rpDesc, profilerIndex);
+   WGPURenderPassTimestampWrites rpTimestampWrites = {};
+   renderer.GetProfiler().GetRenderPassTimestampWrites(profilerIndex, rpTimestampWrites);
+   rpDesc.timestampWrites = &rpTimestampWrites;
+
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
 
    FreeCamera &camera = Application::GetInstance().GetEditor().GetCamera();
-
    // Update uniforms.
    _uniforms.view = camera.GetViewMatrix();
    _uniforms.proj = camera.GetProjectionMatrix();

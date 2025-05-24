@@ -81,7 +81,9 @@ void ImGuiManager::Render(const Renderer &renderer, const CommandEncoder &encode
       ca.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
    }
    rpDesc.colorAttachments = &ca;
-   renderer.GetProfiler().SetupTimestamps(rpDesc, profilerIndex);
+   WGPURenderPassTimestampWrites rpTimestampWrites = {};
+   renderer.GetProfiler().GetRenderPassTimestampWrites(profilerIndex, rpTimestampWrites);
+   rpDesc.timestampWrites = &rpTimestampWrites;
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
 
    GetInstance().NewFrame();

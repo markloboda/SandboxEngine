@@ -154,7 +154,9 @@ void ClothRenderer::Render(const Renderer &renderer, const CommandEncoder &encod
    ca.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
    rpDesc.colorAttachments = &ca;
    rpDesc.depthStencilAttachment = nullptr;
-   renderer.GetProfiler().SetupTimestamps(rpDesc, profilerIndex);
+   WGPURenderPassTimestampWrites rpTimestampWrites = {};
+   renderer.GetProfiler().GetRenderPassTimestampWrites(profilerIndex, rpTimestampWrites);
+   rpDesc.timestampWrites = &rpTimestampWrites;
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
 
    FreeCamera &camera = Application::GetInstance().GetEditor().GetCamera();

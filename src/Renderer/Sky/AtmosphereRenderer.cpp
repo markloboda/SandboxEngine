@@ -88,7 +88,9 @@ void AtmosphereRenderer::Render(const Renderer &renderer, const CommandEncoder &
    ca.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
    rpDesc.colorAttachments = &ca;
    rpDesc.depthStencilAttachment = nullptr;
-   renderer.GetProfiler().SetupTimestamps(rpDesc, profilerIndex);
+   WGPURenderPassTimestampWrites rpTimestampWrites = {};
+   renderer.GetProfiler().GetRenderPassTimestampWrites(profilerIndex, rpTimestampWrites);
+   rpDesc.timestampWrites = &rpTimestampWrites;
 
    RenderPassEncoder pass = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
 

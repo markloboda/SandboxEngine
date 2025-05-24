@@ -256,7 +256,9 @@ void CloudRenderer::Render(const Renderer &renderer, const CommandEncoder &encod
    rpDesc.colorAttachmentCount = 1;
    rpDesc.colorAttachments = &cp;
    rpDesc.depthStencilAttachment = nullptr;
-   renderer.GetProfiler().SetupTimestamps(rpDesc, profilerIndex);
+   WGPURenderPassTimestampWrites rpTimestampWrites = {};
+   renderer.GetProfiler().GetRenderPassTimestampWrites(profilerIndex, rpTimestampWrites);
+   rpDesc.timestampWrites = &rpTimestampWrites;
 
    RenderPassEncoder pass = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
    pass.SetPipeline(*_pipeline);

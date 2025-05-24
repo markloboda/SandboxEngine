@@ -176,6 +176,7 @@ void Renderer::Render()
    _device.Poll();
 
    _profiler->ReadResults();
+   _profiler->ResetUsage();
    FetchProfileResults();
 
    wgpuTextureRelease(surfaceTexture.texture);
@@ -227,7 +228,10 @@ void Renderer::ClearRenderPass(const CommandEncoder &encoder, const TextureView 
    rpDesc.colorAttachmentCount = 1;
    rpDesc.colorAttachments = &ca;
    rpDesc.depthStencilAttachment = nullptr;
-   _profiler->SetupTimestamps(rpDesc, profilerIndex);
+   WGPURenderPassTimestampWrites rpTimestampWrites = {};
+   _profiler->GetRenderPassTimestampWrites(profilerIndex, rpTimestampWrites);
+   rpDesc.timestampWrites = &rpTimestampWrites;
+
    RenderPassEncoder clearPass = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
    clearPass.EndPass();
 }

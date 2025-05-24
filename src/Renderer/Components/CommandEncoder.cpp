@@ -44,6 +44,11 @@ void CommandEncoder::CopyBufferToBuffer(const Buffer &source, uint64_t sourceOff
    wgpuCommandEncoderCopyBufferToBuffer(_encoder, source.Get(), sourceOffset, destination.Get(), destinationOffset, size);
 }
 
+void CommandEncoder::ClearBuffer(const Buffer &buffer, uint64_t offset, uint64_t size) const
+{
+   wgpuCommandEncoderClearBuffer(_encoder, buffer.Get(), offset, size);
+}
+
 void CommandEncoder::WriteTimestamp(const QuerySet &querySet, uint32_t queryIndex) const
 {
    wgpuCommandEncoderWriteTimestamp(_encoder, querySet.Get(), queryIndex);
