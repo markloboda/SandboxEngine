@@ -6,9 +6,9 @@ class FreeCamera;
 class Editor : public UIRenderer
 {
 private:
-   bool _showAtmosphere = false;
+   bool _showAtmosphere = true;
    bool _showGrid = true;
-   bool _renderClouds = false;
+   bool _renderClouds = true;
 
    FreeCamera* _camera;
 
@@ -19,16 +19,16 @@ public:
    ~Editor() override;
 
    void RenderImGuiUI() override;
-   void Update(float dt);
+   void Update(float dt) const;
 
-   FreeCamera& GetCamera() const
+   FreeCamera &GetCamera() const
    {
       return *_camera;
    }
 
-   Scene* GetScene() const
+   Scene &GetScene() const
    {
-      return _scene;
+      return *_scene;
    }
 
    bool GetRenderAtmosphere() const

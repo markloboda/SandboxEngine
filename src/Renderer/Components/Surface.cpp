@@ -1,7 +1,8 @@
 #include <pch.h>
 
-Surface::Surface(Device *device, GLFWwindow *window) : _surface(glfwCreateWindowWGPUSurface(device->GetInstance(), window)),
-                                                       _config(WGPUSurfaceConfiguration{})
+Surface::Surface(const Device &device, GLFWwindow *window) :
+   _surface(glfwCreateWindowWGPUSurface(device.GetInstance(), window)),
+   _config(WGPUSurfaceConfiguration{})
 {
    if (!_surface)
    {
@@ -17,7 +18,7 @@ Surface::~Surface()
    }
 }
 
-void Surface::Resize(int width, int height)
+void Surface::Resize(const int width, const int height)
 {
    _config.width = width;
    _config.height = height;
@@ -45,20 +46,20 @@ void Surface::ConfigureSurface(WGPUSurfaceConfiguration config)
    wgpuSurfaceConfigure(_surface, &_config);
 }
 
-void Surface::UnConfigureSurface()
+void Surface::UnConfigureSurface() const
 {
    wgpuSurfaceUnconfigure(_surface);
 }
 
-void Surface::GetNextSurfaceTexture(WGPUSurfaceTexture *surfaceTexture) const
+void Surface::GetNextSurfaceTexture(WGPUSurfaceTexture &surfaceTexture) const
 {
-   wgpuSurfaceGetCurrentTexture(_surface, surfaceTexture);
+   wgpuSurfaceGetCurrentTexture(_surface, &surfaceTexture);
 
-   if (surfaceTexture->status == WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
+   if (surfaceTexture.status == WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
    {
       std::cerr << "Warning: Surface texture is not in optimal state.\n";
    }
-   else if (surfaceTexture->status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
+   else if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
    {
       std::cerr << ("Failed to get surface texture in optimal way.");
    }

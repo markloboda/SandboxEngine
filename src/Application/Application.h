@@ -52,14 +52,14 @@ public:
       return _windowHeight;
    }
 
-   Editor* GetEditor() const
+   Editor &GetEditor() const
    {
-      return _editor;
+      return *_editor;
    }
 
-   Renderer* GetRenderer() const
+   Renderer &GetRenderer() const
    {
-      return _renderer;
+      return *_renderer;
    }
 
    // Manages the application.

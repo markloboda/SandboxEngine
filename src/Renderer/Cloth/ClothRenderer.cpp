@@ -6,7 +6,7 @@
 #include <Renderer/Cloth/ClothParticleSystem.h>
 
 
-ClothRenderer::ClothRenderer(Renderer *renderer):
+ClothRenderer::ClothRenderer(Renderer &renderer):
    _clothParticleSystem(new ClothParticleSystem())
 {
    bool success = Initialize(renderer);
@@ -18,18 +18,18 @@ ClothRenderer::~ClothRenderer()
    Terminate();
 }
 
-bool ClothRenderer::Initialize(Renderer *renderer)
+bool ClothRenderer::Initialize(Renderer &renderer)
 {
    // Initialize particles and constraints
    int width = 10;
    int height = 10;
    _clothParticleSystem->InitializeDemo(width, height);
 
-   Device *device = renderer->GetDevice();
+   Device &device = renderer.GetDevice();
 
    // Shader modules
-   ShaderModule vertexShader = ShaderModule::LoadShaderModule(device, "cloth.vert");
-   ShaderModule fragmentShader = ShaderModule::LoadShaderModule(device, "cloth.frag");
+   ShaderModule &vertexShader = ShaderModule::LoadShaderModule(device, "cloth.vert");
+   ShaderModule &fragmentShader = ShaderModule::LoadShaderModule(device, "cloth.frag");
 
    std::vector<VertexData> vertices;
    std::vector<uint32_t> indices;
@@ -37,13 +37,13 @@ bool ClothRenderer::Initialize(Renderer *renderer)
    // Buffers
    {
       _vertexBuffer = new Buffer(device, WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst, sizeof(VertexData) * vertices.size());
-      renderer->UploadBufferData(_vertexBuffer, vertices.data(), sizeof(VertexData) * vertices.size());
+      renderer.UploadBufferData(*_vertexBuffer, vertices.data(), sizeof(VertexData) * vertices.size());
 
       _indexBuffer = new Buffer(device, WGPUBufferUsage_Index | WGPUBufferUsage_CopyDst, sizeof(uint32_t) * indices.size());
-      renderer->UploadBufferData(_indexBuffer, indices.data(), sizeof(uint32_t) * indices.size());
+      renderer.UploadBufferData(*_indexBuffer, indices.data(), sizeof(uint32_t) * indices.size());
 
       _cameraUniformBuffer = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CameraUniform));
-      renderer->UploadBufferData(_cameraUniformBuffer, &_cameraUniform, sizeof(CameraUniform));
+      renderer.UploadBufferData(*_cameraUniformBuffer, &_cameraUniform, sizeof(CameraUniform));
    }
 
    // Bind groups
@@ -71,8 +71,8 @@ bool ClothRenderer::Initialize(Renderer *renderer)
       WGPUPipelineLayoutDescriptor plDesc = {};
       plDesc.label = WGPUStringView{"ClothRenderer Pipeline Layout", WGPU_STRLEN};
       plDesc.bindGroupLayoutCount = 1;
-      plDesc.bindGroupLayouts = _cameraUniformBindGroup->GetLayout();
-      WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device->Get(), &plDesc);
+      plDesc.bindGroupLayouts = &_cameraUniformBindGroup->GetLayout();
+      WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device.Get(), &plDesc);
 
       WGPURenderPipelineDescriptor rpDesc = {};
       rpDesc.label = WGPUStringView{"ClothRenderer Render Pipeline", WGPU_STRLEN};
@@ -128,7 +128,7 @@ bool ClothRenderer::Initialize(Renderer *renderer)
    return true;
 }
 
-void ClothRenderer::Terminate()
+void ClothRenderer::Terminate() const
 {
    delete _renderPipeline;
    delete _cameraUniformBindGroup;
@@ -138,52 +138,53 @@ void ClothRenderer::Terminate()
    delete _clothParticleSystem;
 }
 
-void ClothRenderer::Update(float dt)
+void ClothRenderer::Update(const float dt) const
 {
    _clothParticleSystem->Update(dt);
 }
 
-void ClothRenderer::Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView)
+void ClothRenderer::Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, const uint32_t profilerIndex)
 {
    WGPURenderPassDescriptor rpDesc = {};
    rpDesc.colorAttachmentCount = 1;
    WGPURenderPassColorAttachment ca = {};
-   ca.view = surfaceTextureView->Get();
+   ca.view = surfaceTextureView.Get();
    ca.loadOp = WGPULoadOp_Load;
    ca.storeOp = WGPUStoreOp_Store;
    ca.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
    rpDesc.colorAttachments = &ca;
    rpDesc.depthStencilAttachment = nullptr;
-   RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder->BeginRenderPass(&rpDesc));
+   renderer.GetProfiler().SetupTimestamps(rpDesc, profilerIndex);
+   RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
 
-   FreeCamera &camera = Application::GetInstance().GetEditor()->GetCamera();
+   FreeCamera &camera = Application::GetInstance().GetEditor().GetCamera();
 
    // Update vertex buffer with new particle positions
    std::vector<VertexData> vertices;
    std::vector<uint32_t> indices;
    GenerateVertexData(vertices, indices);
-   renderer->UploadBufferData(_vertexBuffer, vertices.data(), sizeof(VertexData) * vertices.size());
-   renderer->UploadBufferData(_indexBuffer, indices.data(), sizeof(uint32_t) * indices.size());
+   renderer.UploadBufferData(*_vertexBuffer, vertices.data(), sizeof(VertexData) * vertices.size());
+   renderer.UploadBufferData(*_indexBuffer, indices.data(), sizeof(uint32_t) * indices.size());
 
    // Update uniforms.
    _cameraUniform.view = camera.GetViewMatrix();
    _cameraUniform.proj = camera.GetProjectionMatrix();
-   renderer->UploadBufferData(_cameraUniformBuffer, &_cameraUniform, sizeof(_cameraUniform));
+   renderer.UploadBufferData(*_cameraUniformBuffer, &_cameraUniform, sizeof(_cameraUniform));
 
    // Render
-   renderPassEncoder.SetPipeline(_renderPipeline);
-   renderPassEncoder.SetVertexBuffer(0, _vertexBuffer);
-   renderPassEncoder.SetIndexBuffer(_indexBuffer, WGPUIndexFormat_Uint32);
-   renderPassEncoder.SetBindGroup(0, _cameraUniformBindGroup);
-   renderPassEncoder.DrawIndexed((uint32_t) indices.size(), 1, 0, 0, 0);
+   renderPassEncoder.SetPipeline(*_renderPipeline);
+   renderPassEncoder.SetVertexBuffer(0, *_vertexBuffer);
+   renderPassEncoder.SetIndexBuffer(*_indexBuffer, WGPUIndexFormat_Uint32);
+   renderPassEncoder.SetBindGroup(0, *_cameraUniformBindGroup);
+   renderPassEncoder.DrawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
    renderPassEncoder.EndPass();
 }
 
-void ClothRenderer::GenerateVertexData(std::vector<VertexData> &outVertices, std::vector<uint32_t> &outIndices)
+void ClothRenderer::GenerateVertexData(std::vector<VertexData> &outVertices, std::vector<uint32_t> &outIndices) const
 {
-   vec2 dimensions = _clothParticleSystem->GetDimensions();
-   size_t width = (size_t) dimensions.x;
-   size_t height = (size_t) dimensions.y;
+   const vec2 dimensions = _clothParticleSystem->GetDimensions();
+   const auto width = static_cast<size_t>(dimensions.x);
+   const auto height = static_cast<size_t>(dimensions.y);
 
    const ClothParticleSystem::ParticleData *particles;
    size_t particleCount = 0;
@@ -207,14 +208,14 @@ void ClothRenderer::GenerateVertexData(std::vector<VertexData> &outVertices, std
          size_t i3 = (i + 1) * height + (j + 1);
 
          // Triangle 1
-         outIndices.push_back((uint32_t) i0);
-         outIndices.push_back((uint32_t) i1);
-         outIndices.push_back((uint32_t) i2);
+         outIndices.push_back(static_cast<uint32_t>(i0));
+         outIndices.push_back(static_cast<uint32_t>(i1));
+         outIndices.push_back(static_cast<uint32_t>(i2));
 
          // Triangle 2
-         outIndices.push_back((uint32_t) i2);
-         outIndices.push_back((uint32_t) i1);
-         outIndices.push_back((uint32_t) i3);
+         outIndices.push_back(static_cast<uint32_t>(i2));
+         outIndices.push_back(static_cast<uint32_t>(i1));
+         outIndices.push_back(static_cast<uint32_t>(i3));
 
          // Face normals
          vec3 n1 = normalize(cross(outVertices[i1].position - outVertices[i0].position,

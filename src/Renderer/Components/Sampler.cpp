@@ -1,6 +1,6 @@
 #include <pch.h>
 
-Sampler::Sampler(Device *device, WGPUSamplerDescriptor *desc) : _sampler(wgpuDeviceCreateSampler(device->Get(), desc))
+Sampler::Sampler(const Device &device, const WGPUSamplerDescriptor *desc) : _sampler(wgpuDeviceCreateSampler(device.Get(), desc))
 {
    if (!_sampler)
    {

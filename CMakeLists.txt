@@ -52,6 +52,7 @@ set(SOURCE_FILES
   ${SRC_ROOT}/Renderer/Sky/CloudModel.cpp
   ${SRC_ROOT}/Renderer/Sky/CloudRenderer.cpp
   ${SRC_ROOT}/Renderer/UI/ImGuiManager.cpp
+  ${SRC_ROOT}/Renderer/Utils/Profiler.cpp
   ${SRC_ROOT}/Renderer/GridRenderer.cpp
   ${SRC_ROOT}/Renderer/Renderer.cpp
 

@@ -6,9 +6,9 @@ private:
    WGPURenderPipeline _renderPipeline;
 
 public:
-   RenderPipeline(Device* device, WGPURenderPipelineDescriptor* desc);
+   RenderPipeline(const Device &device, const WGPURenderPipelineDescriptor *desc);
    ~RenderPipeline();
 
-   WGPURenderPipeline Get() const { return _renderPipeline; }
+   [[nodiscard]] WGPURenderPipeline Get() const { return _renderPipeline; }
 };
 

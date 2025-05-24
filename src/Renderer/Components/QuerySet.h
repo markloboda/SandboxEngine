@@ -14,7 +14,7 @@ public:
    /// \param device   A pointer to your Device wrapper (must expose a method Get() → WGPUDevice).
    /// \param type     The WGPUQueryType (e.g. WGPUQueryType_Timestamp).
    /// \param count    The number of query slots to allocate.
-   QuerySet(Device *device, WGPUQueryType type, uint32_t count);
+   QuerySet(const Device &device, WGPUQueryType type, uint32_t count);
 
    ~QuerySet();
 
@@ -25,8 +25,8 @@ public:
    [[nodiscard]] uint32_t GetCount() const { return _count; }
 
    /// Writes a timestamp to the specified query index.
-   void WriteTimestamp(const CommandEncoder *encoder, uint32_t queryIndex) const;
+   void WriteTimestamp(const CommandEncoder &encoder, uint32_t queryIndex) const;
 
    /// Resolve query set results to a buffer.
-   void Resolve(const CommandEncoder *encoder, Buffer *buffer, uint32_t bufferOffset) const;
+   void Resolve(const CommandEncoder &encoder, uint32_t queryCount, const Buffer &destination, uint64_t destinationOffset) const;
 };

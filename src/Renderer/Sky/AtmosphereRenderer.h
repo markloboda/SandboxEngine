@@ -3,16 +3,16 @@
 class AtmosphereRenderer
 {
 private:
-   RenderPipeline *_renderPipeline;
+   RenderPipeline *_renderPipeline{};
 
 public:
-   AtmosphereRenderer(Renderer *renderer);
+   explicit AtmosphereRenderer(Renderer &renderer);
    ~AtmosphereRenderer();
 
 private:
-   bool Initialize(Renderer *renderer);
+   bool Initialize(Renderer &renderer);
    void Terminate();
 
 public:
-   void Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView);
+   void Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex);
 };

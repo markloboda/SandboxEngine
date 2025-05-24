@@ -28,12 +28,12 @@ namespace Math
    }
 
    // Angle conversions
-   constexpr float ToRadians(float degrees)
+   constexpr float ToRadians(const float degrees)
    {
       return degrees * (PI / 180.0f);
    }
 
-   constexpr float ToDegrees(float radians)
+   constexpr float ToDegrees(const float radians)
    {
       return radians * (180.0f / PI);
    }

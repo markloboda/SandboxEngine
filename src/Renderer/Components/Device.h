@@ -11,10 +11,11 @@ public:
    Device();
    ~Device();
 
-   WGPUDevice Get() const { return _device; }
-   WGPUInstance GetInstance() const { return _instance; }
-   WGPUShaderModule CreateShaderModuleSpirV(const std::vector<uint32_t>& spirvCode) const;
-   void Poll() const;
+   [[nodiscard]] WGPUDevice Get() const { return _device; }
+   [[nodiscard]] WGPUInstance GetInstance() const { return _instance; }
+
+   [[nodiscard]] WGPUShaderModule CreateShaderModuleSpirV(const std::vector<uint32_t> &spirvCode) const;
+   void Poll(bool wait = false) const;
 
 private:
 };

@@ -44,7 +44,6 @@ using namespace glm;
 #include <Renderer/Components/BindGroup.h>
 #include <Renderer/Components/Buffer.h>
 #include <Renderer/Components/CommandBuffer.h>
-#include <Renderer/Components/CommandEncoder.h>
 #include <Renderer/Components/ComputePassEncoder.h>
 #include <Renderer/Components/ComputePipeline.h>
 #include <Renderer/Components/Device.h>
@@ -58,5 +57,6 @@ using namespace glm;
 #include <Renderer/Components/Queue.h>
 #include <Renderer/Components/Texture.h>
 #include <Renderer/Components/TextureView.h>
+#include <Renderer/Components/CommandEncoder.h>
 
 #include <Renderer/Renderer.h>

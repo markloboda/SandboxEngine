@@ -12,13 +12,14 @@ private:
    Texture* _baseNoiseTexture;
 
 public:
-   CloudsModel(Renderer* renderer);
+   explicit CloudsModel(Renderer &renderer);
    ~CloudsModel();
 
-   Texture* GetWeatherMapTexture() const { return _weatherMapTexture; }
-   void LoadWeatherMapTexture(Renderer *renderer, const std::string &filePath);
-   Texture* GetBaseNoiseTexture() const { return _baseNoiseTexture; }
+   void LoadWeatherMapTexture(Renderer &renderer, const std::string &filePath);
+   [[nodiscard]] Texture &GetWeatherMapTexture() const { return *_weatherMapTexture; }
+   [[nodiscard]] Texture &GetBaseNoiseTexture() const { return *_baseNoiseTexture; }
+
 private:
-   void GenerateWeatherMapTexture(Renderer* renderer);
-   void GenerateBaseNoiseTexture(Renderer* renderer);
+   void GenerateWeatherMapTexture(Renderer &renderer);
+   void GenerateBaseNoiseTexture(Renderer &renderer);
 };

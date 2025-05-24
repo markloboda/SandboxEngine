@@ -17,9 +17,9 @@ private:
 public:
    FreeCamera(vec3 position = vec3(0.0f, 0.0f, 0.0f), vec3 up = vec3(0.0f, 1.0f, 0.0f), float yaw = 0, float pitch = 0);
 
-   mat4 GetViewProjectionMatrix();
-   mat4 GetProjectionMatrix();
-   mat4 GetViewMatrix();
+   mat4 GetViewProjectionMatrix() const;
+   mat4 GetProjectionMatrix() const;
+   mat4 GetViewMatrix() const;
 
    void Update(float dt);
    void ProcessMouseMovement(double xOffset, double yOffset, bool constrainPitch = true);

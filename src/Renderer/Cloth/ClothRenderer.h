@@ -10,7 +10,7 @@ private:
       vec3 normal;
    };
 
-   ClothParticleSystem* _clothParticleSystem;
+   ClothParticleSystem *_clothParticleSystem;
 
    struct CameraUniform
    {
@@ -18,9 +18,9 @@ private:
       mat4 proj;
    };
 
-   RenderPipeline* _renderPipeline;
+   RenderPipeline *_renderPipeline;
 
-   BindGroup* _cameraUniformBindGroup;
+   BindGroup *_cameraUniformBindGroup;
    Buffer *_cameraUniformBuffer = nullptr;
    Buffer *_vertexBuffer = nullptr;
    Buffer *_indexBuffer = nullptr;
@@ -31,18 +31,17 @@ private:
    };
 
 public:
-   ClothRenderer(Renderer *renderer);
-
+   explicit ClothRenderer(Renderer &renderer);
    ~ClothRenderer();
 
 private:
-   bool Initialize(Renderer *renderer);
-   void Terminate();
+   bool Initialize(Renderer &renderer);
+   void Terminate() const;
 
 public:
-   void Update(float dt);
-   void Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView);
+   void Update(float dt) const;
+   void Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, uint32_t profilerIndex);
 
 private:
-   void GenerateVertexData(std::vector<VertexData> &outVertices, std::vector<uint32_t> &outIndices);
+   void GenerateVertexData(std::vector<VertexData> &outVertices, std::vector<uint32_t> &outIndices) const;
 };

@@ -7,7 +7,7 @@
 #include <Renderer/Sky/CloudModel.h>
 #include <Utils/FreeCamera.h>
 
-CloudRenderer::CloudRenderer(Renderer *renderer)
+CloudRenderer::CloudRenderer(Renderer &renderer)
 {
    bool success = Initialize(renderer);
    assert(success);
@@ -18,9 +18,9 @@ CloudRenderer::~CloudRenderer()
    Terminate();
 }
 
-bool CloudRenderer::Initialize(Renderer *renderer)
+bool CloudRenderer::Initialize(Renderer &renderer)
 {
-   Device *device = renderer->GetDevice();
+   Device &device = renderer.GetDevice();
 
    // Shader modules
    ShaderModule vertexShader = ShaderModule::LoadShaderModule(device, "clouds.vert");
@@ -60,25 +60,25 @@ bool CloudRenderer::Initialize(Renderer *renderer)
    // Texture views
    {
       {
-         Texture *weatherMap = _cloudsModel->GetWeatherMapTexture();
+         Texture &weatherMap = _cloudsModel->GetWeatherMapTexture();
          WGPUTextureViewDescriptor viewDesc = {};
-         viewDesc.format = weatherMap->GetFormat();
+         viewDesc.format = weatherMap.GetFormat();
          viewDesc.dimension = WGPUTextureViewDimension_2D;
          viewDesc.baseMipLevel = 0;
          viewDesc.mipLevelCount = 1;
          viewDesc.baseArrayLayer = 0;
          viewDesc.arrayLayerCount = 1;
-         _weatherMapTextureView = new TextureView(weatherMap->Get(), &viewDesc);
+         _weatherMapTextureView = new TextureView(weatherMap.Get(), &viewDesc);
       } {
-         Texture *cloudBaseTexture = _cloudsModel->GetBaseNoiseTexture();
+         Texture &cloudBaseTexture = _cloudsModel->GetBaseNoiseTexture();
          WGPUTextureViewDescriptor viewDesc = {};
-         viewDesc.format = cloudBaseTexture->GetFormat();
+         viewDesc.format = cloudBaseTexture.GetFormat();
          viewDesc.dimension = WGPUTextureViewDimension_3D;
          viewDesc.baseMipLevel = 0;
          viewDesc.mipLevelCount = 1;
          viewDesc.baseArrayLayer = 0;
          viewDesc.arrayLayerCount = 1;
-         _cloudBaseTextureView = new TextureView(cloudBaseTexture->Get(), &viewDesc);
+         _cloudBaseTextureView = new TextureView(cloudBaseTexture.Get(), &viewDesc);
       }
    }
 
@@ -164,13 +164,13 @@ bool CloudRenderer::Initialize(Renderer *renderer)
    {
       // Bind group layouts array
       WGPUBindGroupLayout bindGroupLayouts[2];
-      bindGroupLayouts[0] = *_texturesBindGroup->GetLayout();
-      bindGroupLayouts[1] = *_dataBindGroup->GetLayout();
+      bindGroupLayouts[0] = _texturesBindGroup->GetLayout();
+      bindGroupLayouts[1] = _dataBindGroup->GetLayout();
 
       WGPUPipelineLayoutDescriptor plDesc = {};
       plDesc.bindGroupLayoutCount = 2;
       plDesc.bindGroupLayouts = bindGroupLayouts;
-      WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device->Get(), &plDesc);
+      WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device.Get(), &plDesc);
 
       WGPURenderPipelineDescriptor rpDesc = {};
       rpDesc.label = WGPUStringView{"CloudRenderer Render Pipeline", WGPU_STRLEN};
@@ -216,7 +216,7 @@ bool CloudRenderer::Initialize(Renderer *renderer)
    return true;
 }
 
-void CloudRenderer::Terminate()
+void CloudRenderer::Terminate() const
 {
    delete _pipeline;
    delete _texturesBindGroup;
@@ -231,23 +231,23 @@ void CloudRenderer::Terminate()
    delete _dataBindGroup;
 }
 
-void CloudRenderer::Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView)
+void CloudRenderer::Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex)
 {
    // Collect CloudBounds nodes
-   Application *app = &Application::GetInstance();
-   ResolutionData resolution = {vec2(app->GetWindowWidth(), app->GetWindowHeight())};
-   FreeCamera &camera = app->GetEditor()->GetCamera();
+   const Application *app = &Application::GetInstance();
+   const ResolutionData resolution = {vec2(app->GetWindowWidth(), app->GetWindowHeight())};
+   FreeCamera &camera = app->GetEditor().GetCamera();
 
    _shaderParams.view = camera.GetViewMatrix();
    _shaderParams.proj = camera.GetProjectionMatrix();
    _shaderParams.pos = camera.GetPosition();
-   renderer->UploadBufferData(_uCameraData, &_shaderParams, sizeof(CameraData));
-   renderer->UploadBufferData(_uResolution, &resolution, sizeof(ResolutionData));
-   renderer->UploadBufferData(_uCloudRenderSettings, &Settings, sizeof(CloudRenderSettings));
+   renderer.UploadBufferData(*_uCameraData, &_shaderParams, sizeof(CameraData));
+   renderer.UploadBufferData(*_uResolution, &resolution, sizeof(ResolutionData));
+   renderer.UploadBufferData(*_uCloudRenderSettings, &Settings, sizeof(CloudRenderSettings));
 
    WGPURenderPassDescriptor rpDesc = {};
    WGPURenderPassColorAttachment cp{}; {
-      cp.view = surfaceTextureView->Get();
+      cp.view = surfaceTextureView.Get();
       cp.loadOp = WGPULoadOp_Load;
       cp.storeOp = WGPUStoreOp_Store;
       cp.clearValue = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -256,11 +256,12 @@ void CloudRenderer::Render(Renderer *renderer, CommandEncoder *encoder, TextureV
    rpDesc.colorAttachmentCount = 1;
    rpDesc.colorAttachments = &cp;
    rpDesc.depthStencilAttachment = nullptr;
+   renderer.GetProfiler().SetupTimestamps(rpDesc, profilerIndex);
 
-   RenderPassEncoder pass = RenderPassEncoder(encoder->BeginRenderPass(&rpDesc));
-   pass.SetPipeline(_pipeline);
-   pass.SetBindGroup(0, _texturesBindGroup);
-   pass.SetBindGroup(1, _dataBindGroup);
+   RenderPassEncoder pass = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
+   pass.SetPipeline(*_pipeline);
+   pass.SetBindGroup(0, *_texturesBindGroup);
+   pass.SetBindGroup(1, *_dataBindGroup);
    pass.Draw(3, 1, 0, 0);
    pass.EndPass();
 }

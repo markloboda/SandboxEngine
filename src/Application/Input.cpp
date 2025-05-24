@@ -50,12 +50,12 @@ vec2 Input::GetCursorPos()
    return vec2(static_cast<float>(x), static_cast<float>(y));
 }
 
-void Input::SetCursorPositionCallback(CursorPositionCallback callback)
+void Input::SetCursorPositionCallback(const CursorPositionCallback &callback)
 {
    GetInstance()._cursorPositionCallback.push_back(callback);
 }
 
-void Input::SetMouseWheelCallback(MouseWheelCallback callback)
+void Input::SetMouseWheelCallback(const MouseWheelCallback &callback)
 {
    GetInstance()._mouseWheelCallback.push_back(callback);
 }

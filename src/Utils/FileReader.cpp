@@ -14,7 +14,7 @@ std::vector<uint32_t> FileReader::LoadSPIRV(const std::string &path)
    return buffer;
 }
 
-Texture *FileReader::LoadTexture2D(Renderer *renderer, const std::string &filePath, int *width, int *height)
+Texture *FileReader::LoadTexture2D(Renderer &renderer, const std::string &filePath, int *width, int *height)
 {
    // Load the image using stb_image
    int x, y, channels;
@@ -38,7 +38,7 @@ Texture *FileReader::LoadTexture2D(Renderer *renderer, const std::string &filePa
    textureDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
 
    // Create the texture
-   Texture *tex = new Texture(renderer->GetDevice(), &textureDesc);
+   Texture *tex = new Texture(renderer.GetDevice(), &textureDesc);
    if (!tex->IsValid())
    {
       std::cerr << "Failed to create texture: " << filePath << std::endl;
@@ -51,7 +51,7 @@ Texture *FileReader::LoadTexture2D(Renderer *renderer, const std::string &filePa
    writeSize.width = static_cast<uint32_t>(x);
    writeSize.height = static_cast<uint32_t>(y);
    writeSize.depthOrArrayLayers = 1;
-   renderer->UploadTextureData(tex, data, x * y * channels, &writeSize);
+   renderer.UploadTextureData(*tex, data, x * y * channels, &writeSize);
 
    // Free the image data
    stbi_image_free(data);

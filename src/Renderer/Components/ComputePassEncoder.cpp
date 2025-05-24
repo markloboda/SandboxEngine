@@ -1,6 +1,7 @@
 #include <pch.h>
 
-ComputePassEncoder::ComputePassEncoder(WGPUComputePassEncoder encoder) : _encoder(encoder)
+ComputePassEncoder::ComputePassEncoder(const WGPUComputePassEncoder encoder):
+   _encoder(encoder)
 {
    if (!_encoder)
    {
@@ -16,22 +17,22 @@ ComputePassEncoder::~ComputePassEncoder()
    }
 }
 
-void ComputePassEncoder::SetPipeline(ComputePipeline *pipeline)
+void ComputePassEncoder::SetPipeline(const ComputePipeline &pipeline) const
 {
-   wgpuComputePassEncoderSetPipeline(_encoder, pipeline->Get());
+   wgpuComputePassEncoderSetPipeline(_encoder, pipeline.Get());
 }
 
-void ComputePassEncoder::SetBindGroup(uint32_t index, BindGroup *bindGroup)
+void ComputePassEncoder::SetBindGroup(const uint32_t index, const BindGroup &bindGroup) const
 {
-   wgpuComputePassEncoderSetBindGroup(_encoder, index, *bindGroup->Get(), 0, 0);
+   wgpuComputePassEncoderSetBindGroup(_encoder, index, bindGroup.Get(), 0, nullptr);
 }
 
-void ComputePassEncoder::Dispatch(uint32_t workgroupCountX, uint32_t workgroupCountY, uint32_t workgroupCountZ)
+void ComputePassEncoder::Dispatch(const uint32_t workgroupCountX, const uint32_t workgroupCountY, const uint32_t workgroupCountZ) const
 {
    wgpuComputePassEncoderDispatchWorkgroups(_encoder, workgroupCountX, workgroupCountY, workgroupCountZ);
 }
 
-void ComputePassEncoder::EndPass()
+void ComputePassEncoder::EndPass() const
 {
    wgpuComputePassEncoderEnd(_encoder);
 }

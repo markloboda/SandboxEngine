@@ -1,6 +1,6 @@
 #include <pch.h>
 
-BindGroup::BindGroup(Device *device, BindGroupDesc desc)
+BindGroup::BindGroup(const Device &device, const BindGroupDesc desc)
 {
    assert(desc.layoutEntries.size() == desc.entries.size());
 
@@ -9,7 +9,7 @@ BindGroup::BindGroup(Device *device, BindGroupDesc desc)
       WGPUBindGroupLayoutDescriptor bindGroupLayoutDesc = {};
       bindGroupLayoutDesc.entryCount = static_cast<uint32_t>(desc.layoutEntries.size());
       bindGroupLayoutDesc.entries = desc.layoutEntries.data();
-      _bindGroupLayout = wgpuDeviceCreateBindGroupLayout(device->Get(), &bindGroupLayoutDesc);
+      _bindGroupLayout = wgpuDeviceCreateBindGroupLayout(device.Get(), &bindGroupLayoutDesc);
       if (!_bindGroupLayout)
       {
          std::cerr << ("Failed to create WebGPU BindGroupLayout");
@@ -22,7 +22,7 @@ BindGroup::BindGroup(Device *device, BindGroupDesc desc)
       bindGroupDesc.layout = _bindGroupLayout;
       bindGroupDesc.entryCount = static_cast<uint32_t>(desc.entries.size());
       bindGroupDesc.entries = desc.entries.data();
-      _bindGroup = wgpuDeviceCreateBindGroup(device->Get(), &bindGroupDesc);
+      _bindGroup = wgpuDeviceCreateBindGroup(device.Get(), &bindGroupDesc);
       if (!_bindGroup)
       {
          std::cerr << ("Failed to create WebGPU BindGroup");

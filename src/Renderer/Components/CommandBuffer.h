@@ -9,8 +9,8 @@ private:
 
 public:
    CommandBuffer() = default;
-   CommandBuffer(WGPUCommandBuffer cmdBuffer);
+   explicit CommandBuffer(const CommandEncoder &cmdEncoder);
    ~CommandBuffer();
 
-   WGPUCommandBuffer Get() const { return _cmdBuffer; }
+   [[nodiscard]] WGPUCommandBuffer Get() const { return _cmdBuffer; }
 };

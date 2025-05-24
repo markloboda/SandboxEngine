@@ -1,6 +1,7 @@
 #include <pch.h>
 
-CommandEncoder::CommandEncoder(Device *device, WGPUCommandEncoderDescriptor *descriptor) : _encoder(wgpuDeviceCreateCommandEncoder(device->Get(), descriptor))
+CommandEncoder::CommandEncoder(const Device &device, const WGPUCommandEncoderDescriptor *descriptor):
+   _encoder(wgpuDeviceCreateCommandEncoder(device.Get(), descriptor))
 {
    if (!_encoder)
    {
@@ -16,24 +17,39 @@ CommandEncoder::~CommandEncoder()
    }
 }
 
-WGPUComputePassEncoder CommandEncoder::BeginComputePass(WGPUComputePassDescriptor *descriptor)
+WGPUComputePassEncoder CommandEncoder::BeginComputePass(const WGPUComputePassDescriptor *descriptor) const
 {
    return wgpuCommandEncoderBeginComputePass(Get(), descriptor);
 }
 
-WGPURenderPassEncoder CommandEncoder::BeginRenderPass(WGPURenderPassDescriptor *descriptor)
+WGPURenderPassEncoder CommandEncoder::BeginRenderPass(const WGPURenderPassDescriptor *descriptor) const
 {
    return wgpuCommandEncoderBeginRenderPass(Get(), descriptor);
 }
 
-WGPUCommandBuffer CommandEncoder::Finish()
+WGPUCommandBuffer CommandEncoder::Finish() const
 {
    WGPUCommandBufferDescriptor desc = {};
    desc.label = WGPUStringView{"My Command Buffer", WGPU_STRLEN};
    return wgpuCommandEncoderFinish(_encoder, &desc);
 }
 
-void CommandEncoder::CopyTextureToBuffer(WGPUTexelCopyTextureInfo const *source, WGPUTexelCopyBufferInfo const *destination, WGPUExtent3D const *copySize)
+void CommandEncoder::CopyTextureToBuffer(WGPUTexelCopyTextureInfo const *source, WGPUTexelCopyBufferInfo const *destination, WGPUExtent3D const *copySize) const
 {
    wgpuCommandEncoderCopyTextureToBuffer(_encoder, source, destination, copySize);
+}
+
+void CommandEncoder::CopyBufferToBuffer(const Buffer &source, uint64_t sourceOffset, const Buffer &destination, uint64_t destinationOffset, uint64_t size) const
+{
+   wgpuCommandEncoderCopyBufferToBuffer(_encoder, source.Get(), sourceOffset, destination.Get(), destinationOffset, size);
+}
+
+void CommandEncoder::WriteTimestamp(const QuerySet &querySet, uint32_t queryIndex) const
+{
+   wgpuCommandEncoderWriteTimestamp(_encoder, querySet.Get(), queryIndex);
+}
+
+void CommandEncoder::ResolveQuerySet(const QuerySet &querySet, uint32_t firstQuery, uint32_t queryCount, const Buffer &destination, uint64_t destinationOffset) const
+{
+   wgpuCommandEncoderResolveQuerySet(_encoder, querySet.Get(), firstQuery, queryCount, destination.Get(), destinationOffset);
 }

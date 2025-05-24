@@ -10,7 +10,7 @@ public:
    virtual ~Node() = default;
 
    Node() = default;
-   Node(std::string name, const mat4x4& matrix) :
+   Node(const std::string &name, const mat4x4 &matrix) :
       _name(name),
       _matrix(matrix)
    {}

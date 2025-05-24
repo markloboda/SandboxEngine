@@ -4,6 +4,8 @@
 #include <Application/Editor.h>
 #include <Renderer/UI/ImGuiManager.h>
 
+#include <Renderer/Utils/Profiler.h>
+
 #include <Renderer/GridRenderer.h>
 #include <Renderer/Cloth/ClothRenderer.h>
 #include <Renderer/Sky/AtmosphereRenderer.h>
@@ -11,7 +13,7 @@
 
 WGPULogCallback GetLogCallback()
 {
-   return [](WGPULogLevel level, WGPUStringView message, void *)
+   return [](WGPULogLevel level, WGPUStringView message, void */*userdata*/)
    {
       switch (level)
       {
@@ -44,10 +46,8 @@ WGPULogCallback GetLogCallback()
 Renderer::Renderer(GLFWwindow *window)
    : _window(window),
      _device(Device()),
-     _surface(Surface(&_device, window)),
-     _queue(&_device),
-     _querySet(&_device, WGPUQueryType_Timestamp, _statsCount * 2),
-     _queryResultBuffer(&_device, WGPUBufferUsage_QueryResolve | WGPUBufferUsage_CopyDst | WGPUBufferUsage_MapRead, _querySet.GetCount() * sizeof(uint64_t))
+     _surface(Surface(_device, window)),
+     _queue(_device)
 {
    bool success = Initialize();
    assert(success);
@@ -70,6 +70,9 @@ bool Renderer::Initialize()
       wgpuSetLogCallback(GetLogCallback(), nullptr);
    }
 
+   // Profiler.
+   _profiler = new Profiler(_device, 6);
+
    // Configure surface.
    {
       WGPUSurfaceConfiguration config = {};
@@ -88,23 +91,23 @@ bool Renderer::Initialize()
    // Set frame buffer size callback.
    glfwSetFramebufferSizeCallback(_window, [](GLFWwindow * /*window*/, int width, int height)
    {
-      Application::GetInstance().GetRenderer()->OnWindowResize(width, height);
+      Application::GetInstance().GetRenderer().OnWindowResize(width, height);
    });
 
    // Set up ImGui.
-   ImGuiManager::CreateInstance(this);
-   ImGuiManager::GetInstance().Configure(this);
+   ImGuiManager::CreateInstance(*this);
+   ImGuiManager::GetInstance().Configure(*this);
 
    // Set up renderers.
-   _gridRenderer = new GridRenderer(this);
-   _atmosphereRenderer = new AtmosphereRenderer(this);
-   _clothRenderer = new ClothRenderer(this);
-   _cloudRenderer = new CloudRenderer(this);
+   _gridRenderer = new GridRenderer(*this);
+   _atmosphereRenderer = new AtmosphereRenderer(*this);
+   _clothRenderer = new ClothRenderer(*this);
+   _cloudRenderer = new CloudRenderer(*this);
 
    return true;
 }
 
-void Renderer::Terminate()
+void Renderer::Terminate() const
 {
    // Destroy renderers.
    delete _gridRenderer;
@@ -120,7 +123,7 @@ void Renderer::Terminate()
    _surface.UnConfigureSurface();
 }
 
-void Renderer::Update(float dt)
+void Renderer::Update(const float dt) const
 {
    _clothRenderer->Update(dt);
 }
@@ -130,59 +133,50 @@ void Renderer::Render()
    WGPUCommandEncoderDescriptor encoderDesc = {};
    std::string encoderLabel = "My Command Encoder (Renderer::Render())";
    encoderDesc.label = WGPUStringView{encoderLabel.c_str(), encoderLabel.size()};
-   CommandEncoder encoder = CommandEncoder(&_device, &encoderDesc);
+   CommandEncoder encoder = CommandEncoder(_device, &encoderDesc);
 
    // Render pass.
    WGPUSurfaceTexture surfaceTexture;
-   _surface.GetNextSurfaceTexture(&surfaceTexture);
-   TextureView textureView = TextureView(surfaceTexture.texture, nullptr);
+   _surface.GetNextSurfaceTexture(surfaceTexture);
+   const TextureView textureView = TextureView(surfaceTexture.texture, nullptr);
 
-   int queryIndex = 0;
    // Renderers
    {
-      ClearRenderPass(&encoder, &textureView);
+      ClearRenderPass(encoder, textureView, 0);
 
-      _querySet.WriteTimestamp(&encoder, queryIndex++);
-      bool renderAtmosphere = Application::GetInstance().GetEditor()->GetRenderAtmosphere();
-      if (renderAtmosphere)
+      if (Application::GetInstance().GetEditor().GetRenderAtmosphere())
       {
-         _atmosphereRenderer->Render(this, &encoder, &textureView);
+         _atmosphereRenderer->Render(*this, encoder, textureView, 1);
       }
-      _querySet.WriteTimestamp(&encoder, queryIndex++);
 
-      _querySet.WriteTimestamp(&encoder, queryIndex++);
-      bool renderGrid = Application::GetInstance().GetEditor()->GetRenderGrid();
-      if (renderGrid)
+      if (Application::GetInstance().GetEditor().GetRenderGrid())
       {
-         _gridRenderer->Render(this, &encoder, &textureView);
+         _gridRenderer->Render(*this, encoder, textureView, 2);
       }
-      _querySet.WriteTimestamp(&encoder, queryIndex++);
 
-      _querySet.WriteTimestamp(&encoder, queryIndex++);
       if (true)
       {
-         _clothRenderer->Render(this, &encoder, &textureView);
+         _clothRenderer->Render(*this, encoder, textureView, 3);
       }
-      _querySet.WriteTimestamp(&encoder, queryIndex++);
 
-      _querySet.WriteTimestamp(&encoder, queryIndex++);
-      bool renderClouds = Application::GetInstance().GetEditor()->GetRenderClouds();
-      if (renderClouds)
+      if (Application::GetInstance().GetEditor().GetRenderClouds())
       {
-         _cloudRenderer->Render(this, &encoder, &textureView);
+         _cloudRenderer->Render(*this, encoder, textureView, 4);
       }
-      _querySet.WriteTimestamp(&encoder, queryIndex++);
 
       // ImGui.
-      _querySet.WriteTimestamp(&encoder, queryIndex++);
-      ImGuiManager::GetInstance().Render(this, &encoder, &textureView);
-      _querySet.WriteTimestamp(&encoder, queryIndex++);
+      ImGuiManager::GetInstance().Render(*this, encoder, textureView, 5);
    }
 
-   CommandBuffer cmdBuffer = CommandBuffer(encoder.Finish());
+   _profiler->ResolveQuerySet(encoder);
+
+   CommandBuffer cmdBuffer = CommandBuffer(encoder);
    _queue.Submit(1, &cmdBuffer);
    _surface.Present();
    _device.Poll();
+
+   _profiler->ReadResults();
+   FetchProfileResults();
 
    wgpuTextureRelease(surfaceTexture.texture);
 }
@@ -197,10 +191,10 @@ void Renderer::OnWindowResize(int width, int height)
    _surface.Resize(width, height);
 }
 
-void Renderer::UploadTextureData(Texture *texture, const void *data, size_t dataSize, const WGPUExtent3D *writeSize)
+void Renderer::UploadTextureData(const Texture &texture, const void *data, const size_t dataSize, const WGPUExtent3D *writeSize) const
 {
    WGPUTexelCopyTextureInfo destination = {};
-   destination.texture = texture->Get();
+   destination.texture = texture.Get();
    destination.mipLevel = 0;
    destination.origin = {0, 0, 0};
    WGPUTexelCopyBufferLayout bufferLayout = {};
@@ -210,20 +204,20 @@ void Renderer::UploadTextureData(Texture *texture, const void *data, size_t data
    wgpuQueueWriteTexture(_queue.Get(), &destination, data, dataSize, &bufferLayout, writeSize);
 }
 
-void Renderer::UploadBufferData(Buffer *buffer, const void *data, size_t size)
+void Renderer::UploadBufferData(const Buffer &buffer, const void *data, size_t size) const
 {
-   if (size > buffer->GetSize())
+   if (size > buffer.GetSize())
    {
       std::cerr << ("Data size exceeds buffer capacity");
    }
 
-   wgpuQueueWriteBuffer(_queue.Get(), buffer->Get(), 0, data, size);
+   wgpuQueueWriteBuffer(_queue.Get(), buffer.Get(), 0, data, size);
 }
 
-void Renderer::ClearRenderPass(CommandEncoder *encoder, TextureView *surfaceTextureView)
+void Renderer::ClearRenderPass(const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex) const
 {
    WGPURenderPassColorAttachment ca = {};
-   ca.view = surfaceTextureView->Get();
+   ca.view = surfaceTextureView.Get();
    ca.loadOp = WGPULoadOp_Clear;
    ca.storeOp = WGPUStoreOp_Store;
    ca.clearValue = {0.1f, 0.1f, 0.1f, 1.0f};
@@ -233,6 +227,20 @@ void Renderer::ClearRenderPass(CommandEncoder *encoder, TextureView *surfaceText
    rpDesc.colorAttachmentCount = 1;
    rpDesc.colorAttachments = &ca;
    rpDesc.depthStencilAttachment = nullptr;
-   RenderPassEncoder clearPass = RenderPassEncoder(encoder->BeginRenderPass(&rpDesc));
+   _profiler->SetupTimestamps(rpDesc, profilerIndex);
+   RenderPassEncoder clearPass = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
    clearPass.EndPass();
+}
+
+void Renderer::FetchProfileResults()
+{
+   _gpuRenderStats.clearTime = _profiler->GetQueryData(0);
+   _gpuRenderStats.atmosphereTime = _profiler->GetQueryData(1);
+   _gpuRenderStats.gridTime = _profiler->GetQueryData(2);
+   _gpuRenderStats.clothTime = _profiler->GetQueryData(3);
+   _gpuRenderStats.cloudTime = _profiler->GetQueryData(4);
+   _gpuRenderStats.uiTime = _profiler->GetQueryData(5);
+   _gpuRenderStats.totalTime = _gpuRenderStats.clearTime + _gpuRenderStats.atmosphereTime +
+                               _gpuRenderStats.gridTime + _gpuRenderStats.clothTime +
+                               _gpuRenderStats.cloudTime + _gpuRenderStats.uiTime;
 }

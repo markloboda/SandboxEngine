@@ -6,8 +6,8 @@ private:
    WGPUSampler _sampler;
 
 public:
-   Sampler(Device* device, WGPUSamplerDescriptor* desc);
+   Sampler(const Device &device, const WGPUSamplerDescriptor *desc);
    ~Sampler();
 
-   WGPUSampler Get() const { return _sampler; }
+   [[nodiscard]] WGPUSampler Get() const { return _sampler; }
 };

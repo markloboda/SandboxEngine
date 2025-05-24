@@ -11,16 +11,16 @@ private:
    WGPUSurfaceConfiguration _config;
 
 public:
-   Surface(Device* device, GLFWwindow* window);
+   Surface(const Device &device, GLFWwindow *window);
    ~Surface();
 
-   WGPUSurface Get() const { return _surface; }
-   WGPUTextureFormat GetFormat() const { return _config.format; }
+   [[nodiscard]] WGPUSurface Get() const { return _surface; }
+   [[nodiscard]] WGPUTextureFormat GetFormat() const { return _config.format; }
    void Resize(int width, int height);
 
    void ConfigureSurface(WGPUSurfaceConfiguration config);
-   void UnConfigureSurface();
+   void UnConfigureSurface() const;
 
-   void GetNextSurfaceTexture(WGPUSurfaceTexture* surfaceTexture) const;
+   void GetNextSurfaceTexture(WGPUSurfaceTexture &surfaceTexture) const;
    void Present() const;
 };

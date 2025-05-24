@@ -1,7 +1,8 @@
 #include <pch.h>
 
-Texture::Texture(Device *device, WGPUTextureDescriptor *desc) : _texture(wgpuDeviceCreateTexture(device->Get(), desc)),
-                                                                _format(desc->format)
+Texture::Texture(const Device &device, const WGPUTextureDescriptor *desc) :
+   _texture(wgpuDeviceCreateTexture(device.Get(), desc)),
+   _format(desc->format)
 {
    if (_texture == nullptr)
    {

@@ -1,7 +1,7 @@
 #include <pch.h>
 #include <Renderer/Sky/AtmosphereRenderer.h>
 
-AtmosphereRenderer::AtmosphereRenderer(Renderer *renderer)
+AtmosphereRenderer::AtmosphereRenderer(Renderer &renderer)
 {
    bool success = Initialize(renderer);
    assert(success);
@@ -12,9 +12,9 @@ AtmosphereRenderer::~AtmosphereRenderer()
    Terminate();
 }
 
-bool AtmosphereRenderer::Initialize(Renderer *renderer)
+bool AtmosphereRenderer::Initialize(Renderer &renderer)
 {
-   Device *device = renderer->GetDevice();
+   Device &device = renderer.GetDevice();
 
    // Shader modules
    ShaderModule vertexShader = ShaderModule::LoadShaderModule(device, "atmosphere.vert");
@@ -25,7 +25,7 @@ bool AtmosphereRenderer::Initialize(Renderer *renderer)
       WGPUPipelineLayoutDescriptor plDesc = {};
       plDesc.bindGroupLayoutCount = 0;
       plDesc.bindGroupLayouts = nullptr;
-      WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device->Get(), &plDesc);
+      WGPUPipelineLayout pipelineLayout = wgpuDeviceCreatePipelineLayout(device.Get(), &plDesc);
 
       WGPURenderPipelineDescriptor rpDesc = {};
       rpDesc.label = WGPUStringView{"Atmosphere Render Pipeline", WGPU_STRLEN};
@@ -76,23 +76,24 @@ void AtmosphereRenderer::Terminate()
    delete _renderPipeline;
 }
 
-void AtmosphereRenderer::Render(Renderer *, CommandEncoder *encoder, TextureView *surfaceTextureView)
+void AtmosphereRenderer::Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex)
 {
    WGPURenderPassDescriptor rpDesc = {};
    rpDesc.colorAttachmentCount = 1;
    WGPURenderPassColorAttachment ca = {};
-   ca.view = surfaceTextureView->Get();
+   ca.view = surfaceTextureView.Get();
    ca.loadOp = WGPULoadOp_Clear;
    ca.storeOp = WGPUStoreOp_Store;
    ca.clearValue = {0.0f, 0.0f, 0.0f, 1.0f};
    ca.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
    rpDesc.colorAttachments = &ca;
    rpDesc.depthStencilAttachment = nullptr;
+   renderer.GetProfiler().SetupTimestamps(rpDesc, profilerIndex);
 
-   RenderPassEncoder pass = RenderPassEncoder(encoder->BeginRenderPass(&rpDesc));
+   RenderPassEncoder pass = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
 
    // Render
-   pass.SetPipeline(_renderPipeline);
+   pass.SetPipeline(*_renderPipeline);
    pass.Draw(3, 1, 0, 0);
    pass.EndPass();
 }

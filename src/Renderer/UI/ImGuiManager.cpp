@@ -5,11 +5,11 @@
 // Define the static member
 ImGuiManager *ImGuiManager::_instance = nullptr;
 
-ImGuiManager::ImGuiManager(Renderer *renderer)
+ImGuiManager::ImGuiManager(const Renderer &renderer)
 {
    // Create ImGui context and setup backend bindings.
    ImGui::CreateContext();
-   ImGui_ImplGlfw_InitForOther(renderer->GetWindow(), true);
+   ImGui_ImplGlfw_InitForOther(renderer.GetWindow(), true);
    ImGui::StyleColorsClassic();
 }
 
@@ -19,7 +19,7 @@ ImGuiManager::~ImGuiManager()
    ImGui::DestroyContext();
 }
 
-bool ImGuiManager::CreateInstance(Renderer *renderer)
+bool ImGuiManager::CreateInstance(const Renderer &renderer)
 {
    if (_instance != nullptr)
    {
@@ -40,18 +40,19 @@ ImGuiManager &ImGuiManager::GetInstance()
    if (_instance == nullptr)
    {
       std::cerr << ("ImGuiManager instance has not been created.");
+      DEBUG_BREAK();
    }
 
    return *_instance;
 }
 
-void ImGuiManager::Configure(Renderer *renderer)
+void ImGuiManager::Configure(Renderer &renderer)
 {
-   _renderTargetFormat = renderer->GetSurface()->GetFormat();
+   _renderTargetFormat = renderer.GetSurface().GetFormat();
 
    // Initialize WGPU ImGui backend
    ImGui_ImplWGPU_InitInfo initInfo = {};
-   initInfo.Device = renderer->GetDevice()->Get();
+   initInfo.Device = renderer.GetDevice().Get();
    initInfo.NumFramesInFlight = 3;
    initInfo.RenderTargetFormat = _renderTargetFormat;
    initInfo.DepthStencilFormat = WGPUTextureFormat_Undefined;
@@ -68,23 +69,24 @@ void ImGuiManager::Shutdown()
    ImGui_ImplWGPU_Shutdown();
 }
 
-void ImGuiManager::Render(Renderer *, CommandEncoder *encoder, TextureView *surfaceTextureView)
+void ImGuiManager::Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex)
 {
    // Render pass
-   WGPURenderPassDescriptor renderPassDesc = {};
-   renderPassDesc.colorAttachmentCount = 1;
+   WGPURenderPassDescriptor rpDesc = {};
+   rpDesc.colorAttachmentCount = 1;
    WGPURenderPassColorAttachment ca = {}; {
-      ca.view = surfaceTextureView->Get();
+      ca.view = surfaceTextureView.Get();
       ca.loadOp = WGPULoadOp_Load;
       ca.storeOp = WGPUStoreOp_Store;
       ca.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
    }
-   renderPassDesc.colorAttachments = &ca;
-   RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder->BeginRenderPass(&renderPassDesc));
+   rpDesc.colorAttachments = &ca;
+   renderer.GetProfiler().SetupTimestamps(rpDesc, profilerIndex);
+   RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
 
    GetInstance().NewFrame();
    GetInstance().RenderUI();
-   GetInstance().EndFrame(&renderPassEncoder);
+   GetInstance().EndFrame(renderPassEncoder);
 
    renderPassEncoder.EndPass();
 }
@@ -117,13 +119,13 @@ void ImGuiManager::NewFrame()
    ImGui::NewFrame();
 }
 
-void ImGuiManager::EndFrame(RenderPassEncoder *encoder)
+void ImGuiManager::EndFrame(const RenderPassEncoder &encoder)
 {
    ImGui::Render();
-   ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder->Get());
+   ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder.Get());
 }
 
-void ImGuiManager::RenderUI()
+void ImGuiManager::RenderUI() const
 {
    for (UIRenderer *uiRenderer: _uiRenderers)
    {
@@ -136,7 +138,7 @@ void ImGuiManager::AddUIRenderer(UIRenderer *uiRenderer)
    _uiRenderers.push_back(uiRenderer);
 }
 
-bool ImGuiManager::RemoveUIRenderer(UIRenderer *uiRenderer)
+bool ImGuiManager::RemoveUIRenderer(const UIRenderer *uiRenderer)
 {
    auto it = std::find(_uiRenderers.begin(), _uiRenderers.end(), uiRenderer);
    if (it != _uiRenderers.end())

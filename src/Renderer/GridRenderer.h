@@ -14,11 +14,11 @@ static_assert(sizeof(GridUniforms) == 144, "GridUniforms size mismatch");
 class GridRenderer
 {
 private:
-   BindGroup* _uniformsBindGroup;
-   Buffer* _uniformBuffer;
-   Buffer* _vertexBuffer;
+   BindGroup *_uniformsBindGroup;
+   Buffer *_uniformBuffer;
+   Buffer *_vertexBuffer;
 
-   RenderPipeline* _renderPipeline;
+   RenderPipeline *_renderPipeline;
 
    GridUniforms _uniforms = {
       .view = mat4x4(),
@@ -29,14 +29,13 @@ private:
    };
 
 public:
-   GridRenderer(Renderer *renderer);
-
+   explicit GridRenderer(Renderer &renderer);
    ~GridRenderer();
 
 private:
-   bool Initialize(Renderer* renderer);
+   bool Initialize(Renderer &renderer);
    void Terminate();
 
 public:
-   void Render(Renderer* renderer, CommandEncoder* encoder, TextureView* surfaceTextureView);
+   void Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex);
 };

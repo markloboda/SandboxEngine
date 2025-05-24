@@ -1,17 +1,21 @@
 #pragma once
+#include "Utils/Profiler.h"
 
-class ClothRenderer;
+struct GLFWwindow;
+class Profiler;
 
 class AtmosphereRenderer;
 class CloudRenderer;
 class GridRenderer;
-struct GLFWwindow;
+class ClothRenderer;
 
 class Renderer
 {
 public:
-   struct RenderStats
+   struct GPURenderStats
    {
+      float totalTime = 0.0f;
+      float clearTime = 0.0f;
       float atmosphereTime = 0.0f;
       float gridTime = 0.0f;
       float clothTime = 0.0f;
@@ -20,51 +24,52 @@ public:
    };
 
 private:
-   GLFWwindow* _window;
+   GLFWwindow *_window;
    Device _device;
    Surface _surface;
    Queue _queue;
 
-   GridRenderer* _gridRenderer;
+   GridRenderer *_gridRenderer;
    AtmosphereRenderer *_atmosphereRenderer;
-   CloudRenderer* _cloudRenderer;
+   CloudRenderer *_cloudRenderer;
    ClothRenderer *_clothRenderer;
 
-   QuerySet _querySet;
-   Buffer _queryResultBuffer;
-   RenderStats _stats;
-   uint32_t _statsCount = 5;
+   Profiler *_profiler;
+   GPURenderStats _gpuRenderStats;
 
 public:
-   Renderer(GLFWwindow* window);
+   explicit Renderer(GLFWwindow *window);
    ~Renderer();
 
 private:
    bool Initialize();
    void InitializeTimestampResources();
-   void Terminate();
+   void Terminate() const;
 
 public:
-   void Update(float dt);
+   void Update(float dt) const;
 
    void Render();
-   bool ShouldClose() const;
+   [[nodiscard]] bool ShouldClose() const;
 
    void OnWindowResize(int width, int height);
 
-   void UploadTextureData(Texture* texture, const void* data, size_t dataSize, const WGPUExtent3D* writeSize);
-   void UploadBufferData(Buffer* buffer, const void* data, size_t size);
+   void UploadTextureData(const Texture &texture, const void *data, size_t dataSize, const WGPUExtent3D *writeSize) const;
+   void UploadBufferData(const Buffer &buffer, const void *data, size_t size) const;
 
-   GLFWwindow* GetWindow() const { return _window; }
-   Device* GetDevice() { return &_device; }
-   Surface* GetSurface() { return &_surface; }
-   Queue* GetQueue() { return &_queue; }
+   [[nodiscard]] GLFWwindow *GetWindow() const { return _window; }
+   Device &GetDevice() { return _device; }
+   Surface &GetSurface() { return _surface; }
+   Queue &GetQueue() { return _queue; }
 
-   CloudRenderer* GetCloudRenderer() const { return _cloudRenderer; }
-   GridRenderer* GetGridRenderer() const { return _gridRenderer; }
+   [[nodiscard]] CloudRenderer &GetCloudRenderer() const { return *_cloudRenderer; }
+   [[nodiscard]] GridRenderer &GetGridRenderer() const { return *_gridRenderer; }
 
-   RenderStats GetRenderStats() const { return _stats; }
+   [[nodiscard]] Profiler &GetProfiler() const { return *_profiler; }
+   [[nodiscard]] const GPURenderStats &GetGPURenderStats() const { return _gpuRenderStats; }
 
 private:
-   void ClearRenderPass(CommandEncoder* encoder, TextureView* surfaceTextureView);
+   void ClearRenderPass(const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex) const;
+
+   void FetchProfileResults();
 };

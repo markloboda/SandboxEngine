@@ -6,9 +6,9 @@ private:
    WGPUComputePipeline _pipeline;
 
 public:
-   ComputePipeline(Device* device, WGPUComputePipelineDescriptor* desc);
+   ComputePipeline(const Device &device, const WGPUComputePipelineDescriptor *desc);
    ~ComputePipeline();
 
-   WGPUComputePipeline Get() const { return _pipeline; }
+   [[nodiscard]] WGPUComputePipeline Get() const { return _pipeline; }
 };
 

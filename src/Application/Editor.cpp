@@ -38,7 +38,7 @@ void Editor::RenderImGuiUI()
 {
    int windowHeight = Application::GetInstance().GetWindowHeight();
 
-   Renderer *renderer = Application::GetInstance().GetRenderer();
+   Renderer &renderer = Application::GetInstance().GetRenderer();
 
    // Editor settings
    {
@@ -69,7 +69,7 @@ void Editor::RenderImGuiUI()
 
    // Stats
    {
-      Renderer::RenderStats stats = renderer->GetRenderStats();
+      const Renderer::GPURenderStats &stats = renderer.GetGPURenderStats();
 
       ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 200, 0), ImGuiCond_Always);
       ImGui::SetNextWindowSize(ImVec2(200, 0), ImGuiCond_Always);
@@ -79,6 +79,8 @@ void Editor::RenderImGuiUI()
 
       if (ImGui::CollapsingHeader("Rendering Stats", ImGuiTreeNodeFlags_DefaultOpen))
       {
+         ImGui::Text("Total GPU; %.1f ms", stats.totalTime);
+         ImGui::Text("Clear: %.1f ms", stats.clearTime);
          ImGui::Text("Atmosphere: %.1f ms", stats.atmosphereTime);
          ImGui::Text("Grid: %.1f ms", stats.gridTime);
          ImGui::Text("Cloth: %.1f ms", stats.clothTime);
@@ -94,18 +96,18 @@ void Editor::RenderImGuiUI()
       if (_renderClouds)
       {
          ImGui::Begin("Clouds", nullptr); {
-            CloudRenderer::CloudRenderSettings *settings = &renderer->GetCloudRenderer()->Settings;
+            CloudRenderer::CloudRenderSettings &settings = renderer.GetCloudRenderer().Settings;
 
             // Cloud settings
             if (ImGui::CollapsingHeader("Position", ImGuiTreeNodeFlags_DefaultOpen))
             {
-               ImGui::InputFloat("Start Height", &settings->cloudStartHeight);
-               ImGui::InputFloat("End Height", &settings->cloudEndHeight);
+               ImGui::InputFloat("Start Height", &settings.cloudStartHeight);
+               ImGui::InputFloat("End Height", &settings.cloudEndHeight);
             }
 
             if (ImGui::CollapsingHeader("Visuals", ImGuiTreeNodeFlags_DefaultOpen))
             {
-               ImGui::SliderFloat("Density Multiplier", &settings->densityMultiplier, 0.01f, 5.0f);
+               ImGui::SliderFloat("Density Multiplier", &settings.densityMultiplier, 0.01f, 5.0f);
             }
          }
          ImGui::End();
@@ -113,7 +115,7 @@ void Editor::RenderImGuiUI()
    }
 }
 
-void Editor::Update(float dt)
+void Editor::Update(const float dt) const
 {
    // Update camera
    _camera->Update(dt);

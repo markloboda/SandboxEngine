@@ -6,7 +6,7 @@ class UIRenderer;
 class ImGuiManager
 {
 public:
-   static bool CreateInstance(Renderer* renderer);
+   static bool CreateInstance(const Renderer &renderer);
    static void DestroyInstance();
    static ImGuiManager& GetInstance();
 
@@ -17,23 +17,23 @@ private:
    // UI renderers
    std::vector<UIRenderer*> _uiRenderers;
 
-   ImGuiManager(Renderer* renderer);
+   explicit ImGuiManager(const Renderer &renderer);
    ~ImGuiManager();
 
 public:
-   void Configure(Renderer* renderer);
+   void Configure(Renderer &renderer);
    void Shutdown();
 
-   void Render(Renderer* renderer, CommandEncoder* encoder, TextureView* surfaceTextureView);
+   void Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex);
 
    void AddUIRenderer(UIRenderer* uiRenderer);
-   bool RemoveUIRenderer(UIRenderer* uiRenderer);
+   bool RemoveUIRenderer(const UIRenderer *uiRenderer);
 
 private:
    void SetupStyle();
 
    void NewFrame();
-   void EndFrame(RenderPassEncoder* encoder);
-   void RenderUI();
+   void EndFrame(const RenderPassEncoder &encoder);
+   void RenderUI() const;
 };
 

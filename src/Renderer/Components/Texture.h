@@ -7,10 +7,10 @@ private:
    WGPUTextureFormat _format;
 
 public:
-   Texture(Device* device, WGPUTextureDescriptor* desc);
+   Texture(const Device &device, const WGPUTextureDescriptor *desc);
    ~Texture();
 
-   WGPUTexture Get() const { return _texture; }
-   bool IsValid() const { return _texture != nullptr; }
-   WGPUTextureFormat GetFormat() const { return _format; }
+   [[nodiscard]] WGPUTexture Get() const { return _texture; }
+   [[nodiscard]] bool IsValid() const { return _texture != nullptr; }
+   [[nodiscard]] WGPUTextureFormat GetFormat() const { return _format; }
 };

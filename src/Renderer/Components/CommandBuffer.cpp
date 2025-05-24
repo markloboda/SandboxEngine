@@ -1,6 +1,7 @@
 #include <pch.h>
 
-CommandBuffer::CommandBuffer(WGPUCommandBuffer cmdBuffer) : _cmdBuffer(cmdBuffer)
+CommandBuffer::CommandBuffer(const CommandEncoder &cmdEncoder):
+   _cmdBuffer(cmdEncoder.Finish())
 {
    if (!_cmdBuffer)
    {

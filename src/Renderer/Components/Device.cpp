@@ -24,7 +24,7 @@ Device::Device()
    // Create the instance.
    {
       WGPUInstanceExtras extras = {};
-      extras.chain.sType = (WGPUSType) WGPUSType_InstanceExtras;
+      extras.chain.sType = static_cast<WGPUSType>(WGPUSType_InstanceExtras);
       extras.flags = WGPUInstanceFlag_Validation | WGPUInstanceFlag_Debug;
 
       WGPUInstanceDescriptor instanceDesc = {};
@@ -47,7 +47,7 @@ Device::Device()
       adapterCallbackInfo.userdata1 = &adapterPromise;
       adapterCallbackInfo.callback = [](WGPURequestAdapterStatus status, WGPUAdapter adapter, WGPUStringView message, void *userdata1, void *)
       {
-         std::promise<WGPUAdapter> *promise = reinterpret_cast<std::promise<WGPUAdapter> *>(userdata1);
+         std::promise<WGPUAdapter> *promise = static_cast<std::promise<WGPUAdapter> *>(userdata1);
          if (status == WGPURequestAdapterStatus_Success)
          {
             promise->set_value(adapter);
@@ -87,17 +87,19 @@ Device::Device()
       deviceDesc.label = WGPUStringView{"My Device", WGPU_STRLEN};
 
       WGPUFeatureName features[] = {
-         static_cast<WGPUFeatureName>(WGPUNativeFeature_SpirvShaderPassthrough)
+         static_cast<WGPUFeatureName>(WGPUNativeFeature_SpirvShaderPassthrough),
+         WGPUFeatureName_TimestampQuery,
+         static_cast<WGPUFeatureName>(WGPUNativeFeature_TimestampQueryInsideEncoders)
       };
 
       deviceDesc.requiredFeatures = features;
-      deviceDesc.requiredFeatureCount = 1;
+      deviceDesc.requiredFeatureCount = sizeof(features) / sizeof(WGPUFeatureName);
 
       WGPURequestDeviceCallbackInfo deviceCallbackInfo = {};
       deviceCallbackInfo.nextInChain = nullptr;
       deviceCallbackInfo.callback = [](WGPURequestDeviceStatus status, WGPUDevice device, WGPUStringView message, void *userdata1, void *)
       {
-         std::promise<WGPUDevice> *promise = reinterpret_cast<std::promise<WGPUDevice> *>(userdata1);
+         std::promise<WGPUDevice> *promise = static_cast<std::promise<WGPUDevice> *>(userdata1);
          if (status == WGPURequestDeviceStatus_Success)
          {
             promise->set_value(device);
@@ -147,7 +149,7 @@ WGPUShaderModule Device::CreateShaderModuleSpirV(const std::vector<uint32_t> &sp
    return wgpuDeviceCreateShaderModule(_device, &desc);
 }
 
-void Device::Poll() const
+void Device::Poll(const bool wait) const
 {
-   wgpuDevicePoll(_device, false, nullptr);
+   wgpuDevicePoll(_device, wait, nullptr);
 }

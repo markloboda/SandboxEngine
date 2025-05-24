@@ -1,7 +1,7 @@
 #include <pch.h>
 
-ShaderModule::ShaderModule(WGPUShaderModule shaderModule)
-   : _shaderModule(shaderModule)
+ShaderModule::ShaderModule(WGPUShaderModule shaderModule):
+   _shaderModule(shaderModule)
 {
    if (_shaderModule == nullptr)
    {
@@ -23,7 +23,7 @@ std::string inline ShaderModule::GetShaderPath(const std::string &shaderName)
    return "shaders/" + shaderName;
 }
 
-ShaderModule &ShaderModule::LoadShaderModule(Device *device, const std::string &shaderName)
+ShaderModule &ShaderModule::LoadShaderModule(const Device &device, const std::string &shaderName)
 {
    if (shaderName.ends_with(".frag") || shaderName.ends_with(".vert") || shaderName.ends_with(".spv"))
    {
@@ -34,7 +34,7 @@ ShaderModule &ShaderModule::LoadShaderModule(Device *device, const std::string &
    return *new ShaderModule(nullptr);
 }
 
-ShaderModule &ShaderModule::LoadSPIRVShaderModule(Device *device, const std::string &shaderName)
+ShaderModule &ShaderModule::LoadSPIRVShaderModule(const Device &device, const std::string &shaderName)
 {
    std::string path = GetShaderPath(shaderName);
 
@@ -57,7 +57,7 @@ ShaderModule &ShaderModule::LoadSPIRVShaderModule(Device *device, const std::str
    descriptor.sourceSize = static_cast<uint32_t>(spirv.size());
    descriptor.source = spirv.data();
 
-   WGPUShaderModule shaderModule = wgpuDeviceCreateShaderModuleSpirV(device->Get(), &descriptor);
+   WGPUShaderModule shaderModule = wgpuDeviceCreateShaderModuleSpirV(device.Get(), &descriptor);
    if (!shaderModule)
    {
       std::cerr << ("Failed to create shader module: " + path);

@@ -45,13 +45,10 @@ private:
 
 
 public:
-   CloudRenderer(Renderer *renderer);
-
+   explicit CloudRenderer(Renderer &renderer);
    ~CloudRenderer();
 
-   [[nodiscard]] bool Initialize(Renderer *renderer);
-
-   void Terminate();
-
-   void Render(Renderer *renderer, CommandEncoder *encoder, TextureView *surfaceTextureView);
+   [[nodiscard]] bool Initialize(Renderer &renderer);
+   void Terminate() const;
+   void Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex);
 };

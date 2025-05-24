@@ -169,8 +169,8 @@ public:
    static bool IsKeyPressed(EInputKey key);
    static vec2 GetCursorPos();
 
-   static void SetCursorPositionCallback(CursorPositionCallback callback);
-   static void SetMouseWheelCallback(MouseWheelCallback callback);
+   static void SetCursorPositionCallback(const CursorPositionCallback &callback);
+   static void SetMouseWheelCallback(const MouseWheelCallback &callback);
 };
 
 

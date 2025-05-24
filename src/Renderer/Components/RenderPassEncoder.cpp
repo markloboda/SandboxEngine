@@ -16,36 +16,37 @@ RenderPassEncoder::~RenderPassEncoder()
    }
 }
 
-void RenderPassEncoder::SetPipeline(RenderPipeline *pipeline)
+void RenderPassEncoder::SetPipeline(const RenderPipeline &pipeline) const
 {
-   wgpuRenderPassEncoderSetPipeline(_encoder, pipeline->Get());
+   wgpuRenderPassEncoderSetPipeline(_encoder, pipeline.Get());
 }
 
-void RenderPassEncoder::SetVertexBuffer(uint32_t slot, Buffer *buffer)
+void RenderPassEncoder::SetVertexBuffer(const uint32_t slot, const Buffer &buffer) const
 {
-   wgpuRenderPassEncoderSetVertexBuffer(_encoder, slot, buffer->Get(), 0, buffer->GetSize());
+   wgpuRenderPassEncoderSetVertexBuffer(_encoder, slot, buffer.Get(), 0, buffer.GetSize());
 }
 
-void RenderPassEncoder::SetIndexBuffer(Buffer *buffer, WGPUIndexFormat format)
+void RenderPassEncoder::SetIndexBuffer(const Buffer &buffer, WGPUIndexFormat format) const
 {
-   wgpuRenderPassEncoderSetIndexBuffer(_encoder, buffer->Get(), format, 0, buffer->GetSize());
+   wgpuRenderPassEncoderSetIndexBuffer(_encoder, buffer.Get(), format, 0, buffer.GetSize());
 }
 
-void RenderPassEncoder::SetBindGroup(uint32_t index, BindGroup *bindGroup)
+void RenderPassEncoder::SetBindGroup(const uint32_t index, const BindGroup &bindGroup) const
 {
-   wgpuRenderPassEncoderSetBindGroup(_encoder, index, *bindGroup->Get(), 0, 0);
+   wgpuRenderPassEncoderSetBindGroup(_encoder, index, bindGroup.Get(), 0, nullptr);
 }
 
-void RenderPassEncoder::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance)
+void RenderPassEncoder::Draw(const uint32_t vertexCount, const uint32_t instanceCount, const uint32_t firstVertex, const uint32_t firstInstance) const
 {
    wgpuRenderPassEncoderDraw(_encoder, vertexCount, instanceCount, firstVertex, firstInstance);
 }
-void RenderPassEncoder::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t baseVertex, uint32_t firstInstance)
+void RenderPassEncoder::DrawIndexed(const uint32_t indexCount, const uint32_t instanceCount, const uint32_t firstIndex, const int32_t baseVertex,
+                                    const uint32_t firstInstance) const
 {
    wgpuRenderPassEncoderDrawIndexed(_encoder, indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
 }
 
-void RenderPassEncoder::EndPass()
+void RenderPassEncoder::EndPass() const
 {
    wgpuRenderPassEncoderEnd(_encoder);
 }
