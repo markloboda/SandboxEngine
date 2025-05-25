@@ -6,9 +6,12 @@ class FreeCamera;
 class Editor : public UIRenderer
 {
 private:
-   bool _showAtmosphere = true;
-   bool _showGrid = true;
-   bool _renderClouds = true;
+   bool _renderGrid = true;
+
+   bool _renderAtmosphere = false;
+   bool _renderClouds = false;
+
+   bool _renderCloths = true;
 
    FreeCamera* _camera;
 
@@ -33,16 +36,21 @@ public:
 
    bool GetRenderAtmosphere() const
    {
-      return _showAtmosphere;
+      return _renderAtmosphere;
    }
 
    bool GetRenderGrid() const
    {
-      return _showGrid;
+      return _renderGrid;
    }
 
    bool GetRenderClouds() const
    {
       return _renderClouds;
+   }
+
+   bool GetRenderCloths() const
+   {
+      return _renderCloths;
    }
 };

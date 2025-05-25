@@ -50,18 +50,18 @@ bool AtmosphereRenderer::Initialize(Renderer &renderer)
       fs.module = fragmentShader.Get();
       fs.entryPoint = WGPUStringView{"main", WGPU_STRLEN};
       fs.targetCount = 1;
-      WGPUColorTargetState cts = {}; {
-         WGPUBlendState blend = {};
+      WGPUColorTargetState cts = {};
+      WGPUBlendState blend = {}; {
          blend.color.srcFactor = WGPUBlendFactor_SrcAlpha;
          blend.color.dstFactor = WGPUBlendFactor_OneMinusSrcAlpha;
          blend.color.operation = WGPUBlendOperation_Add;
          blend.alpha.srcFactor = WGPUBlendFactor_Zero;
          blend.alpha.dstFactor = WGPUBlendFactor_One;
          blend.alpha.operation = WGPUBlendOperation_Add;
-         cts.format = WGPUTextureFormat_RGBA8Unorm;
          cts.blend = &blend;
-         cts.writeMask = WGPUColorWriteMask_All;
       }
+      cts.format = WGPUTextureFormat_RGBA8Unorm;
+      cts.writeMask = WGPUColorWriteMask_All;
       fs.targets = &cts;
       rpDesc.fragment = &fs;
 

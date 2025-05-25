@@ -42,6 +42,8 @@ public:
    void Update(float dt) const;
    void Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, uint32_t profilerIndex);
 
+   [[nodiscard]] ClothParticleSystem &GetClothParticleSystem() const { return *_clothParticleSystem; }
+
 private:
    void GenerateVertexData(std::vector<VertexData> &outVertices, std::vector<uint32_t> &outIndices) const;
 };

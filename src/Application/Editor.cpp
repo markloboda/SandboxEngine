@@ -2,6 +2,8 @@
 #include <Application/Editor.h>
 
 #include <Application/Application.h>
+#include <Renderer/Cloth/ClothParticleSystem.h>
+#include <Renderer/Cloth/ClothRenderer.h>
 #include <Renderer/UI/ImGuiManager.h>
 #include <Utils/FreeCamera.h>
 
@@ -48,16 +50,20 @@ void Editor::RenderImGuiUI()
       ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
       ImGui::Text("Editor Settings");
-
       ImGui::Separator();
-      ImGui::Checkbox("Show Atmosphere", &_showAtmosphere);
 
+      ImGui::Checkbox("Show Grid", &_renderGrid);
       ImGui::Separator();
-      ImGui::Checkbox("Show Grid", &_showGrid);
+      ImGui::Separator();
 
+      ImGui::Checkbox("Show Atmosphere", &_renderAtmosphere);
       ImGui::Separator();
+
       ImGui::Checkbox("Render Clouds", &_renderClouds);
+      ImGui::Separator();
+      ImGui::Separator();
 
+      ImGui::Checkbox("Show Cloths", &_renderCloths);
       ImGui::Separator();
 
       ImGui::Text("Camera");
@@ -77,15 +83,18 @@ void Editor::RenderImGuiUI()
       ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
       ImGui::Text("Frame Time: %.1f ms", 1000.0f / ImGui::GetIO().Framerate);
 
-      if (ImGui::CollapsingHeader("Rendering Stats", ImGuiTreeNodeFlags_DefaultOpen))
+      if (renderer.IsProfilerEnabled())
       {
-         ImGui::Text("Total GPU; %.1f ms", stats.totalTime);
-         ImGui::Text("Clear: %.1f ms", stats.clearTime);
-         ImGui::Text("Atmosphere: %.1f ms", stats.atmosphereTime);
-         ImGui::Text("Grid: %.1f ms", stats.gridTime);
-         ImGui::Text("Cloth: %.1f ms", stats.clothTime);
-         ImGui::Text("Cloud: %.1f ms", stats.cloudTime);
-         ImGui::Text("UI: %.1f ms", stats.uiTime);
+         if (ImGui::CollapsingHeader("Rendering Stats", ImGuiTreeNodeFlags_DefaultOpen))
+         {
+            ImGui::Text("Total GPU; %.1f ms", stats.totalTime);
+            ImGui::Text("Clear: %.1f ms", stats.clearTime);
+            ImGui::Text("Atmosphere: %.1f ms", stats.atmosphereTime);
+            ImGui::Text("Grid: %.1f ms", stats.gridTime);
+            ImGui::Text("Cloth: %.1f ms", stats.clothTime);
+            ImGui::Text("Cloud: %.1f ms", stats.cloudTime);
+            ImGui::Text("UI: %.1f ms", stats.uiTime);
+         }
       }
 
       ImGui::End();

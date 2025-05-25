@@ -20,9 +20,9 @@ ClothRenderer::~ClothRenderer()
 
 bool ClothRenderer::Initialize(Renderer &renderer)
 {
+   int width = 70;
+   int height = 70;
    // Initialize particles and constraints
-   int width = 10;
-   int height = 10;
    _clothParticleSystem->InitializeDemo(width, height);
 
    Device &device = renderer.GetDevice();
@@ -85,7 +85,19 @@ bool ClothRenderer::Initialize(Renderer &renderer)
       rpDesc.multisample.count = 1;
       rpDesc.multisample.mask = 0xFFFFFFFF;
       rpDesc.multisample.alphaToCoverageEnabled = false;
-      rpDesc.depthStencil = nullptr;
+
+      WGPUDepthStencilState depthStencil = {};
+      depthStencil.format = WGPUTextureFormat_Depth24Plus;
+      depthStencil.depthWriteEnabled = WGPUOptionalBool_True;
+      depthStencil.depthCompare = WGPUCompareFunction_Less;
+      depthStencil.stencilBack = {};
+      depthStencil.stencilFront = {};
+      depthStencil.stencilReadMask = 0xFFFFFFFF;
+      depthStencil.stencilWriteMask = 0xFFFFFFFF;
+      depthStencil.depthBias = 0;
+      depthStencil.depthBiasSlopeScale = 0.0f;
+      depthStencil.depthBiasClamp = 0.0f;
+      rpDesc.depthStencil = &depthStencil;
 
       // Vertex state
       std::vector<WGPUVertexAttribute> vas = {};
@@ -153,10 +165,16 @@ void ClothRenderer::Render(const Renderer &renderer, const CommandEncoder &encod
    ca.storeOp = WGPUStoreOp_Store;
    ca.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
    rpDesc.colorAttachments = &ca;
-   rpDesc.depthStencilAttachment = nullptr;
    WGPURenderPassTimestampWrites rpTimestampWrites = {};
    renderer.GetProfiler().GetRenderPassTimestampWrites(profilerIndex, rpTimestampWrites);
    rpDesc.timestampWrites = &rpTimestampWrites;
+   WGPURenderPassDepthStencilAttachment ds = {};
+   ds.view = renderer.GetDepthTextureView().Get();
+   ds.depthClearValue = 1.0f;
+   ds.depthLoadOp = WGPULoadOp_Clear;
+   ds.depthStoreOp = WGPUStoreOp_Store;
+   ds.depthReadOnly = false;
+   rpDesc.depthStencilAttachment = &ds;
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
 
    FreeCamera &camera = Application::GetInstance().GetEditor().GetCamera();

@@ -94,6 +94,23 @@ bool Renderer::Initialize()
       Application::GetInstance().GetRenderer().OnWindowResize(width, height);
    });
 
+   // Depth texture.
+   {
+      WGPUTextureDescriptor desc = {};
+      desc.dimension = WGPUTextureDimension_2D;
+      desc.format = WGPUTextureFormat_Depth24Plus;
+      desc.usage = WGPUTextureUsage_RenderAttachment;
+      desc.size = WGPUExtent3D{
+         .width = static_cast<uint32_t>(Application::GetInstance().GetWindowWidth()),
+         .height = static_cast<uint32_t>(Application::GetInstance().GetWindowHeight()),
+         .depthOrArrayLayers = 1u
+      };
+      desc.mipLevelCount = 1;
+      desc.sampleCount = 1;
+      _depthTexture = new Texture(_device, &desc);
+      _depthTextureView = new TextureView(_depthTexture->Get(), nullptr);
+   }
+
    // Set up ImGui.
    ImGuiManager::CreateInstance(*this);
    ImGuiManager::GetInstance().Configure(*this);
@@ -119,13 +136,23 @@ void Renderer::Terminate() const
    ImGuiManager::GetInstance().Shutdown();
    ImGuiManager::DestroyInstance();
 
+   // Destroy depth texture and view.
+   delete _depthTextureView;
+   delete _depthTexture;
+
+   // Destroy profiler.
+   delete _profiler;
+
    // UnConfigure surface.
    _surface.UnConfigureSurface();
 }
 
 void Renderer::Update(const float dt) const
 {
-   _clothRenderer->Update(dt);
+   if (Application::GetInstance().GetEditor().GetRenderCloths())
+   {
+      _clothRenderer->Update(dt);
+   }
 }
 
 void Renderer::Render()
@@ -154,7 +181,7 @@ void Renderer::Render()
          _gridRenderer->Render(*this, encoder, textureView, 2);
       }
 
-      if (true)
+      if (Application::GetInstance().GetEditor().GetRenderCloths())
       {
          _clothRenderer->Render(*this, encoder, textureView, 3);
       }
@@ -168,16 +195,22 @@ void Renderer::Render()
       ImGuiManager::GetInstance().Render(*this, encoder, textureView, 5);
    }
 
-   _profiler->ResolveQuerySet(encoder);
+   if (_profilerEnabled)
+   {
+      _profiler->ResolveQuerySet(encoder);
+   }
 
    CommandBuffer cmdBuffer = CommandBuffer(encoder);
    _queue.Submit(1, &cmdBuffer);
    _surface.Present();
    _device.Poll();
 
-   _profiler->ReadResults();
-   _profiler->ResetUsage();
-   FetchProfileResults();
+   if (_profilerEnabled)
+   {
+      _profiler->ReadResults();
+      _profiler->ResetUsage();
+      FetchProfileResults();
+   }
 
    wgpuTextureRelease(surfaceTexture.texture);
 }
@@ -189,6 +222,29 @@ bool Renderer::ShouldClose() const
 
 void Renderer::OnWindowResize(int width, int height)
 {
+   // Depth texture
+   {
+      delete _depthTexture;
+      delete _depthTextureView;
+
+      // Recreate
+      WGPUTextureDescriptor desc = {};
+      desc.dimension = WGPUTextureDimension_2D;
+      desc.format = WGPUTextureFormat_Depth24Plus;
+      desc.usage = WGPUTextureUsage_RenderAttachment;
+      desc.size = WGPUExtent3D{
+         .width = static_cast<uint32_t>(width),
+         .height = static_cast<uint32_t>(height),
+         .depthOrArrayLayers = 1u
+      };
+      desc.mipLevelCount = 1;
+      desc.sampleCount = 1;
+
+      _depthTexture = new Texture(_device, &desc);
+      _depthTextureView = new TextureView(_depthTexture->Get(), nullptr);
+   }
+
+   // Surface
    _surface.Resize(width, height);
 }
 

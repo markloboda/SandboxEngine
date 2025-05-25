@@ -8,6 +8,11 @@ using glm::vec3;
 class ClothParticleSystem
 {
 public:
+   struct SystemSettings
+   {
+      int solverIterations = 30;
+   };
+
    struct ParticleData
    {
       vec3 prevPosition;
@@ -32,6 +37,9 @@ private:
    std::vector<ParticleData> _particles;
    std::vector<DistanceConstraint> _constraints;
    vec2 _dimensions = {};
+
+public:
+   SystemSettings Settings = {};
 
 public:
    void InitializeDemo(size_t width, size_t height);

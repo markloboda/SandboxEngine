@@ -75,9 +75,8 @@ void ClothParticleSystem::InitializeDemo(size_t width, size_t height)
 
 void ClothParticleSystem::Update(float dt)
 {
-    constexpr int solverIterations = 10;
-    float solverDt = dt / static_cast<float>(solverIterations);
-    for (int iter = 0; iter < solverIterations; ++iter)
+    float solverDt = dt / static_cast<float>(Settings.solverIterations);
+    for (int iter = 0; iter < Settings.solverIterations; ++iter)
     {
         for (auto &particle: _particles)
         {

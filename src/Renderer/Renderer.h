@@ -29,13 +29,17 @@ private:
    Surface _surface;
    Queue _queue;
 
-   GridRenderer *_gridRenderer;
-   AtmosphereRenderer *_atmosphereRenderer;
-   CloudRenderer *_cloudRenderer;
-   ClothRenderer *_clothRenderer;
+   Texture *_depthTexture = nullptr;
+   TextureView *_depthTextureView = nullptr;
 
-   Profiler *_profiler;
-   GPURenderStats _gpuRenderStats;
+   GridRenderer *_gridRenderer = nullptr;
+   AtmosphereRenderer *_atmosphereRenderer = nullptr;
+   CloudRenderer *_cloudRenderer = nullptr;
+   ClothRenderer *_clothRenderer = nullptr;
+
+   bool _profilerEnabled = false;
+   Profiler *_profiler = nullptr;
+   GPURenderStats _gpuRenderStats = {};
 
 public:
    explicit Renderer(GLFWwindow *window);
@@ -64,7 +68,12 @@ public:
 
    [[nodiscard]] CloudRenderer &GetCloudRenderer() const { return *_cloudRenderer; }
    [[nodiscard]] GridRenderer &GetGridRenderer() const { return *_gridRenderer; }
+   [[nodiscard]] AtmosphereRenderer &GetAtmosphereRenderer() const { return *_atmosphereRenderer; }
+   [[nodiscard]] ClothRenderer &GetClothRenderer() const { return *_clothRenderer; }
 
+   [[nodiscard]] TextureView &GetDepthTextureView() const { return *_depthTextureView; }
+
+   [[nodiscard]] bool IsProfilerEnabled() const { return _profilerEnabled; }
    [[nodiscard]] Profiler &GetProfiler() const { return *_profiler; }
    [[nodiscard]] const GPURenderStats &GetGPURenderStats() const { return _gpuRenderStats; }
 
