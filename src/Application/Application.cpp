@@ -53,6 +53,7 @@ void Application::Terminate() const
 void Application::Run()
 {
    constexpr double targetFrameTime = 1.0 / 60.0; // 60 FPS
+   constexpr int maxFixedIterations = 3;
    double lastTime = glfwGetTime();
    double accumulator = 0.0;
 
@@ -65,8 +66,8 @@ void Application::Run()
       glfwPollEvents();
 
       accumulator += frameTime;
-
-      while (accumulator >= targetFrameTime)
+      int iterations = 0;
+      while (accumulator >= targetFrameTime && iterations < maxFixedIterations)
       {
          if (_editor->GetRenderCloths())
          {
@@ -74,6 +75,7 @@ void Application::Run()
          }
 
          accumulator -= targetFrameTime;
+         ++iterations;
       }
 
       const float dt = static_cast<float>(frameTime);
