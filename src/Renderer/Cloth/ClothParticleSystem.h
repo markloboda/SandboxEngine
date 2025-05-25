@@ -10,7 +10,7 @@ class ClothParticleSystem
 public:
    struct SystemSettings
    {
-      int solverIterations = 30;
+      int solverIterations = 10;
    };
 
    struct ParticleData
@@ -43,7 +43,7 @@ public:
 
 public:
    void InitializeDemo(size_t width, size_t height);
-   void Update(float dt);
+   void FixedUpdate(float dt);
 
    void GetParticles(const ParticleData *&data, size_t &count) const;
    void AddParticle(const ParticleData &particle);

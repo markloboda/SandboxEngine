@@ -39,7 +39,6 @@ private:
    void Terminate() const;
 
 public:
-   void Update(float dt) const;
    void Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, uint32_t profilerIndex);
 
    [[nodiscard]] ClothParticleSystem &GetClothParticleSystem() const { return *_clothParticleSystem; }

@@ -51,8 +51,6 @@ private:
    void Terminate() const;
 
 public:
-   void Update(float dt) const;
-
    void Render();
    [[nodiscard]] bool ShouldClose() const;
 

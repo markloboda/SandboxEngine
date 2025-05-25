@@ -147,14 +147,6 @@ void Renderer::Terminate() const
    _surface.UnConfigureSurface();
 }
 
-void Renderer::Update(const float dt) const
-{
-   if (Application::GetInstance().GetEditor().GetRenderCloths())
-   {
-      _clothRenderer->Update(dt);
-   }
-}
-
 void Renderer::Render()
 {
    WGPUCommandEncoderDescriptor encoderDesc = {};

@@ -73,7 +73,7 @@ void ClothParticleSystem::InitializeDemo(size_t width, size_t height)
     }
 }
 
-void ClothParticleSystem::Update(float dt)
+void ClothParticleSystem::FixedUpdate(float dt)
 {
     float solverDt = dt / static_cast<float>(Settings.solverIterations);
     for (int iter = 0; iter < Settings.solverIterations; ++iter)

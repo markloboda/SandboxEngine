@@ -20,8 +20,8 @@ ClothRenderer::~ClothRenderer()
 
 bool ClothRenderer::Initialize(Renderer &renderer)
 {
-   int width = 70;
-   int height = 70;
+   int width = 10;
+   int height = 10;
    // Initialize particles and constraints
    _clothParticleSystem->InitializeDemo(width, height);
 
@@ -148,11 +148,6 @@ void ClothRenderer::Terminate() const
    delete _vertexBuffer;
    delete _indexBuffer;
    delete _clothParticleSystem;
-}
-
-void ClothRenderer::Update(const float dt) const
-{
-   _clothParticleSystem->Update(dt);
 }
 
 void ClothRenderer::Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, const uint32_t profilerIndex)

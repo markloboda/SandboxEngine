@@ -2,6 +2,8 @@
 #include <Application/Application.h>
 #include <Renderer/Renderer.h>
 #include <Application/Editor.h>
+#include <Renderer/Cloth/ClothParticleSystem.h>
+#include <Renderer/Cloth/ClothRenderer.h>
 
 bool Application::Initialize()
 {
@@ -50,20 +52,34 @@ void Application::Terminate() const
 
 void Application::Run()
 {
+   constexpr double targetFrameTime = 1.0 / 60.0; // 60 FPS
    double lastTime = glfwGetTime();
+   double accumulator = 0.0;
+
    while (IsRunning())
    {
       const double currentTime = glfwGetTime();
-      const float dt = static_cast<float>(currentTime - lastTime);
+      double frameTime = currentTime - lastTime;
       lastTime = currentTime;
 
       glfwPollEvents();
 
-      // Update.
-      _editor->Update(dt);
-      _renderer->Update(dt);
+      accumulator += frameTime;
 
-      // Render.
+      while (accumulator >= targetFrameTime)
+      {
+         if (_editor->GetRenderCloths())
+         {
+            _renderer->GetClothRenderer().GetClothParticleSystem().FixedUpdate(static_cast<float>(targetFrameTime));
+         }
+
+         accumulator -= targetFrameTime;
+      }
+
+      const float dt = static_cast<float>(frameTime);
+      _editor->Update(dt);
+
+      // Render
       _renderer->Render();
    }
 }
