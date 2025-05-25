@@ -8,10 +8,10 @@ class Editor : public UIRenderer
 private:
    bool _renderGrid = true;
 
-   bool _renderAtmosphere = false;
-   bool _renderClouds = false;
+   bool _renderAtmosphere = true;
+   bool _renderClouds = true;
 
-   bool _renderCloths = true;
+   bool _renderCloths = false;
 
    FreeCamera* _camera;
 
