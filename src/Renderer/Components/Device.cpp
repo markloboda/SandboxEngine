@@ -89,7 +89,6 @@ Device::Device()
       WGPUFeatureName features[] = {
          static_cast<WGPUFeatureName>(WGPUNativeFeature_SpirvShaderPassthrough),
          WGPUFeatureName_TimestampQuery,
-         static_cast<WGPUFeatureName>(WGPUNativeFeature_TimestampQueryInsideEncoders)
       };
 
       deviceDesc.requiredFeatures = features;
