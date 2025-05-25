@@ -91,8 +91,19 @@ Device::Device()
          WGPUFeatureName_TimestampQuery,
       };
 
+      // Check if the features are supported by the adapter.
+      uint32_t featureCount = sizeof(features) / sizeof(WGPUFeatureName);
+      for (uint32_t i = 0; i < featureCount; ++i)
+      {
+         if (!wgpuAdapterHasFeature(_adapter, features[i]))
+         {
+            std::cerr << "Feature " << features[i] << " is not supported by the adapter.\n";
+            features[i] = WGPUFeatureName_Undefined; // Remove unsupported feature
+         }
+      }
+
       deviceDesc.requiredFeatures = features;
-      deviceDesc.requiredFeatureCount = sizeof(features) / sizeof(WGPUFeatureName);
+      deviceDesc.requiredFeatureCount = featureCount;
 
       WGPURequestDeviceCallbackInfo deviceCallbackInfo = {};
       deviceCallbackInfo.nextInChain = nullptr;

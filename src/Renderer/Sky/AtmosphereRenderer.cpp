@@ -92,7 +92,7 @@ void AtmosphereRenderer::Render(const Renderer &renderer, const CommandEncoder &
    renderer.GetProfiler().GetRenderPassTimestampWrites(profilerIndex, rpTimestampWrites);
    rpDesc.timestampWrites = &rpTimestampWrites;
 
-   RenderPassEncoder pass = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
+   const RenderPassEncoder pass = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
 
    // Render
    pass.SetPipeline(*_renderPipeline);

@@ -8,7 +8,7 @@ private:
    uint32_t _count;
 
 public:
-   QuerySet(const Device &device, WGPUQueryType type, uint32_t count);
+   QuerySet(const Device &device, const WGPUQuerySetDescriptor &desc);
    ~QuerySet();
 
    [[nodiscard]] WGPUQuerySet Get() const { return _querySet; }

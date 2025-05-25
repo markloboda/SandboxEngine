@@ -2,7 +2,11 @@
 #include <Renderer/Utils/Profiler.h>
 
 Profiler::Profiler(Device &device, const uint32_t profileCount):
-   _gpuStatsQuerySet(device, WGPUQueryType_Timestamp, profileCount * 2),
+   _gpuStatsQuerySet(device, WGPUQuerySetDescriptor{
+                        .label = WGPUStringView{"GPU Stats Query Set", WGPU_STRLEN},
+                        .type = WGPUQueryType_Timestamp,
+                        .count = profileCount * 2, // Two timestamps per profile
+                     }),
    _gpuStatsResolveBuffer(device, WGPUBufferUsage_QueryResolve | WGPUBufferUsage_CopySrc, _gpuStatsQuerySet.GetCount() * sizeof(uint64_t)),
    _gpuStatsResultBuffer(device, WGPUBufferUsage_CopyDst | WGPUBufferUsage_MapRead, _gpuStatsResolveBuffer.GetSize()),
    timestampCount(profileCount * 2)
@@ -49,8 +53,7 @@ void Profiler::ResolveQuerySet(const CommandEncoder &encoder) const
 
       uint32_t count = i - start;
       uint64_t bufferOffset = start * sizeof(uint64_t);
-      // Align down to the nearest 256-byte boundary
-      bufferOffset = (bufferOffset / 256) * 256;
+      bufferOffset = (bufferOffset / 256) * 256; // Align to 256 bytes
 
       encoder.ResolveQuerySet(_gpuStatsQuerySet, start, count, _gpuStatsResolveBuffer, bufferOffset);
    }
@@ -72,13 +75,14 @@ void Profiler::ReadResults()
          if (status != WGPUMapAsyncStatus_Success)
          {
             std::cerr << "Failed to map stats result buffer." << message.data << "\n";
+            return;
          }
-         auto *profiler = static_cast<Profiler *>(userdata);
-         const auto *data = static_cast<const uint64_t *>(profiler->_gpuStatsResultBuffer.GetMappedRange());
+         Profiler *profiler = static_cast<Profiler *>(userdata);
+         uint64_t *data = static_cast<uint64_t *>(profiler->_gpuStatsResultBuffer.GetMappedRange());
 
          for (uint32_t i = 0; i < profiler->timestampCount; i += 2)
          {
-            profiler->_timingResults[i / 2] = static_cast<float>(data[i + 1] - data[i]) * 1e-6f; // Convert to milliseconds
+            profiler->_timingResults[i / 2] = static_cast<float>(data[i + 1] - data[i]) * 1e-6f; // Convert nanoseconds to milliseconds
          }
 
          profiler->_gpuStatsResultBuffer.Unmap();

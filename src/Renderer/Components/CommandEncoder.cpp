@@ -24,7 +24,7 @@ WGPUComputePassEncoder CommandEncoder::BeginComputePass(const WGPUComputePassDes
 
 WGPURenderPassEncoder CommandEncoder::BeginRenderPass(const WGPURenderPassDescriptor *descriptor) const
 {
-   return wgpuCommandEncoderBeginRenderPass(Get(), descriptor);
+   return wgpuCommandEncoderBeginRenderPass(_encoder, descriptor);
 }
 
 WGPUCommandBuffer CommandEncoder::Finish() const

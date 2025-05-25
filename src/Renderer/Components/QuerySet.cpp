@@ -1,13 +1,8 @@
 #include <pch.h>
 
-QuerySet::QuerySet(const Device &device, const WGPUQueryType type, const uint32_t count)
-   : _count(count)
+QuerySet::QuerySet(const Device &device, const WGPUQuerySetDescriptor &desc)
+   : _count(desc.count)
 {
-   // Build the descriptor for the query set:
-   WGPUQuerySetDescriptor desc = {};
-   desc.type = type;
-   desc.count = count;
-
    // Create the WGPUQuerySet on the GPU device:
    _querySet = wgpuDeviceCreateQuerySet(device.Get(), &desc);
    assert(_querySet && "Failed to create WGPUQuerySet");
