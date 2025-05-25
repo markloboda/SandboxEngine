@@ -20,8 +20,8 @@ ClothRenderer::~ClothRenderer()
 
 bool ClothRenderer::Initialize(Renderer &renderer)
 {
-   int width = 10;
-   int height = 10;
+   int width = 50;
+   int height = 50;
    // Initialize particles and constraints
    _clothParticleSystem->InitializeDemo(width, height);
 

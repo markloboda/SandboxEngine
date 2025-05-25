@@ -10,7 +10,7 @@ class ClothParticleSystem
 public:
    struct SystemSettings
    {
-      int solverIterations = 10;
+      int solverIterations = 5;
    };
 
    struct ParticleData
