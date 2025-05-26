@@ -47,7 +47,7 @@ layout(location = 0) out vec4 fragCol;
 // raymarching settings
 #define MAX_RAYMARCH_STEPS 120
 #define MAX_RAYMARCH_LIGHT_STEPS 6
-#define MAX_RAYMARCH_DISTANCE 100000.0
+#define MAX_RAYMARCH_DISTANCE 102400.0
 #define CLOUD_MAP_SCALING_FACTOR 1.0 / 51200.0 // covers 51.2km x 51.2km
 #define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR (1.0 / 10000)
 
@@ -259,21 +259,21 @@ float density(in vec3 pos)
    float cloudCoverage  = clamp(mapSample.r * uSettings.coverageMultiplier, 0.0, 1.0);
    float cloudType      = mapSample.b;
    float heightFraction = getCloudHeightFraction(pos.y, cloudType);
+   float heightGradient = clampRemap(pos.y, uSettings.cloudStartHeight, uSettings.cloudEndHeight, 0.0, 1.0);
 
    // detail sampling
    vec4  detailLowFreqSample  = sampleCloudDetailLowFreq(pos);
    float lowFreqPerlin  = detailLowFreqSample.r;
-   float lowFreqFBM = dot(detailLowFreqSample.gba, vec3(0.625, 0.25, 0.125));
-
+   float lowFreqFBM = clamp(dot(detailLowFreqSample.gba, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
    vec3 detailHighFreqSample = sampleCloudDetailHighFreq(pos).rgb;
-   float highFreqFBM = dot(detailHighFreqSample, vec3(0.625, 0.25, 0.125));
-   // TODO: erode with 2d texture
+   float highFreqFBM = clamp(dot(detailHighFreqSample, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
 
    // final density calculation
    float baseDensity = remap(lowFreqPerlin, (1.0 - lowFreqFBM), 1.0, 0.0, 1.0) * heightFraction; // combine low frequency noise and height fraction
-//   baseDensity = remap(baseDensity, (1.0 - highFreqFBM), 1.0, 0.0, 1.0); // combine high frequency noise
    float cloudDensity = remap(baseDensity, (1.0 - cloudCoverage), 1.0, 0.0, 1.0);
+   cloudDensity *= heightGradient; // apply height gradient
 
+   // TODO: add erosion at edges
 
    return clamp(cloudDensity, 0.0, 1.0);
 }
