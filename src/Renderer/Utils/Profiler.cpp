@@ -3,6 +3,7 @@
 
 Profiler::Profiler(Device &device, const uint32_t profileCount):
    _gpuStatsQuerySet(device, WGPUQuerySetDescriptor{
+                        .nextInChain = nullptr,
                         .label = WGPUStringView{"GPU Stats Query Set", WGPU_STRLEN},
                         .type = WGPUQueryType_Timestamp,
                         .count = profileCount * 2, // Two timestamps per profile
