@@ -40,13 +40,14 @@ layout(location = 0) out vec4 fragCol;
 #define M_PI 3.14159265358979323846
 
 // physical settings
+#define SUN_COLOR vec3(1.0)
 #define SUN_DIR vec3(0.577, -0.577, 0.577)
-#define LIGHT_ABSORPTION 0.1
+#define LIGHT_ABSORPTION 1.0
 
 // raymarching settings
-#define MAX_RAYMARCH_STEPS 240
-#define MAX_RAYMARCH_LIGHT_STEPS 12
-#define MAX_RAYMARCH_DISTANCE 500000.0
+#define MAX_RAYMARCH_STEPS 120
+#define MAX_RAYMARCH_LIGHT_STEPS 6
+#define MAX_RAYMARCH_DISTANCE 100000.0
 #define CLOUD_MAP_SCALING_FACTOR 1.0 / 51200.0 // covers 51.2km x 51.2km
 #define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR (1.0 / 10000)
 
@@ -320,7 +321,7 @@ vec4 raymarch(vec3 start, vec3 end)
 
    // Log‑biased steps parameters
    const int   numSteps   = MAX_RAYMARCH_STEPS;
-   const float biasPower  = 2.5;    // >1 biases samples toward the camera
+   const float biasPower  = 2.0;    // >1 biases samples toward the camera
 
    float prevRayDst = 0.0;
    for (int i = 0; i < numSteps; ++i)
@@ -328,9 +329,9 @@ vec4 raymarch(vec3 start, vec3 end)
       // update raymarching position
       float stepIndex = float(i + 1) / float(numSteps);
       float rayDst  = pow(stepIndex, biasPower) * rayLength;
+      float stepSize = rayDst - prevRayDst;
       vec3 rayPos = start + rayDir * rayDst;
 
-      float stepSize = rayDst - prevRayDst;
       prevRayDst = rayDst;
 
       float cloudDensity = density(rayPos);
@@ -341,7 +342,7 @@ vec4 raymarch(vec3 start, vec3 end)
       float phaseFunction = henyeyGreenstein(dot(rayDir, SUN_DIR), 0.5);
 
       transmittance *= exp(-cloudDensity * stepSize);
-      lightEnergy += /*transmittance * */cloudDensity * phaseFunction * lightTransmittance * stepSize;
+      lightEnergy += transmittance * cloudDensity * phaseFunction * lightTransmittance * stepSize;
 
       if (transmittance <= 0.01)
       {
@@ -351,9 +352,8 @@ vec4 raymarch(vec3 start, vec3 end)
    }
 
    float alpha = 1.0 - transmittance;
-   vec3 lightColor = vec3(1.0, 0.95, 0.9);
-   vec3 color = lightColor * lightEnergy;
-   color = vec3(1.0);
+   vec3 lightColor = SUN_COLOR;
+   vec3 color = lightColor * (1.0 - lightEnergy);
 
    return vec4(color, alpha);
 }
