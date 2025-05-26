@@ -63,7 +63,7 @@ void FreeCamera::Update(float dt)
    {
       // Mouse wheel speed increase
       _speed = clamp(mouseWheel_ > 0 ? _speed * powf(1.1f, fabsf(static_cast<float>(mouseWheel_))) : _speed * powf(0.9f, fabsf(static_cast<float>(mouseWheel_))), 0.5f,
-                     1000.0f);
+                     50000.0f);
       mouseWheel_ = 0;
 
       float speed = _speed;

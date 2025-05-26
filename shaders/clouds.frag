@@ -44,6 +44,8 @@ layout(location = 0) out vec4 fragCol;
 #define LIGHT_ABSORPTION 0.1
 
 // raymarching settings
+#define MAX_RAYMARCH_STEPS 240
+#define MAX_RAYMARCH_LIGHT_STEPS 12
 #define MAX_RAYMARCH_DISTANCE 500000.0
 #define CLOUD_MAP_SCALING_FACTOR 1.0 / 51200.0 // covers 51.2km x 51.2km
 #define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR (1.0 / 10000)
@@ -54,25 +56,6 @@ layout(location = 0) out vec4 fragCol;
 #define CUMULUS_OFFSET       vec3(0.1, 0.9, 1.0)
 
 // helper functions
-float rand(vec2 co) {
-   return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
-}
-
-float bayerDither(vec2 uv)
-{
-   // 4x4 Bayer matrix values normalized to [0,1)
-   int x = int(mod(gl_FragCoord.x, 4.0));
-   int y = int(mod(gl_FragCoord.y, 4.0));
-   int index = x + y * 4;
-   float bayer[16] = float[16](
-   0.0,  8.0,  2.0, 10.0,
-   12.0, 4.0, 14.0, 6.0,
-   3.0, 11.0, 1.0, 9.0,
-   15.0, 7.0, 13.0, 5.0
-   );
-   return bayer[index] / 16.0;
-}
-
 float remap(float originalValue, float originalMin, float originalMax, float newMin, float newMax)
 {
    return newMin + (((originalValue - originalMin) / (originalMax - originalMin)) * (newMax - newMin));
@@ -300,15 +283,15 @@ float henyeyGreenstein(float cos, float eccentricity)
    return ((1.0 - eccentricity * eccentricity) / pow(1.0 + eccentricity * eccentricity - 2.0 * eccentricity * cos, 1.5)) / (4.0 * M_PI);
 }
 
-float raymarchToLight(vec3 rayOrigin, vec3 rayDir, float jitterOffset)
+float raymarchToLight(vec3 rayOrigin, vec3 rayDir)
 {
-   const int numSteps = 6;
+   const int numSteps = MAX_RAYMARCH_LIGHT_STEPS;
    const float stepSize = 200.0 / float(numSteps);
 
    float lightTransmittance = 1.0;
 
    vec3 step = stepSize * rayDir;
-   vec3 rayPos = rayOrigin + step * jitterOffset;
+   vec3 rayPos = rayOrigin + step;
 
    for (int i = 0; i < numSteps; ++i)
    {
@@ -324,7 +307,7 @@ float raymarchToLight(vec3 rayOrigin, vec3 rayDir, float jitterOffset)
    return lightTransmittance;
 }
 
-vec4 raymarch(vec3 start, vec3 end, float jitterOffset)
+vec4 raymarch(vec3 start, vec3 end)
 {
    // Ray setup
    vec3  ray       = end - start;
@@ -336,7 +319,7 @@ vec4 raymarch(vec3 start, vec3 end, float jitterOffset)
    float lightEnergy   = 0.0;
 
    // Log‑biased steps parameters
-   const int   numSteps   = 140;
+   const int   numSteps   = MAX_RAYMARCH_STEPS;
    const float biasPower  = 2.5;    // >1 biases samples toward the camera
 
    float prevRayDst = 0.0;
@@ -354,7 +337,7 @@ vec4 raymarch(vec3 start, vec3 end, float jitterOffset)
       if (cloudDensity < EPSILON)
          continue;
 
-      float lightTransmittance = raymarchToLight(rayPos, -SUN_DIR, jitterOffset);
+      float lightTransmittance = raymarchToLight(rayPos, -SUN_DIR);
       float phaseFunction = henyeyGreenstein(dot(rayDir, SUN_DIR), 0.5);
 
       transmittance *= exp(-cloudDensity * stepSize);
@@ -394,7 +377,5 @@ void main()
    vec3 start = rayOrigin + rayDir * dstToStart;
    vec3 end   = start     + rayDir * dstInside;
 
-   float jitter = 0.0;// bayerDither(uv);
-
-   fragCol = raymarch(start, end, jitter);
+   fragCol = raymarch(start, end);
 }
