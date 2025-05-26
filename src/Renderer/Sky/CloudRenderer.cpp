@@ -46,15 +46,25 @@ bool CloudRenderer::Initialize(Renderer &renderer)
       weatherMapSamplerDesc.maxAnisotropy = 1;
       _weatherMapSampler = new Sampler(device, &weatherMapSamplerDesc);
 
-      WGPUSamplerDescriptor cloudBaseSamplerDesc = {};
-      cloudBaseSamplerDesc.addressModeU = WGPUAddressMode_Repeat;
-      cloudBaseSamplerDesc.addressModeV = WGPUAddressMode_Repeat;
-      cloudBaseSamplerDesc.addressModeW = WGPUAddressMode_Repeat;
-      cloudBaseSamplerDesc.minFilter = WGPUFilterMode_Linear;
-      cloudBaseSamplerDesc.magFilter = WGPUFilterMode_Linear;
-      cloudBaseSamplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
-      cloudBaseSamplerDesc.maxAnisotropy = 1;
-      _uCloudBaseSampler = new Sampler(device, &cloudBaseSamplerDesc);
+      WGPUSamplerDescriptor cloudBaseLowFreqSamplerDesc = {};
+      cloudBaseLowFreqSamplerDesc.addressModeU = WGPUAddressMode_Repeat;
+      cloudBaseLowFreqSamplerDesc.addressModeV = WGPUAddressMode_Repeat;
+      cloudBaseLowFreqSamplerDesc.addressModeW = WGPUAddressMode_Repeat;
+      cloudBaseLowFreqSamplerDesc.minFilter = WGPUFilterMode_Linear;
+      cloudBaseLowFreqSamplerDesc.magFilter = WGPUFilterMode_Linear;
+      cloudBaseLowFreqSamplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
+      cloudBaseLowFreqSamplerDesc.maxAnisotropy = 1;
+      _uCloudBaseLowFreqSampler = new Sampler(device, &cloudBaseLowFreqSamplerDesc);
+
+      WGPUSamplerDescriptor cloudBaseHighFreqSamplerDesc = {};
+      cloudBaseHighFreqSamplerDesc.addressModeU = WGPUAddressMode_Repeat;
+      cloudBaseHighFreqSamplerDesc.addressModeV = WGPUAddressMode_Repeat;
+      cloudBaseHighFreqSamplerDesc.addressModeW = WGPUAddressMode_Repeat;
+      cloudBaseHighFreqSamplerDesc.minFilter = WGPUFilterMode_Linear;
+      cloudBaseHighFreqSamplerDesc.magFilter = WGPUFilterMode_Linear;
+      cloudBaseHighFreqSamplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
+      cloudBaseHighFreqSamplerDesc.maxAnisotropy = 1;
+      _uCloudBaseHighFreqSampler = new Sampler(device, &cloudBaseHighFreqSamplerDesc);
    }
 
    // Texture views
@@ -70,22 +80,32 @@ bool CloudRenderer::Initialize(Renderer &renderer)
          viewDesc.arrayLayerCount = 1;
          _weatherMapTextureView = new TextureView(weatherMap.Get(), &viewDesc);
       } {
-         Texture &cloudBaseTexture = _cloudsModel->GetBaseNoiseTexture();
+         Texture &cloudBaseLowFreqTexture = _cloudsModel->GetBaseLowFreqNoiseTexture();
          WGPUTextureViewDescriptor viewDesc = {};
-         viewDesc.format = cloudBaseTexture.GetFormat();
+         viewDesc.format = cloudBaseLowFreqTexture.GetFormat();
          viewDesc.dimension = WGPUTextureViewDimension_3D;
          viewDesc.baseMipLevel = 0;
          viewDesc.mipLevelCount = 1;
          viewDesc.baseArrayLayer = 0;
          viewDesc.arrayLayerCount = 1;
-         _cloudBaseTextureView = new TextureView(cloudBaseTexture.Get(), &viewDesc);
+         _cloudBaseLowFreqTextureView = new TextureView(cloudBaseLowFreqTexture.Get(), &viewDesc);
+      } {
+         Texture &cloudBaseHighFreqTexture = _cloudsModel->GetBaseHighFreqNoiseTexture();
+         WGPUTextureViewDescriptor viewDesc = {};
+         viewDesc.format = cloudBaseHighFreqTexture.GetFormat();
+         viewDesc.dimension = WGPUTextureViewDimension_3D;
+         viewDesc.baseMipLevel = 0;
+         viewDesc.mipLevelCount = 1;
+         viewDesc.baseArrayLayer = 0;
+         viewDesc.arrayLayerCount = 1;
+         _cloudBaseHighFreqTextureView = new TextureView(cloudBaseHighFreqTexture.Get(), &viewDesc);
       }
    }
 
    // Bind groups
    {
       {
-         std::vector<WGPUBindGroupLayoutEntry> bglEntries(4);
+         std::vector<WGPUBindGroupLayoutEntry> bglEntries(6);
 
          // weatherMap (binding 0)
          bglEntries[0].binding = 0;
@@ -99,28 +119,44 @@ bool CloudRenderer::Initialize(Renderer &renderer)
          bglEntries[1].visibility = WGPUShaderStage_Fragment;
          bglEntries[1].sampler.type = WGPUSamplerBindingType_Filtering;
 
-         // cloudTexture (binding 2)
+         // lowFreqCloudTexture (binding 2)
          bglEntries[2].binding = 2;
          bglEntries[2].visibility = WGPUShaderStage_Fragment;
          bglEntries[2].texture.sampleType = WGPUTextureSampleType_UnfilterableFloat;
          bglEntries[2].texture.viewDimension = WGPUTextureViewDimension_3D;
          bglEntries[2].texture.multisampled = WGPUOptionalBool_False;
 
-         // cloudSampler (binding 3)
+         // lowFreqCloudSampler (binding 3)
          bglEntries[3].binding = 3;
          bglEntries[3].visibility = WGPUShaderStage_Fragment;
          bglEntries[3].sampler.type = WGPUSamplerBindingType_Filtering;
 
-         std::vector<WGPUBindGroupEntry> bgEntries(4);
+         // highFreqCloudTexture (binding 4)
+         bglEntries[4].binding = 4;
+         bglEntries[4].visibility = WGPUShaderStage_Fragment;
+         bglEntries[4].texture.sampleType = WGPUTextureSampleType_UnfilterableFloat;
+         bglEntries[4].texture.viewDimension = WGPUTextureViewDimension_3D;
+         bglEntries[4].texture.multisampled = WGPUOptionalBool_False;
+
+         // highFreqCloudSampler (binding 5)
+         bglEntries[5].binding = 5;
+         bglEntries[5].visibility = WGPUShaderStage_Fragment;
+         bglEntries[5].sampler.type = WGPUSamplerBindingType_Filtering;
+
+         std::vector<WGPUBindGroupEntry> bgEntries(6);
 
          bgEntries[0].binding = 0;
          bgEntries[0].textureView = _weatherMapTextureView->Get();
          bgEntries[1].binding = 1;
          bgEntries[1].sampler = _weatherMapSampler->Get();
          bgEntries[2].binding = 2;
-         bgEntries[2].textureView = _cloudBaseTextureView->Get();
+         bgEntries[2].textureView = _cloudBaseLowFreqTextureView->Get();
          bgEntries[3].binding = 3;
-         bgEntries[3].sampler = _uCloudBaseSampler->Get();
+         bgEntries[3].sampler = _uCloudBaseLowFreqSampler->Get();
+         bgEntries[4].binding = 4;
+         bgEntries[4].textureView = _cloudBaseHighFreqTextureView->Get();
+         bgEntries[5].binding = 5;
+         bgEntries[5].sampler = _uCloudBaseHighFreqSampler->Get();
 
          _texturesBindGroup = new BindGroup(device, {bglEntries, bgEntries});
       } {
@@ -220,8 +256,8 @@ void CloudRenderer::Terminate() const
 {
    delete _pipeline;
    delete _texturesBindGroup;
-   delete _uCloudBaseSampler;
-   delete _cloudBaseTextureView;
+   delete _uCloudBaseLowFreqSampler;
+   delete _cloudBaseLowFreqTextureView;
    delete _uCameraData;
    delete _uResolution;
    delete _cloudsModel;

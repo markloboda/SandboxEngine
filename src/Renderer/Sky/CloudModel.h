@@ -3,13 +3,14 @@
 class CloudsModel
 {
 private:
-   // R - channel: Cloud Coverage (Worley Noise)
    highp_u32vec2 _weatherMapTextureDimensions;
    Texture* _weatherMapTexture;
 
-   // R - channel: Cloud Density (Perlin Noise)
-   highp_u32vec3 _baseNoiseTextureDimensions;
-   Texture* _baseNoiseTexture;
+   highp_u32vec3 _baseLowFreqNoiseTextureDimensions;
+   Texture *_baseLowFreqNoiseTexture;
+
+   highp_u32vec3 _baseHighFreqNoiseTextureDimensions;
+   Texture *_baseHighFreqNoiseTexture;
 
 public:
    explicit CloudsModel(Renderer &renderer);
@@ -17,9 +18,11 @@ public:
 
    void LoadWeatherMapTexture(Renderer &renderer, const std::string &filePath);
    [[nodiscard]] Texture &GetWeatherMapTexture() const { return *_weatherMapTexture; }
-   [[nodiscard]] Texture &GetBaseNoiseTexture() const { return *_baseNoiseTexture; }
+   [[nodiscard]] Texture &GetBaseLowFreqNoiseTexture() const { return *_baseLowFreqNoiseTexture; }
+   [[nodiscard]] Texture &GetBaseHighFreqNoiseTexture() const { return *_baseHighFreqNoiseTexture; }
 
 private:
    void GenerateWeatherMapTexture(Renderer &renderer);
-   void GenerateBaseNoiseTexture(Renderer &renderer);
+   void GenerateBaseLowFreqNoiseTexture(Renderer &renderer);
+   void GenerateBaseHighFreqNoiseTexture(Renderer &renderer);
 };

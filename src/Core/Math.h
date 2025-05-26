@@ -66,4 +66,11 @@ namespace Math
    {
       return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
    }
+
+   // Clamp Remap function
+   template<typename T>
+   constexpr T ClampRemap(T value, T min1, T max1, T min2, T max2)
+   {
+      return Clamp(Remap(value, min1, max1, min2, max2), min2, max2);
+   }
 }
