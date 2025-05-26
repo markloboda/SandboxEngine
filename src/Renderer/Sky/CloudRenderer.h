@@ -23,8 +23,7 @@ public:
       float cloudStartHeight = 6100.0;
       float cloudEndHeight = 18300.0;
 
-      float coverageMultiplier = 1.0;
-      float erosionStrength = 0.5;
+      float coverageMultiplier = 0.5f;
    };
 
    CloudRenderSettings Settings;

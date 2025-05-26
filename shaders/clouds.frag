@@ -28,7 +28,6 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    float cloudEndHeight;
 
    float coverageMultiplier;
-   float erosionStrength;
 } uSettings;
 
 layout(location = 0) in vec2 uv;
@@ -47,8 +46,7 @@ layout(location = 0) out vec4 fragCol;
 // raymarching settings
 #define MAX_RAYMARCH_DISTANCE 500000.0
 #define CLOUD_MAP_SCALING_FACTOR 1.0 / 51200.0 // covers 51.2km x 51.2km
-#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR1 (1.0 / 50000)
-#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR2 (1.0 / 5000)
+#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR (1.0 / 10000)
 
 // cloud heights
 #define STRATUS_OFFSET       vec3(0.1, 0.2, 0.3)
@@ -249,7 +247,7 @@ vec4 sampleCloudMap(in vec3 pos)
 // Sample cloud detail low frequency noise (3D texture)
 vec4 sampleCloudDetailLowFreq(in vec3 pos)
 {
-   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR1;
+   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR;
    vec4 detailSample = texture(sampler3D(cloudBaseLowFreqTexture, cloudBaseLowFreqSampler), detailTextureCoord);
    return detailSample;
 }
@@ -257,7 +255,7 @@ vec4 sampleCloudDetailLowFreq(in vec3 pos)
 // Sample cloud detail high frequency noise (3D texture)
 vec3 sampleCloudDetailHighFreq(in vec3 pos)
 {
-   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR2;
+   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR;
    vec3 detailSample = texture(sampler3D(cloudBaseHighFreqTexture, cloudBaseHighFreqSampler), detailTextureCoord).rgb;
    return detailSample;
 }
@@ -285,13 +283,13 @@ float density(in vec3 pos)
 
    vec3 detailHighFreqSample = sampleCloudDetailHighFreq(pos).rgb;
    float highFreqFBM = dot(detailHighFreqSample, vec3(0.625, 0.25, 0.125));
+   // TODO: erode with 2d texture
 
-   float baseDensity = max(lowFreqPerlin * (1.0 - lowFreqFBM), 0.0);
-   baseDensity *= heightFraction;
-   baseDensity = max(baseDensity - highFreqFBM * uSettings.erosionStrength, 0.0);
+   // final density calculation
+   float baseDensity = remap(lowFreqPerlin, (1.0 - lowFreqFBM), 1.0, 0.0, 1.0) * heightFraction; // combine low frequency noise and height fraction
+//   baseDensity = remap(baseDensity, (1.0 - highFreqFBM), 1.0, 0.0, 1.0); // combine high frequency noise
+   float cloudDensity = remap(baseDensity, (1.0 - cloudCoverage), 1.0, 0.0, 1.0);
 
-   // Sculpt with coverage (interpreted as a threshold or gradient)
-   float cloudDensity = remap(baseDensity, 0.0, cloudCoverage, 0.0, 1.0);
 
    return clamp(cloudDensity, 0.0, 1.0);
 }

@@ -47,9 +47,9 @@ bool CloudRenderer::Initialize(Renderer &renderer)
       _weatherMapSampler = new Sampler(device, &weatherMapSamplerDesc);
 
       WGPUSamplerDescriptor cloudBaseLowFreqSamplerDesc = {};
-      cloudBaseLowFreqSamplerDesc.addressModeU = WGPUAddressMode_Repeat;
-      cloudBaseLowFreqSamplerDesc.addressModeV = WGPUAddressMode_Repeat;
-      cloudBaseLowFreqSamplerDesc.addressModeW = WGPUAddressMode_Repeat;
+      cloudBaseLowFreqSamplerDesc.addressModeU = WGPUAddressMode_MirrorRepeat;
+      cloudBaseLowFreqSamplerDesc.addressModeV = WGPUAddressMode_MirrorRepeat;
+      cloudBaseLowFreqSamplerDesc.addressModeW = WGPUAddressMode_MirrorRepeat;
       cloudBaseLowFreqSamplerDesc.minFilter = WGPUFilterMode_Linear;
       cloudBaseLowFreqSamplerDesc.magFilter = WGPUFilterMode_Linear;
       cloudBaseLowFreqSamplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
@@ -57,9 +57,9 @@ bool CloudRenderer::Initialize(Renderer &renderer)
       _uCloudBaseLowFreqSampler = new Sampler(device, &cloudBaseLowFreqSamplerDesc);
 
       WGPUSamplerDescriptor cloudBaseHighFreqSamplerDesc = {};
-      cloudBaseHighFreqSamplerDesc.addressModeU = WGPUAddressMode_Repeat;
-      cloudBaseHighFreqSamplerDesc.addressModeV = WGPUAddressMode_Repeat;
-      cloudBaseHighFreqSamplerDesc.addressModeW = WGPUAddressMode_Repeat;
+      cloudBaseHighFreqSamplerDesc.addressModeU = WGPUAddressMode_MirrorRepeat;
+      cloudBaseHighFreqSamplerDesc.addressModeV = WGPUAddressMode_MirrorRepeat;
+      cloudBaseHighFreqSamplerDesc.addressModeW = WGPUAddressMode_MirrorRepeat;
       cloudBaseHighFreqSamplerDesc.minFilter = WGPUFilterMode_Linear;
       cloudBaseHighFreqSamplerDesc.magFilter = WGPUFilterMode_Linear;
       cloudBaseHighFreqSamplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;

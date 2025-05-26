@@ -117,7 +117,6 @@ void Editor::RenderImGuiUI()
             if (ImGui::CollapsingHeader("Visuals", ImGuiTreeNodeFlags_DefaultOpen))
             {
                ImGui::SliderFloat("Coverage Multiplier", &settings.coverageMultiplier, 0.01f, 5.0f);
-               ImGui::SliderFloat("Erosion Strength", &settings.erosionStrength, 0.0f, 1.0f);
             }
          }
          ImGui::End();
