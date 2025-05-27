@@ -30,8 +30,8 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    float lightAbsorption;        // how strongly light is absorbed (scattering falloff)
    float coverageMultiplier;     // scales the coverage read from the weather map
    float phaseEccentricity;      // eccentricity for Henyey-Greenstein phase function
-   float detailStrength;         // weight of detail FBM in final density
    float densityMultiplier;      // scales the final computed cloud density
+   float detailThreshold;         // weight of detail FBM in final density
 
    int cloudRaymarchSteps;       // number of steps in raymarch()
    int lightRaymarchSteps;       // number of steps in raymarchToLight()
@@ -48,7 +48,7 @@ layout(location = 0) out vec4 fragCol;
 #define M_PI 3.14159265358979323846
 
 // physical settings
-#define SUN_COLOR vec3(0.92, 0.8, 0.71) // yellow sunlight color
+#define SUN_COLOR vec3(1.0, 1.0, 1.0)
 #define SUN_DIR _sunDir
 const vec3 _sunDir = normalize(vec3(0.0, -1.0, 0.0));
 
@@ -56,8 +56,11 @@ const vec3 _sunDir = normalize(vec3(0.0, -1.0, 0.0));
 #define MAX_RAYMARCH_STEPS uSettings.cloudRaymarchSteps
 #define MAX_RAYMARCH_LIGHT_STEPS uSettings.lightRaymarchSteps
 #define MAX_RAYMARCH_DISTANCE 51200.0
-#define CLOUD_MAP_SCALING_FACTOR (1.0 / 51200.0) // covers 51.2km x 51.2km
-#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR (1.0 / 10000)
+#define CLOUD_MAP_SCALING_FACTOR _cloudMapScalingFactor
+const float _cloudMapScalingFactor = 1.0 / 51200.0; // covers 51.2km x 51.2km
+#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR1 _cloudDetailTextureScalingFactor1
+const float _cloudDetailTextureScalingFactor1 = 1.0 / 10000; // 10km x 10km
+#define CLOUD_HIGH_FREQ_DETAIL_THRESHOLD uSettings.detailThreshold
 
 // cloud heights
 #define STRATUS_OFFSET       vec3(0.1, 0.2, 0.3)
@@ -239,7 +242,7 @@ vec4 sampleCloudMap(in vec3 pos)
 // Sample cloud detail low frequency noise (3D texture)
 vec4 sampleCloudDetailLowFreq(in vec3 pos)
 {
-   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR;
+   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR1;
    vec4 detailSample = texture(sampler3D(cloudBaseLowFreqTexture, cloudBaseLowFreqSampler), detailTextureCoord);
    return detailSample;
 }
@@ -247,7 +250,7 @@ vec4 sampleCloudDetailLowFreq(in vec3 pos)
 // Sample cloud detail high frequency noise (3D texture)
 vec3 sampleCloudDetailHighFreq(in vec3 pos)
 {
-   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR;
+   vec3 detailTextureCoord = pos;
    vec3 detailSample = texture(sampler3D(cloudBaseHighFreqTexture, cloudBaseHighFreqSampler), detailTextureCoord).rgb;
    return detailSample;
 }
@@ -273,21 +276,25 @@ float sampleCloudDensity(in vec3 pos)
    float lowFreqPerlin  = detailLowFreqSample.r;
    float lowFreqFBM = clamp(dot(detailLowFreqSample.gba, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
 
-   // detail high freq data
-   vec3  detailHighFreqSample = sampleCloudDetailHighFreq(pos).rgb;
-   float highFreqFBM = clamp(dot(detailHighFreqSample, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
-
    // final density calculation
    float baseDensity = remap(lowFreqPerlin, (1.0 - lowFreqFBM), 1.0, 0.0, 1.0);
+
+   // detail high freq data (if enabled)
+   if (uSettings.detailThreshold > 0.0)
+   {
+      vec3  detailHighFreqSample = sampleCloudDetailHighFreq(pos).rgb;
+      float highFreqFBM = clamp(dot(detailHighFreqSample, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
+      if (baseDensity < uSettings.detailThreshold)
+      {
+         baseDensity = remap(baseDensity, (1.0 - highFreqFBM), 1.0, 0.0, 1.0);
+      }
+   }
+
    baseDensity *= heightFraction;
    float cloudDensity = remap(baseDensity, (1.0 - cloudCoverage), 1.0, 0.0, 1.0);
    cloudDensity *= heightGradient;
 
    cloudDensity *= uSettings.densityMultiplier;
-
-   // Add high-frequency detail based on detailStrength
-   float detailModulation = mix(1.0, highFreqFBM, uSettings.detailStrength);
-   cloudDensity *= detailModulation;
 
    return clamp(cloudDensity, 0.0, 1.0);
 }
@@ -334,7 +341,7 @@ vec4 raymarch(vec3 start, vec3 end)
 
    // Volumetric state
    float transmittance = 1.0;
-   float radiance      = 0.0;
+   float lightEnergy      = 0.0;
 
    float prevDensity = 0.0;
 
@@ -368,7 +375,7 @@ vec4 raymarch(vec3 start, vec3 end)
       float T = exp(-avgDensity * uSettings.lightAbsorption * stepSize);
 
       transmittance *= T;
-      radiance += transmittance * lightTransmittance * phase * avgDensity * stepSize;
+      lightEnergy += transmittance * lightTransmittance * phase * avgDensity * stepSize;
 
       if (transmittance <= 0.01)
       {
@@ -377,11 +384,11 @@ vec4 raymarch(vec3 start, vec3 end)
       }
    }
 
-   radiance = clamp(radiance, 0.0, 1.0);
+   lightEnergy = clamp(lightEnergy, 0.0, 1.0);
 
    float alpha = 1.0 - transmittance;
    vec3 lightColor = SUN_COLOR;
-   vec3 color = lightColor * radiance;
+   vec3 color = lightColor * lightEnergy;
 
    return vec4(color, alpha);
 }

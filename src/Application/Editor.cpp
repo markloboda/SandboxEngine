@@ -119,8 +119,8 @@ void Editor::RenderImGuiUI()
                ImGui::SliderFloat("Light Absorption", &settings.lightAbsorption, 0.1f, 2.0f);
                ImGui::SliderFloat("Coverage Multiplier", &settings.coverageMultiplier, 0.0f, 10.0f);
                ImGui::SliderFloat("Phase Eccentricity", &settings.phaseEccentricity, -1.0f, 1.0f);
-               ImGui::SliderFloat("Detail Strength", &settings.detailStrength, 0.0f, 1.0f);
                ImGui::SliderFloat("Density Multiplier", &settings.densityMultiplier, 0.0f, 10.0f);
+               ImGui::SliderFloat("Detail Threshold", &settings.detailThreshold, 0.0f, 1.0f);
             }
 
             if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen))
