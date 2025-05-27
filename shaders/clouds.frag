@@ -32,6 +32,8 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    float phaseEccentricity;      // eccentricity for Henyey-Greenstein phase function
    float densityMultiplier;      // scales the final computed cloud density
    float detailThreshold;         // weight of detail FBM in final density
+   float lightRayConeAngle;
+   float ambientLight;          // ambient light level, used for ambient in-scattering
 
    int cloudRaymarchSteps;       // number of steps in raymarch()
    int lightRaymarchSteps;       // number of steps in raymarchToLight()
@@ -51,6 +53,7 @@ layout(location = 0) out vec4 fragCol;
 #define SUN_COLOR vec3(1.0, 1.0, 1.0)
 #define SUN_DIR _sunDir
 const vec3 _sunDir = normalize(vec3(0.0, -1.0, 0.0));
+#define AMBIENT_COLOR vec3(0.45, 0.52, 0.61)
 
 // raymarching settings
 #define MAX_RAYMARCH_STEPS uSettings.cloudRaymarchSteps
@@ -307,18 +310,32 @@ float henyeyGreenstein(float cosTheta, float g)
    return ((1.0 - gg) / (denom * sqrt(denom))) * (1.0 / (4.0 * M_PI));
 }
 
-float raymarchToLight(vec3 rayOrigin, vec3 rayDir)
+float raymarchToLight(vec3 rayOrigin, vec3 rayDir, float coneAngle)
 {
    const int numSteps = MAX_RAYMARCH_LIGHT_STEPS;
    const float stepSize = uSettings.lightStepLength;
 
    float lightTransmittance = 1.0;
 
-   vec3 step = stepSize * rayDir;
-   vec3 rayPos = rayOrigin + step;
+   // Tangent basis for cone deviation
+   vec3 up = abs(rayDir.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+   vec3 right = normalize(cross(up, rayDir));
+   vec3 forward = normalize(cross(rayDir, right));
+
+   vec3 rayPos = rayOrigin + rayDir * stepSize;
 
    for (int i = 0; i < numSteps; ++i)
    {
+      // Generate a random offset within the cone (same per-frame per-pixel)
+      float r1 = fract(sin(dot(rayPos.xy + float(i), vec2(12.9898, 78.233))) * 43758.5453);
+      float r2 = fract(sin(dot(rayPos.zy + float(i) * 1.37, vec2(39.3468, 11.135))) * 96321.9124);
+      float theta = r1 * 2.0 * M_PI;
+      float radius = r2 * coneAngle;
+
+      vec2 offset = vec2(cos(theta), sin(theta)) * radius;
+      vec3 coneDir = normalize(rayDir + offset.x * right + offset.y * forward);
+
+      // Apply the offset direction per step
       float density = sampleCloudDensity(rayPos);
       if (density > EPSILON)
       {
@@ -326,11 +343,12 @@ float raymarchToLight(vec3 rayOrigin, vec3 rayDir)
          if (lightTransmittance <= EPSILON) break;
       }
 
-      rayPos += step;
+      rayPos += coneDir * stepSize;
    }
 
    return lightTransmittance;
 }
+
 
 vec4 raymarch(vec3 start, vec3 end)
 {
@@ -341,7 +359,7 @@ vec4 raymarch(vec3 start, vec3 end)
 
    // Volumetric state
    float transmittance = 1.0;
-   float lightEnergy      = 0.0;
+   vec3  lightColor   = vec3(0.0);
 
    float prevDensity = 0.0;
 
@@ -350,7 +368,6 @@ vec4 raymarch(vec3 start, vec3 end)
 
    // Log‑biased steps parameters
    const int   numSteps = MAX_RAYMARCH_STEPS;
-
 
    float prevRayDst = 0.0;
    for (int i = 0; i < numSteps; ++i)
@@ -369,13 +386,22 @@ vec4 raymarch(vec3 start, vec3 end)
       if (density < EPSILON)
          continue;
 
-      float lightTransmittance = raymarchToLight(rayPos, -SUN_DIR);
+      float lightTransmittance = raymarchToLight(rayPos, -SUN_DIR, uSettings.lightRayConeAngle);
       float phase = henyeyGreenstein(dot(rayDir, -SUN_DIR), uSettings.phaseEccentricity);
-      phase *= 4.0 * M_PI; // normalize the phase value
-      float T = exp(-avgDensity * uSettings.lightAbsorption * stepSize);
+      phase *= 4.0 * M_PI;
 
+      float T = exp(-avgDensity * uSettings.lightAbsorption * stepSize);
       transmittance *= T;
-      lightEnergy += transmittance * lightTransmittance * phase * avgDensity * stepSize;
+
+      // direct light scattering
+      float scatterProb = 1.0 - exp(-avgDensity);
+      float inscattering = lightTransmittance * phase * scatterProb;
+
+      // ambient light scattering
+      float ambient = uSettings.ambientLight * scatterProb;
+
+      // add both to energy
+      lightColor += transmittance * (inscattering * SUN_COLOR + ambient * AMBIENT_COLOR) * stepSize;
 
       if (transmittance <= 0.01)
       {
@@ -384,13 +410,11 @@ vec4 raymarch(vec3 start, vec3 end)
       }
    }
 
-   lightEnergy = clamp(lightEnergy, 0.0, 1.0);
+   lightColor = clamp(lightColor, 0.0, 1.0);
 
    float alpha = 1.0 - transmittance;
-   vec3 lightColor = SUN_COLOR;
-   vec3 color = lightColor * lightEnergy;
 
-   return vec4(color, alpha);
+   return vec4(lightColor, alpha);
 }
 
 void main()

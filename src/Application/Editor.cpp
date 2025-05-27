@@ -121,6 +121,8 @@ void Editor::RenderImGuiUI()
                ImGui::SliderFloat("Phase Eccentricity", &settings.phaseEccentricity, -1.0f, 1.0f);
                ImGui::SliderFloat("Density Multiplier", &settings.densityMultiplier, 0.0f, 10.0f);
                ImGui::SliderFloat("Detail Threshold", &settings.detailThreshold, 0.0f, 1.0f);
+               ImGui::SliderFloat("Light Ray Cone Angle", &settings.lightRayConeAngle, 0.0f, glm::pi<float>() / 2.0f, "%.2f rad");
+               ImGui::SliderFloat("Ambient Light", &settings.ambientLight, 0.0f, 1.0f);
             }
 
             if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen))
