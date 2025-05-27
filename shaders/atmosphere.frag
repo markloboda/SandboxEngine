@@ -2,6 +2,7 @@
 
 layout(location = 0) out vec4 out_color;
 
-void main() {
-   out_color = vec4(0.0, 0.61, 0.88, 1.0);
+void main()
+{
+   out_color = vec4(0.45, 0.52, 0.61, 1.0);
 }

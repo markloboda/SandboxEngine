@@ -116,7 +116,18 @@ void Editor::RenderImGuiUI()
 
             if (ImGui::CollapsingHeader("Visuals", ImGuiTreeNodeFlags_DefaultOpen))
             {
-               ImGui::SliderFloat("Coverage Multiplier", &settings.coverageMultiplier, 0.01f, 5.0f);
+               ImGui::SliderFloat("Light Absorption", &settings.lightAbsorption, 0.1f, 2.0f);
+               ImGui::SliderFloat("Coverage Multiplier", &settings.coverageMultiplier, 0.0f, 10.0f);
+               ImGui::SliderFloat("Phase Eccentricity", &settings.phaseEccentricity, -1.0f, 1.0f);
+               ImGui::SliderFloat("Detail Strength", &settings.detailStrength, 0.0f, 1.0f);
+               ImGui::SliderFloat("Density Multiplier", &settings.densityMultiplier, 0.0f, 10.0f);
+            }
+
+            if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+               ImGui::InputInt("Cloud Raymarch Steps", &settings.cloudRaymarchSteps, 1, 1000);
+               ImGui::InputInt("Light Raymarch Steps", &settings.lightRaymarchSteps, 1, 1000);
+               ImGui::InputFloat("Light Step Length", &settings.lightStepLength, 0.1f, 500.0f, "%.1f");
             }
          }
          ImGui::End();

@@ -20,10 +20,18 @@ private:
 public:
    struct CloudRenderSettings
    {
-      float cloudStartHeight = 6100.0;
-      float cloudEndHeight = 18300.0;
+      float cloudStartHeight = 6100.0f; // height of the bottom of the cloud layer
+      float cloudEndHeight = 18300.0f; // height of the top of the cloud layer
 
-      float coverageMultiplier = 3.2f;
+      float lightAbsorption = 0.626f; // how strongly light is absorbed (scattering falloff)
+      float coverageMultiplier = 6.963f; // scales the coverage read from the weather map
+      float phaseEccentricity = -0.125f; // eccentricity for Henyey-Greenstein phase function
+      float detailStrength = 1.0f; // weight of detail FBM in final density
+      float densityMultiplier = 0.033f; // scales the final computed cloud density
+
+      int cloudRaymarchSteps = 300; // number of steps in raymarch()
+      int lightRaymarchSteps = 7; // number of steps in raymarchToLight()
+      float lightStepLength = 100.0f; // step size in raymarchToLight()
    };
 
    CloudRenderSettings Settings;

@@ -24,10 +24,18 @@ layout(set = 1, binding = 1) uniform ResolutionData
 
 layout(set = 1, binding = 2) uniform CloudRenderSettings
 {
-   float cloudStartHeight;
-   float cloudEndHeight;
+   float cloudStartHeight;       // height of the bottom of the cloud layer
+   float cloudEndHeight;         // height of the top of the cloud layer
 
-   float coverageMultiplier;
+   float lightAbsorption;        // how strongly light is absorbed (scattering falloff)
+   float coverageMultiplier;     // scales the coverage read from the weather map
+   float phaseEccentricity;      // eccentricity for Henyey-Greenstein phase function
+   float detailStrength;         // weight of detail FBM in final density
+   float densityMultiplier;      // scales the final computed cloud density
+
+   int cloudRaymarchSteps;       // number of steps in raymarch()
+   int lightRaymarchSteps;       // number of steps in raymarchToLight()
+   float lightStepLength;        // step size in raymarchToLight()
 } uSettings;
 
 layout(location = 0) in vec2 uv;
@@ -40,15 +48,15 @@ layout(location = 0) out vec4 fragCol;
 #define M_PI 3.14159265358979323846
 
 // physical settings
-#define SUN_COLOR vec3(1.0)
-#define SUN_DIR vec3(0.577, -0.577, 0.577)
-#define LIGHT_ABSORPTION 1.0
+#define SUN_COLOR vec3(0.92, 0.8, 0.71) // yellow sunlight color
+#define SUN_DIR _sunDir
+const vec3 _sunDir = normalize(vec3(0.0, -1.0, 0.0));
 
 // raymarching settings
-#define MAX_RAYMARCH_STEPS 120
-#define MAX_RAYMARCH_LIGHT_STEPS 6
-#define MAX_RAYMARCH_DISTANCE 102400.0
-#define CLOUD_MAP_SCALING_FACTOR 1.0 / 51200.0 // covers 51.2km x 51.2km
+#define MAX_RAYMARCH_STEPS uSettings.cloudRaymarchSteps
+#define MAX_RAYMARCH_LIGHT_STEPS uSettings.lightRaymarchSteps
+#define MAX_RAYMARCH_DISTANCE 51200.0
+#define CLOUD_MAP_SCALING_FACTOR (1.0 / 51200.0) // covers 51.2km x 51.2km
 #define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR (1.0 / 10000)
 
 // cloud heights
@@ -245,49 +253,57 @@ vec3 sampleCloudDetailHighFreq(in vec3 pos)
 }
 
 // Get cloud density at world position
-float density(in vec3 pos)
+float sampleCloudDensity(in vec3 pos)
 {
-   // map sampling
-   vec4  mapSample      = sampleCloudMap(pos);
-
+   vec4 mapSample = sampleCloudMap(pos);
    if (mapSample.a < EPSILON)
    {
-      // no clouds at this position
+      // no clouds at this position (outside cloud layer or tile bounds)
       return 0.0;
    }
 
+   // map data
    float cloudCoverage  = clamp(mapSample.r * uSettings.coverageMultiplier, 0.0, 1.0);
    float cloudType      = mapSample.b;
    float heightFraction = getCloudHeightFraction(pos.y, cloudType);
    float heightGradient = clampRemap(pos.y, uSettings.cloudStartHeight, uSettings.cloudEndHeight, 0.0, 1.0);
 
-   // detail sampling
+   // detail low freq data
    vec4  detailLowFreqSample  = sampleCloudDetailLowFreq(pos);
    float lowFreqPerlin  = detailLowFreqSample.r;
    float lowFreqFBM = clamp(dot(detailLowFreqSample.gba, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
-   vec3 detailHighFreqSample = sampleCloudDetailHighFreq(pos).rgb;
+
+   // detail high freq data
+   vec3  detailHighFreqSample = sampleCloudDetailHighFreq(pos).rgb;
    float highFreqFBM = clamp(dot(detailHighFreqSample, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
 
    // final density calculation
-   float baseDensity = remap(lowFreqPerlin, (1.0 - lowFreqFBM), 1.0, 0.0, 1.0) * heightFraction; // combine low frequency noise and height fraction
+   float baseDensity = remap(lowFreqPerlin, (1.0 - lowFreqFBM), 1.0, 0.0, 1.0);
+   baseDensity *= heightFraction;
    float cloudDensity = remap(baseDensity, (1.0 - cloudCoverage), 1.0, 0.0, 1.0);
-   cloudDensity *= heightGradient; // apply height gradient
+   cloudDensity *= heightGradient;
 
-   // TODO: add erosion at edges
+   cloudDensity *= uSettings.densityMultiplier;
+
+   // Add high-frequency detail based on detailStrength
+   float detailModulation = mix(1.0, highFreqFBM, uSettings.detailStrength);
+   cloudDensity *= detailModulation;
 
    return clamp(cloudDensity, 0.0, 1.0);
 }
 
 // HenyeyGreenstein phase function
-float henyeyGreenstein(float cos, float eccentricity)
+float henyeyGreenstein(float cosTheta, float g)
 {
-   return ((1.0 - eccentricity * eccentricity) / pow(1.0 + eccentricity * eccentricity - 2.0 * eccentricity * cos, 1.5)) / (4.0 * M_PI);
+   float gg = g * g;
+   float denom = 1.0 + gg - 2.0 * g * cosTheta;
+   return ((1.0 - gg) / (denom * sqrt(denom))) * (1.0 / (4.0 * M_PI));
 }
 
 float raymarchToLight(vec3 rayOrigin, vec3 rayDir)
 {
    const int numSteps = MAX_RAYMARCH_LIGHT_STEPS;
-   const float stepSize = 200.0 / float(numSteps);
+   const float stepSize = uSettings.lightStepLength;
 
    float lightTransmittance = 1.0;
 
@@ -296,13 +312,14 @@ float raymarchToLight(vec3 rayOrigin, vec3 rayDir)
 
    for (int i = 0; i < numSteps; ++i)
    {
+      float density = sampleCloudDensity(rayPos);
+      if (density > EPSILON)
+      {
+         lightTransmittance *= exp(-density * uSettings.lightAbsorption * stepSize);
+         if (lightTransmittance <= EPSILON) break;
+      }
+
       rayPos += step;
-
-      float cloudDensity = density(rayPos);
-      if (cloudDensity > EPSILON)
-         continue;
-
-      lightTransmittance *= exp(-cloudDensity * stepSize * LIGHT_ABSORPTION);
    }
 
    return lightTransmittance;
@@ -317,32 +334,41 @@ vec4 raymarch(vec3 start, vec3 end)
 
    // Volumetric state
    float transmittance = 1.0;
-   float lightEnergy   = 0.0;
+   float radiance      = 0.0;
+
+   float prevDensity = 0.0;
+
+   // constants
+   const float hgCos = dot(rayDir, SUN_DIR);
 
    // Log‑biased steps parameters
-   const int   numSteps   = MAX_RAYMARCH_STEPS;
-   const float biasPower  = 2.0;    // >1 biases samples toward the camera
+   const int   numSteps = MAX_RAYMARCH_STEPS;
+
 
    float prevRayDst = 0.0;
    for (int i = 0; i < numSteps; ++i)
    {
       // update raymarching position
-      float stepIndex = float(i + 1) / float(numSteps);
-      float rayDst  = pow(stepIndex, biasPower) * rayLength;
+      float progress = float(i + 1) / float(numSteps);
+      float rayDst   = progress * rayLength;
       float stepSize = rayDst - prevRayDst;
-      vec3 rayPos = start + rayDir * rayDst;
+      vec3  rayPos   = start + rayDir * rayDst;
 
       prevRayDst = rayDst;
 
-      float cloudDensity = density(rayPos);
-      if (cloudDensity < EPSILON)
+      float density = sampleCloudDensity(rayPos);
+      float avgDensity = (density + prevDensity) * 0.5;
+      prevDensity = density;
+      if (density < EPSILON)
          continue;
 
       float lightTransmittance = raymarchToLight(rayPos, -SUN_DIR);
-      float phaseFunction = henyeyGreenstein(dot(rayDir, SUN_DIR), 0.5);
+      float phase = henyeyGreenstein(dot(rayDir, -SUN_DIR), uSettings.phaseEccentricity);
+      phase *= 4.0 * M_PI; // normalize the phase value
+      float T = exp(-avgDensity * uSettings.lightAbsorption * stepSize);
 
-      transmittance *= exp(-cloudDensity * stepSize);
-      lightEnergy += transmittance * cloudDensity * phaseFunction * lightTransmittance * stepSize;
+      transmittance *= T;
+      radiance += transmittance * lightTransmittance * phase * avgDensity * stepSize;
 
       if (transmittance <= 0.01)
       {
@@ -351,9 +377,11 @@ vec4 raymarch(vec3 start, vec3 end)
       }
    }
 
+   radiance = clamp(radiance, 0.0, 1.0);
+
    float alpha = 1.0 - transmittance;
    vec3 lightColor = SUN_COLOR;
-   vec3 color = lightColor * (1.0 - lightEnergy);
+   vec3 color = lightColor * radiance;
 
    return vec4(color, alpha);
 }
