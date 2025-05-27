@@ -1,8 +1,4 @@
 #include <pch.h>
-#include <Renderer/GridRenderer.h>
-#include <Application/Application.h>
-#include <Application/Editor.h>
-#include <Utils/FreeCamera.h>
 
 GridRenderer::GridRenderer(Renderer &renderer)
 {
@@ -128,7 +124,7 @@ void GridRenderer::Render(const Renderer &renderer, const CommandEncoder &encode
 
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
 
-   FreeCamera &camera = Application::GetInstance().GetEditor().GetCamera();
+   FreeCamera &camera = Application::GetInstance().GetRuntime().GetActiveCamera();
    // Update uniforms.
    _uniforms.view = camera.GetViewMatrix();
    _uniforms.proj = camera.GetProjectionMatrix();

@@ -1,9 +1,4 @@
 #include <pch.h>
-#include <Application/Application.h>
-#include <Renderer/Renderer.h>
-#include <Application/Editor.h>
-#include <Renderer/Cloth/ClothParticleSystem.h>
-#include <Renderer/Cloth/ClothRenderer.h>
 
 bool Application::Initialize()
 {
@@ -25,26 +20,35 @@ bool Application::Initialize()
       return false;
    }
 
+   // Set window callbacks.
+   glfwSetFramebufferSizeCallback(_window, [](GLFWwindow * /*window*/, int width, int height)
+   {
+      for (auto &callback: GetInstance()._windowResizeCallbacks)
+      {
+         callback(width, height);
+      }
+   });
+
    Input::Initialize();
 
-   // Initialize renderer.
-   _renderer = new Renderer(_window);
-   if (!_renderer)
+   // Initialize runtime.
+   _runtime = new Runtime();
+   if (!_runtime->Initialize())
    {
-      std::cerr << "Could not initialize renderer!\n";
+      std::cerr << "Runtime initialization failed!\n";
+      delete _runtime;
+      _runtime = nullptr;
+      glfwDestroyWindow(_window);
+      glfwTerminate();
       return false;
    }
-
-   // Initialize editor.
-   _editor = new Editor();
 
    return true;
 }
 
 void Application::Terminate() const
 {
-   delete _editor;
-   delete _renderer;
+   _runtime->Terminate();
    Input::Terminate();
    glfwDestroyWindow(_window);
    glfwTerminate();
@@ -69,20 +73,14 @@ void Application::Run()
       int iterations = 0;
       while (accumulator >= targetFrameTime && iterations < maxFixedIterations)
       {
-         if (_editor->GetRenderCloths())
-         {
-            _renderer->GetClothRenderer().GetClothParticleSystem().FixedUpdate(static_cast<float>(targetFrameTime));
-         }
+         _runtime->FixedUpdate(static_cast<float>(targetFrameTime));
 
          accumulator -= targetFrameTime;
          ++iterations;
       }
 
-      const float dt = static_cast<float>(frameTime);
-      _editor->Update(dt);
-
-      // Render
-      _renderer->Render();
+      _runtime->Update(static_cast<float>(frameTime));
+      _runtime->Render();
    }
 }
 

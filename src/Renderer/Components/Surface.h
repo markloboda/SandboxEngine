@@ -1,9 +1,5 @@
 #pragma once
 
-struct GLFWwindow;
-class Device;
-class TextureView;
-
 class Surface
 {
 private:

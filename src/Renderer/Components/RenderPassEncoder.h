@@ -1,9 +1,5 @@
 #pragma once
 
-class RenderPipeline;
-class CommandEncoder;
-class TextureView;
-
 class RenderPassEncoder
 {
 private:

@@ -1,5 +1,4 @@
 #include <pch.h>
-#include <Utils/FileReader.h>
 
 #include <stb/stb_image.h>
 

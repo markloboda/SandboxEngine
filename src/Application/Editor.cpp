@@ -1,15 +1,4 @@
 #include <pch.h>
-#include <Application/Editor.h>
-
-#include <Application/Application.h>
-#include <Renderer/Cloth/ClothParticleSystem.h>
-#include <Renderer/Cloth/ClothRenderer.h>
-#include <Renderer/UI/ImGuiManager.h>
-#include <Utils/FreeCamera.h>
-
-#include <Renderer/Sky/CloudRenderer.h>
-
-#include "Renderer/Renderer.h"
 
 Editor::Editor()
 {
@@ -40,7 +29,8 @@ void Editor::RenderImGuiUI()
 {
    int windowHeight = Application::GetInstance().GetWindowHeight();
 
-   Renderer &renderer = Application::GetInstance().GetRenderer();
+   Runtime &runtime = Application::GetInstance().GetRuntime();
+   Renderer &renderer = runtime.GetRenderer();
 
    // Editor settings
    {
@@ -52,18 +42,18 @@ void Editor::RenderImGuiUI()
       ImGui::Text("Editor Settings");
       ImGui::Separator();
 
-      ImGui::Checkbox("Show Grid", &_renderGrid);
+      ImGui::Checkbox("Show Grid", &renderer.RenderGrid);
       ImGui::Separator();
       ImGui::Separator();
 
-      ImGui::Checkbox("Show Atmosphere", &_renderAtmosphere);
+      ImGui::Checkbox("Show Atmosphere", &renderer.RenderAtmosphere);
       ImGui::Separator();
 
-      ImGui::Checkbox("Render Clouds", &_renderClouds);
+      ImGui::Checkbox("Render Clouds", &renderer.RenderClouds);
       ImGui::Separator();
       ImGui::Separator();
 
-      ImGui::Checkbox("Show Cloths", &_renderCloths);
+      ImGui::Checkbox("Show Cloths", &renderer.RenderCloth);
       ImGui::Separator();
 
       ImGui::Text("Camera");
@@ -102,7 +92,7 @@ void Editor::RenderImGuiUI()
 
    // Clouds
    {
-      if (_renderClouds)
+      if (renderer.RenderClouds)
       {
          ImGui::Begin("Clouds", nullptr); {
             CloudRenderer::CloudRenderSettings &settings = renderer.GetCloudRenderer().Settings;

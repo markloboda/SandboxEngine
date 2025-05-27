@@ -1,8 +1,5 @@
 #pragma once
 
-class Device;
-class CommandBuffer;
-
 class Queue
 {
 private:

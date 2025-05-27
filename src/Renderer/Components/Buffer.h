@@ -1,7 +1,5 @@
 #pragma once
 
-class Device;
-
 class Buffer
 {
 private:

@@ -1,6 +1,5 @@
 #include <pch.h>
 #include <Renderer/UI/ImGuiManager.h>
-#include <Renderer/UI/UIRenderer.h>
 
 // Define the static member
 ImGuiManager *ImGuiManager::_instance = nullptr;

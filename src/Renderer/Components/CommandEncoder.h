@@ -1,10 +1,5 @@
 #pragma once
 
-class Device;
-class RenderPassEncoder;
-class CommandBuffer;
-class ComputePassEncoder;
-
 class CommandEncoder
 {
 private:

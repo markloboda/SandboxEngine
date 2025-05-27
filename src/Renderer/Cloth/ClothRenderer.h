@@ -1,6 +1,5 @@
 #pragma once
 
-class ClothParticleSystem;
 class ClothRenderer
 {
 private:
@@ -9,8 +8,6 @@ private:
       vec3 position;
       vec3 normal;
    };
-
-   ClothParticleSystem *_clothParticleSystem;
 
    struct CameraUniform
    {
@@ -40,8 +37,6 @@ private:
 
 public:
    void Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, uint32_t profilerIndex);
-
-   [[nodiscard]] ClothParticleSystem &GetClothParticleSystem() const { return *_clothParticleSystem; }
 
 private:
    void GenerateVertexData(std::vector<VertexData> &outVertices, std::vector<uint32_t> &outIndices) const;

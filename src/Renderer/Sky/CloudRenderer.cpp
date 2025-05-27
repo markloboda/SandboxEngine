@@ -1,11 +1,4 @@
 #include <pch.h>
-#include <Renderer/Sky/CloudRenderer.h>
-
-#include <Application/Application.h>
-#include <Application/Editor.h>
-
-#include <Renderer/Sky/CloudModel.h>
-#include <Utils/FreeCamera.h>
 
 CloudRenderer::CloudRenderer(Renderer &renderer)
 {
@@ -30,6 +23,7 @@ bool CloudRenderer::Initialize(Renderer &renderer)
    _uCameraData = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CameraData));
    _uResolution = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(ResolutionData));
    _uCloudRenderSettings = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CloudRenderSettings));
+   _uCloudRenderWeather = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CloudRenderWeather));
 
    // Clouds model
    _cloudsModel = new CloudsModel(renderer);
@@ -160,7 +154,7 @@ bool CloudRenderer::Initialize(Renderer &renderer)
 
          _texturesBindGroup = new BindGroup(device, {bglEntries, bgEntries});
       } {
-         std::vector<WGPUBindGroupLayoutEntry> bglEntries(3);
+         std::vector<WGPUBindGroupLayoutEntry> bglEntries(4);
 
          // camera (binding 0)
          bglEntries[0].binding = 0;
@@ -180,7 +174,13 @@ bool CloudRenderer::Initialize(Renderer &renderer)
          bglEntries[2].buffer.type = WGPUBufferBindingType_Uniform;
          bglEntries[2].buffer.minBindingSize = sizeof(CloudRenderSettings);
 
-         std::vector<WGPUBindGroupEntry> bgEntries(3);
+         // cloud render weather (binding 3)
+         bglEntries[3].binding = 3;
+         bglEntries[3].visibility = WGPUShaderStage_Fragment;
+         bglEntries[3].buffer.type = WGPUBufferBindingType_Uniform;
+         bglEntries[3].buffer.minBindingSize = sizeof(CloudRenderWeather);
+
+         std::vector<WGPUBindGroupEntry> bgEntries(4);
 
          bgEntries[0].binding = 0;
          bgEntries[0].buffer = _uCameraData->Get();
@@ -191,6 +191,9 @@ bool CloudRenderer::Initialize(Renderer &renderer)
          bgEntries[2].binding = 2;
          bgEntries[2].buffer = _uCloudRenderSettings->Get();
          bgEntries[2].size = sizeof(CloudRenderSettings);
+         bgEntries[3].binding = 3;
+         bgEntries[3].buffer = _uCloudRenderWeather->Get();
+         bgEntries[3].size = sizeof(CloudRenderWeather);
 
          _dataBindGroup = new BindGroup(device, {bglEntries, bgEntries});
       }
@@ -261,7 +264,10 @@ void CloudRenderer::Terminate() const
    delete _uCameraData;
    delete _uResolution;
    delete _cloudsModel;
+   delete _uCloudRenderWeather;
    delete _uCloudRenderSettings;
+   delete _uCloudBaseHighFreqSampler;
+   delete _cloudBaseHighFreqTextureView;
    delete _weatherMapSampler;
    delete _weatherMapTextureView;
    delete _dataBindGroup;
@@ -272,7 +278,7 @@ void CloudRenderer::Render(const Renderer &renderer, const CommandEncoder &encod
    // Collect CloudBounds nodes
    const Application *app = &Application::GetInstance();
    const ResolutionData resolution = {vec2(app->GetWindowWidth(), app->GetWindowHeight())};
-   FreeCamera &camera = app->GetEditor().GetCamera();
+   FreeCamera &camera = app->GetRuntime().GetActiveCamera();
 
    _shaderParams.view = camera.GetViewMatrix();
    _shaderParams.proj = camera.GetProjectionMatrix();
@@ -280,6 +286,7 @@ void CloudRenderer::Render(const Renderer &renderer, const CommandEncoder &encod
    renderer.UploadBufferData(*_uCameraData, &_shaderParams, sizeof(CameraData));
    renderer.UploadBufferData(*_uResolution, &resolution, sizeof(ResolutionData));
    renderer.UploadBufferData(*_uCloudRenderSettings, &Settings, sizeof(CloudRenderSettings));
+   renderer.UploadBufferData(*_uCloudRenderWeather, &Weather, sizeof(CloudRenderWeather));
 
    WGPURenderPassDescriptor rpDesc = {};
    WGPURenderPassColorAttachment cp{}; {

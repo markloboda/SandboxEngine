@@ -1,8 +1,5 @@
 #pragma once
 
-class Renderer;
-class Editor;
-
 class Application
 {
 public:
@@ -13,13 +10,16 @@ public:
       return instance;
    }
 
+   using WindowResizeCallback = std::function<void(int, int)>;
+
 private:
    int _windowWidth = 1920;
    int _windowHeight = 1060;
 
    GLFWwindow* _window = nullptr;
-   Renderer* _renderer = nullptr;
-   Editor* _editor = nullptr;
+   Runtime *_runtime = nullptr;
+
+   std::vector<WindowResizeCallback> _windowResizeCallbacks;
 
    // Private constructor for singleton
    Application() = default;
@@ -42,6 +42,11 @@ public:
       return _window;
    }
 
+   [[nodiscard]] Runtime &GetRuntime() const
+   {
+      return *_runtime;
+   }
+
    [[nodiscard]] int GetWindowWidth() const
    {
       return _windowWidth;
@@ -52,14 +57,9 @@ public:
       return _windowHeight;
    }
 
-   Editor &GetEditor() const
+   static void SetWindowResizeCallback(const WindowResizeCallback &callback)
    {
-      return *_editor;
-   }
-
-   Renderer &GetRenderer() const
-   {
-      return *_renderer;
+      GetInstance()._windowResizeCallbacks.push_back(callback);
    }
 
    // Manages the application.

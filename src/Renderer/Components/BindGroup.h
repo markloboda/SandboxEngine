@@ -6,8 +6,6 @@ struct BindGroupDesc
    const std::vector<WGPUBindGroupEntry>& entries;
 };
 
-class Device;
-
 class BindGroup
 {
 private:

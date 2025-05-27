@@ -1,5 +1,4 @@
 #include <pch.h>
-#include <Renderer/Cloth/ClothParticleSystem.h>
 
 float ClothParticleSystem::ParticleData::InvMass() const
 {

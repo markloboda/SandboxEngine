@@ -1,6 +1,6 @@
 #pragma once
 
-class CloudsModel;
+#include <Renderer/Sky/CloudModel.h>
 
 class CloudRenderer
 {
@@ -36,7 +36,13 @@ public:
       float lightStepLength = 100.0f; // step size in raymarchToLight()
    };
 
+   struct CloudRenderWeather
+   {
+      vec3 sunPosition;
+   };
+
    CloudRenderSettings Settings;
+   CloudRenderWeather Weather;
 
 private:
    RenderPipeline *_pipeline;
@@ -51,6 +57,7 @@ private:
    Buffer *_uCameraData;
    Buffer *_uResolution;
    Buffer *_uCloudRenderSettings;
+   Buffer *_uCloudRenderWeather;
 
    CloudsModel *_cloudsModel;
    CameraData _shaderParams;

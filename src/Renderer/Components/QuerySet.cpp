@@ -16,13 +16,3 @@ QuerySet::~QuerySet()
       _querySet = nullptr;
    }
 }
-
-void QuerySet::WriteTimestamp(const CommandEncoder &encoder, uint32_t queryIndex) const
-{
-   encoder.WriteTimestamp(*this, queryIndex);
-}
-
-void QuerySet::Resolve(const CommandEncoder &encoder, uint32_t queryCount, const Buffer &destination, uint64_t destinationOffset) const
-{
-   encoder.ResolveQuerySet(*this, 0, queryCount, destination, destinationOffset);
-}

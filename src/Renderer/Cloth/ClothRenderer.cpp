@@ -1,13 +1,6 @@
 #include <pch.h>
-#include <Renderer/Cloth/ClothRenderer.h>
-#include <Application/Application.h>
-#include <Application/Editor.h>
-#include <Utils/FreeCamera.h>
-#include <Renderer/Cloth/ClothParticleSystem.h>
 
-
-ClothRenderer::ClothRenderer(Renderer &renderer):
-   _clothParticleSystem(new ClothParticleSystem())
+ClothRenderer::ClothRenderer(Renderer &renderer)
 {
    bool success = Initialize(renderer);
    assert(success);
@@ -20,11 +13,6 @@ ClothRenderer::~ClothRenderer()
 
 bool ClothRenderer::Initialize(Renderer &renderer)
 {
-   int width = 50;
-   int height = 50;
-   // Initialize particles and constraints
-   _clothParticleSystem->InitializeDemo(width, height);
-
    Device &device = renderer.GetDevice();
 
    // Shader modules
@@ -147,7 +135,6 @@ void ClothRenderer::Terminate() const
    delete _cameraUniformBuffer;
    delete _vertexBuffer;
    delete _indexBuffer;
-   delete _clothParticleSystem;
 }
 
 void ClothRenderer::Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, const uint32_t profilerIndex)
@@ -172,7 +159,7 @@ void ClothRenderer::Render(const Renderer &renderer, const CommandEncoder &encod
    rpDesc.depthStencilAttachment = &ds;
    RenderPassEncoder renderPassEncoder = RenderPassEncoder(encoder.BeginRenderPass(&rpDesc));
 
-   FreeCamera &camera = Application::GetInstance().GetEditor().GetCamera();
+   FreeCamera &camera = Application::GetInstance().GetRuntime().GetActiveCamera();
 
    // Update vertex buffer with new particle positions
    std::vector<VertexData> vertices;
@@ -197,13 +184,15 @@ void ClothRenderer::Render(const Renderer &renderer, const CommandEncoder &encod
 
 void ClothRenderer::GenerateVertexData(std::vector<VertexData> &outVertices, std::vector<uint32_t> &outIndices) const
 {
-   const vec2 dimensions = _clothParticleSystem->GetDimensions();
+   ClothParticleSystem clothParticleSystem = Application::GetInstance().GetRuntime().GetClothParticleSystem();
+
+   const vec2 dimensions = clothParticleSystem.GetDimensions();
    const auto width = static_cast<size_t>(dimensions.x);
    const auto height = static_cast<size_t>(dimensions.y);
 
    const ClothParticleSystem::ParticleData *particles;
    size_t particleCount = 0;
-   _clothParticleSystem->GetParticles(particles, particleCount);
+   clothParticleSystem.GetParticles(particles, particleCount);
 
    outVertices.resize(particleCount);
    for (size_t i = 0; i < particleCount; ++i)

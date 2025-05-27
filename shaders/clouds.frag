@@ -40,6 +40,11 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    float lightStepLength;        // step size in raymarchToLight()
 } uSettings;
 
+layout(set = 1, binding = 3) uniform CloudRenderWeather
+{
+   vec3 sunPosition;
+} uWeather;
+
 layout(location = 0) in vec2 uv;
 
 // outputs

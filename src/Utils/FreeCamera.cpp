@@ -1,30 +1,12 @@
 #include <pch.h>
 #include <Utils/FreeCamera.h>
 
-#include <Application/Application.h>
-#include <Application/Editor.h>
-
 double mouseX_;
 double mouseY_;
 double mouseDifX_;
 double mouseDifY_;
 
 double mouseWheel_;
-
-void CursorPositionCallback(double xpos, double ypos)
-{
-   mouseDifX_ = xpos - mouseX_;
-   mouseDifY_ = ypos - mouseY_;
-   mouseX_ = xpos;
-   mouseY_ = ypos;
-
-   Application::GetInstance().GetEditor().GetCamera().ProcessMouseMovement(mouseDifX_, mouseDifY_);
-}
-
-void MouseWheelCallback(double yoffset)
-{
-   mouseWheel_ = yoffset;
-}
 
 FreeCamera::FreeCamera(vec3 position, vec3 up, float yaw, float pitch)
 {
@@ -38,8 +20,24 @@ FreeCamera::FreeCamera(vec3 position, vec3 up, float yaw, float pitch)
    _zoom = 45.0f;
    UpdateCameraVectors();
 
-   Input::SetCursorPositionCallback(CursorPositionCallback);
-   Input::SetMouseWheelCallback(MouseWheelCallback);
+   Input::SetCursorPositionCallback(
+      [this](double xpos, double ypos)
+      {
+         mouseDifX_ = xpos - mouseX_;
+         mouseDifY_ = ypos - mouseY_;
+         mouseX_ = xpos;
+         mouseY_ = ypos;
+
+         this->ProcessMouseMovement(mouseDifX_, mouseDifY_);
+      }
+   );
+
+   Input::SetMouseWheelCallback(
+      [](double yoffset)
+      {
+         mouseWheel_ = yoffset;
+      }
+   );
 }
 
 mat4 FreeCamera::GetViewProjectionMatrix() const

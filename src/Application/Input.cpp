@@ -1,7 +1,4 @@
 #include <pch.h>
-#include <Application/Input.h>
-
-#include <Application/Application.h>
 
 void Input::CursorPosChanged(GLFWwindow * /*window*/, double xpos, double ypos)
 {

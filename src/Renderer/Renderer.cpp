@@ -1,15 +1,4 @@
 #include <pch.h>
-#include <Renderer/Renderer.h>
-#include <Application/Application.h>
-#include <Application/Editor.h>
-#include <Renderer/UI/ImGuiManager.h>
-
-#include <Renderer/Utils/Profiler.h>
-
-#include <Renderer/GridRenderer.h>
-#include <Renderer/Cloth/ClothRenderer.h>
-#include <Renderer/Sky/AtmosphereRenderer.h>
-#include <Renderer/Sky/CloudRenderer.h>
 
 WGPULogCallback GetLogCallback()
 {
@@ -89,9 +78,9 @@ bool Renderer::Initialize()
    }
 
    // Set frame buffer size callback.
-   glfwSetFramebufferSizeCallback(_window, [](GLFWwindow * /*window*/, int width, int height)
+   Application::SetWindowResizeCallback([this](int width, int height)
    {
-      Application::GetInstance().GetRenderer().OnWindowResize(width, height);
+      OnWindowResize(width, height);
    });
 
    // Depth texture.
@@ -163,22 +152,22 @@ void Renderer::Render()
    {
       ClearRenderPass(encoder, textureView, 0);
 
-      if (Application::GetInstance().GetEditor().GetRenderAtmosphere())
+      if (RenderAtmosphere)
       {
          _atmosphereRenderer->Render(*this, encoder, textureView, 1);
       }
 
-      if (Application::GetInstance().GetEditor().GetRenderGrid())
+      if (RenderGrid)
       {
          _gridRenderer->Render(*this, encoder, textureView, 2);
       }
 
-      if (Application::GetInstance().GetEditor().GetRenderCloths())
+      if (RenderCloth)
       {
          _clothRenderer->Render(*this, encoder, textureView, 3);
       }
 
-      if (Application::GetInstance().GetEditor().GetRenderClouds())
+      if (RenderClouds)
       {
          _cloudRenderer->Render(*this, encoder, textureView, 4);
       }

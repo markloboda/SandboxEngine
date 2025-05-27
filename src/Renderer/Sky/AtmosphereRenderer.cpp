@@ -1,5 +1,4 @@
 #include <pch.h>
-#include <Renderer/Sky/AtmosphereRenderer.h>
 
 AtmosphereRenderer::AtmosphereRenderer(Renderer &renderer)
 {

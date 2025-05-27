@@ -1,5 +1,4 @@
 #include <pch.h>
-#include <Renderer/Utils/Profiler.h>
 
 Profiler::Profiler(Device &device, const uint32_t profileCount):
    _gpuStatsQuerySet(device, WGPUQuerySetDescriptor{

@@ -1,12 +1,8 @@
 #pragma once
-#include "Utils/Profiler.h"
 
-struct GLFWwindow;
-class Profiler;
-
+class GridRenderer;
 class AtmosphereRenderer;
 class CloudRenderer;
-class GridRenderer;
 class ClothRenderer;
 
 class Renderer
@@ -22,6 +18,11 @@ public:
       float cloudTime = 0.0f;
       float uiTime = 0.0f;
    };
+
+   bool RenderGrid = false;
+   bool RenderAtmosphere = true;
+   bool RenderClouds = true;
+   bool RenderCloth = false;
 
 private:
    GLFWwindow *_window;

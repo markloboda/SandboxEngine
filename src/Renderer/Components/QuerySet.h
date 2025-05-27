@@ -1,4 +1,3 @@
-// QuerySet.h
 #pragma once
 
 class QuerySet
@@ -13,7 +12,4 @@ public:
 
    [[nodiscard]] WGPUQuerySet Get() const { return _querySet; }
    [[nodiscard]] uint32_t GetCount() const { return _count; }
-
-   void WriteTimestamp(const CommandEncoder &encoder, uint32_t queryIndex) const;
-   void Resolve(const CommandEncoder &encoder, uint32_t queryCount, const Buffer &destination, uint64_t destinationOffset) const;
 };

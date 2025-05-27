@@ -1,5 +1,8 @@
 #pragma once
 
+class Texture;
+class Renderer;
+
 class FileReader
 {
 public:

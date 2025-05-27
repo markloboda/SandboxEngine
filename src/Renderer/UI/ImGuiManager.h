@@ -1,7 +1,4 @@
 #pragma once
-class Device;
-class RenderPassEncoder;
-class UIRenderer;
 
 class ImGuiManager
 {

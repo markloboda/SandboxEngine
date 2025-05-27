@@ -27,10 +27,12 @@ add_subdirectory(${LIBS_ROOT}/stb)
 # Source files
 set(SOURCE_FILES
   ${SRC_ROOT}/Application/Application.cpp
+  ${SRC_ROOT}/Application/ClothParticleSystem.cpp
   ${SRC_ROOT}/Application/Editor.cpp
   ${SRC_ROOT}/Application/Input.cpp
+  ${SRC_ROOT}/Application/Runtime.cpp
+  ${SRC_ROOT}/Application/WeatherSystem.cpp
 
-  ${SRC_ROOT}/Renderer/Cloth/ClothParticleSystem.cpp
   ${SRC_ROOT}/Renderer/Cloth/ClothRenderer.cpp
   ${SRC_ROOT}/Renderer/Components/BindGroup.cpp
   ${SRC_ROOT}/Renderer/Components/Buffer.cpp
