@@ -90,6 +90,16 @@ void Editor::RenderImGuiUI()
       ImGui::End();
    }
 
+   // Weather
+   {
+      ImGui::Begin("Weather", nullptr); {
+         WeatherSystem::WeatherState &weatherState = runtime.GetWeatherSystem().CurrentState;
+
+         ImGui::SliderFloat("Time of Day", &weatherState.timeOfDay, 0.0f, 24.0f, "%.1f h");
+      }
+      ImGui::End();
+   }
+
    // Clouds
    {
       if (renderer.RenderClouds)

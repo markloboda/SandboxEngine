@@ -42,7 +42,7 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
 
 layout(set = 1, binding = 3) uniform CloudRenderWeather
 {
-   vec3 sunPosition;
+   vec3 sunDirection;
 } uWeather;
 
 layout(location = 0) in vec2 uv;
@@ -56,8 +56,6 @@ layout(location = 0) out vec4 fragCol;
 
 // physical settings
 #define SUN_COLOR vec3(1.0, 1.0, 1.0)
-#define SUN_DIR _sunDir
-const vec3 _sunDir = normalize(vec3(0.0, -1.0, 0.0));
 #define AMBIENT_COLOR vec3(0.45, 0.52, 0.61)
 
 // raymarching settings
@@ -354,7 +352,6 @@ float raymarchToLight(vec3 rayOrigin, vec3 rayDir, float coneAngle)
    return lightTransmittance;
 }
 
-
 vec4 raymarch(vec3 start, vec3 end)
 {
    // Ray setup
@@ -365,14 +362,14 @@ vec4 raymarch(vec3 start, vec3 end)
    // Volumetric state
    float transmittance = 1.0;
    vec3  lightColor   = vec3(0.0);
-
    float prevDensity = 0.0;
 
-   // constants
-   const float hgCos = dot(rayDir, SUN_DIR);
+   // Sun direction
 
-   // Log‑biased steps parameters
-   const int   numSteps = MAX_RAYMARCH_STEPS;
+   // constants
+   const float hgCos = dot(rayDir, uWeather.sunDirection);
+
+   const int numSteps = MAX_RAYMARCH_STEPS;
 
    float prevRayDst = 0.0;
    for (int i = 0; i < numSteps; ++i)
@@ -391,8 +388,8 @@ vec4 raymarch(vec3 start, vec3 end)
       if (density < EPSILON)
          continue;
 
-      float lightTransmittance = raymarchToLight(rayPos, -SUN_DIR, uSettings.lightRayConeAngle);
-      float phase = henyeyGreenstein(dot(rayDir, -SUN_DIR), uSettings.phaseEccentricity);
+      float lightTransmittance = raymarchToLight(rayPos, -uWeather.sunDirection, uSettings.lightRayConeAngle);
+      float phase = henyeyGreenstein(dot(rayDir, -uWeather.sunDirection), uSettings.phaseEccentricity);
       phase *= 4.0 * M_PI;
 
       float T = exp(-avgDensity * uSettings.lightAbsorption * stepSize);

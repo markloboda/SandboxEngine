@@ -38,7 +38,7 @@ public:
 
    struct CloudRenderWeather
    {
-      vec3 sunPosition;
+      vec3 sunDirection;
    };
 
    CloudRenderSettings Settings;

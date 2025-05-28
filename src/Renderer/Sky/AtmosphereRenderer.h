@@ -2,6 +2,14 @@
 
 class AtmosphereRenderer
 {
+public:
+   struct AtmosphereRendererWeather
+   {
+      vec3 sunDirection;
+   };
+
+   AtmosphereRendererWeather Weather;
+
 private:
    RenderPipeline *_renderPipeline{};
 

@@ -1,17 +1,11 @@
 #include <pch.h>
 
-Runtime::Runtime()
-{
-}
-
-Runtime::~Runtime()
-{
-}
-
 bool Runtime::Initialize()
 {
    _clothParticleSystem = new ClothParticleSystem();
    _clothParticleSystem->InitializeDemo(50, 50);
+
+   _weatherSystem = new WeatherSystem();
 
    _renderer = new Renderer(Application::GetInstance().GetWindow());
    _editor = new Editor();
@@ -37,6 +31,8 @@ void Runtime::FixedUpdate(float dt)
 void Runtime::Update(float dt)
 {
    _editor->Update(dt);
+
+   _weatherSystem->Update(dt);
 }
 
 void Runtime::Render()

@@ -9,11 +9,9 @@ private:
    Renderer* _renderer = nullptr;
 
    ClothParticleSystem *_clothParticleSystem = nullptr;
+   WeatherSystem *_weatherSystem = nullptr;
 
 public:
-   explicit Runtime();
-   ~Runtime();
-
    bool Initialize();
    void Terminate() const;
 
@@ -37,6 +35,11 @@ public:
    [[nodiscard]] ClothParticleSystem &GetClothParticleSystem() const
    {
       return *_clothParticleSystem;
+   }
+
+   [[nodiscard]] WeatherSystem &GetWeatherSystem() const
+   {
+      return *_weatherSystem;
    }
 };
 
