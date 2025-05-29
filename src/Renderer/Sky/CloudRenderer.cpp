@@ -73,20 +73,20 @@ bool CloudRenderer::Initialize(Renderer &renderer, CloudsModel &cloudsModel)
          textureDesc.mipLevelCount = 1;
          textureDesc.format = WGPUTextureFormat_RGBA8Unorm;
          textureDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
-         Texture texture(device, &textureDesc);
+         _weatherMapTexture = new Texture(device, &textureDesc);
 
          WGPUExtent3D copyExtent = {weatherMapData.width, weatherMapData.height, 1};
          size_t dataSize = weatherMapData.width * weatherMapData.height * weatherMapData.channels * sizeof(uint8_t);
-         renderer.UploadTextureData(texture, weatherMapData.data, dataSize, &copyExtent);
+         renderer.UploadTextureData(*_weatherMapTexture, weatherMapData.data, dataSize, &copyExtent);
 
          WGPUTextureViewDescriptor viewDesc = {};
-         viewDesc.format = texture.GetFormat();
+         viewDesc.format = _weatherMapTexture->GetFormat();
          viewDesc.dimension = WGPUTextureViewDimension_2D;
          viewDesc.baseMipLevel = 0;
          viewDesc.mipLevelCount = 1;
          viewDesc.baseArrayLayer = 0;
          viewDesc.arrayLayerCount = 1;
-         _weatherMapTextureView = new TextureView(texture.Get(), &viewDesc);
+         _weatherMapTextureView = new TextureView(_weatherMapTexture->Get(), &viewDesc);
       } {
          CloudsModel::CloudTextureData *cloudTextureData;
          cloudsModel.CreateNewLowFreqNoiseTexture(cloudTextureData);
@@ -321,10 +321,12 @@ void CloudRenderer::Terminate() const
    delete _cloudBaseHighFreqTextureView;
    delete _weatherMapSampler;
    delete _weatherMapTextureView;
+   delete _weatherMapTexture;
    delete _dataBindGroup;
 }
 
-void CloudRenderer::Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex)
+void CloudRenderer::Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, const CloudsModel &cloudsModel,
+                           int profilerIndex)
 {
    // Collect CloudBounds nodes
    const Application *app = &Application::GetInstance();
@@ -338,6 +340,12 @@ void CloudRenderer::Render(const Renderer &renderer, const CommandEncoder &encod
    renderer.UploadBufferData(*_uResolution, &resolution, sizeof(ResolutionData));
    renderer.UploadBufferData(*_uCloudRenderSettings, &Settings, sizeof(CloudRenderSettings));
    renderer.UploadBufferData(*_uCloudRenderWeather, &Weather, sizeof(CloudRenderWeather));
+
+   // Update weather map.
+   const CloudsModel::CloudTextureData &weatherMapData = cloudsModel.GetWeatherMapTexture();
+   WGPUExtent3D copyExtent = {weatherMapData.width, weatherMapData.height, 1};
+   size_t dataSize = weatherMapData.width * weatherMapData.height * weatherMapData.channels * sizeof(uint8_t);
+   renderer.UploadTextureData(*_weatherMapTexture, weatherMapData.data, dataSize, &copyExtent);
 
    WGPURenderPassDescriptor rpDesc = {};
    WGPURenderPassColorAttachment cp{}; {

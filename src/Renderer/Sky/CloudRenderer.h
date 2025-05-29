@@ -50,6 +50,7 @@ private:
    RenderPipeline *_pipeline;
    BindGroup *_texturesBindGroup;
    BindGroup *_dataBindGroup;
+   Texture *_weatherMapTexture;
    TextureView *_weatherMapTextureView;
    Sampler *_weatherMapSampler;
    TextureView *_cloudBaseLowFreqTextureView;
@@ -70,5 +71,5 @@ public:
 
    [[nodiscard]] bool Initialize(Renderer &renderer, CloudsModel &cloudsModel);
    void Terminate() const;
-   void Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex);
+   void Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, const CloudsModel &cloudsModel, int profilerIndex);
 };

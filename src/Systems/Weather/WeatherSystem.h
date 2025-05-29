@@ -17,11 +17,21 @@ public:
 
    WeatherOptions Options = {};
    WeatherState State = {};
+   std::string _currentWeatherMapPath;
    CloudsModel Model;
 
+private:
+
 public:
+   explicit WeatherSystem();
+   ~WeatherSystem();
+
    void Update(float dt);
    void FeedData() const;
+
+   static std::vector<std::string> GetAvailableWeatherMaps() { return FileReader::GetFilesInDirectory("assets/weather", "png"); }
+   const std::string &GetCurrentWeatherMap() const { return _currentWeatherMapPath; }
+   void ChangeWeatherMap(const std::string &filePath);
 
 public:
    static vec3 GetSunDirection(float timeOfDay)

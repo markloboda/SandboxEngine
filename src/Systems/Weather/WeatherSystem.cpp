@@ -1,5 +1,15 @@
 #include <pch.h>
 
+WeatherSystem::WeatherSystem():
+   _currentWeatherMapPath(GetAvailableWeatherMaps()[0])
+{
+   ChangeWeatherMap(_currentWeatherMapPath);
+}
+
+WeatherSystem::~WeatherSystem()
+{
+}
+
 void WeatherSystem::Update(float dt)
 {
    constexpr vec3 windOffset = vec3(0.0f, 0.01f, 0.0f);
@@ -21,6 +31,19 @@ void WeatherSystem::FeedData() const
 
    AtmosphereRenderer &atmosphereRenderer = Application::GetInstance().GetRuntime().GetRenderer().GetAtmosphereRenderer();
    atmosphereRenderer.Weather.sunDirection = sunDirection;
+}
+
+void WeatherSystem::ChangeWeatherMap(const std::string &filePath)
+{
+   if (FileReader::FileExists(filePath))
+   {
+      _currentWeatherMapPath = filePath;
+      Model.LoadWeatherMapTexture(_currentWeatherMapPath);
+   }
+   else
+   {
+      std::cerr << "WeatherSystem: Weather map file does not exist: " << filePath << std::endl;
+   }
 }
 
 

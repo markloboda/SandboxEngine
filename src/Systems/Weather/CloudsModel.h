@@ -18,10 +18,9 @@ public:
    };
 
 private:
-   CloudTextureData *_weatherMap;
+   CloudTextureData *_weatherMap = nullptr;
 
 public:
-   explicit CloudsModel();
    ~CloudsModel();
 
    void LoadWeatherMapTexture(const std::string &filePath);

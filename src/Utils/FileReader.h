@@ -9,9 +9,12 @@ public:
    // Get files in a directory.
    static std::vector<std::string> GetFilesInDirectory(const std::string &directoryPath, const std::string &extension = "");
 
+   // Check if file exists.
+   static bool FileExists(const std::string &filePath);
+
    // Load a SPIR-V shader data.
    static std::vector<uint32_t> LoadSPIRV(const std::string &path);
 
    // Load data of a 2D texture.
-   static bool LoadTexture2DData(const std::string &filePath, unsigned char **data, int *width, int *height, int *channels);
+   static bool LoadTexture2DData(const std::string &filePath, unsigned char **data, int *width, int *height, int *channels, int desiredChannels = 0);
 };

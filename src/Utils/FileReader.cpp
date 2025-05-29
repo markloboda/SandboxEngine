@@ -19,6 +19,11 @@ std::vector<std::string> FileReader::GetFilesInDirectory(const std::string &dire
    return files;
 }
 
+bool FileReader::FileExists(const std::string &filePath)
+{
+   return std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath);
+}
+
 std::vector<uint32_t> FileReader::LoadSPIRV(const std::string &path)
 {
    std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -30,14 +35,19 @@ std::vector<uint32_t> FileReader::LoadSPIRV(const std::string &path)
    return buffer;
 }
 
-bool FileReader::LoadTexture2DData(const std::string &filePath, unsigned char **data, int *width, int *height, int *channels)
+bool FileReader::LoadTexture2DData(const std::string &filePath, unsigned char **data, int *width, int *height, int *channels, int desiredChannels)
 {
    // Load image.
-   unsigned char *imageData = stbi_load(filePath.c_str(), width, height, channels, 0);
+   unsigned char *imageData = stbi_load(filePath.c_str(), width, height, channels, desiredChannels);
    if (!imageData)
    {
       std::cerr << "Failed to load texture data: " << filePath << std::endl;
       return false;
+   }
+
+   if (desiredChannels > 0)
+   {
+      *channels = desiredChannels;
    }
 
    // Copy data to output parameter.

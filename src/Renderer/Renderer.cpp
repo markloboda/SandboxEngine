@@ -169,7 +169,7 @@ void Renderer::Render()
 
       if (RenderClouds)
       {
-         _cloudRenderer->Render(*this, encoder, textureView, 4);
+         _cloudRenderer->Render(*this, encoder, textureView, Application::GetInstance().GetRuntime().GetWeatherSystem().Model, 4);
       }
 
       // ImGui.

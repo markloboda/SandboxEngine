@@ -35,11 +35,6 @@ FastNoiseLite GetWorleyNoiseGenerator(int seed = 0, float frequency = 0.1f)
    return worleyNoise;
 }
 
-CloudsModel::CloudsModel()
-{
-   LoadWeatherMapTexture("assets/weather/cumulus2.png");
-}
-
 CloudsModel::~CloudsModel()
 {
    delete _weatherMap;
@@ -49,7 +44,7 @@ void CloudsModel::LoadWeatherMapTexture(const std::string &filePath)
 {
    int width, height, channels;
    unsigned char *data = nullptr;
-   if (!FileReader::LoadTexture2DData(filePath, &data, &width, &height, &channels))
+   if (!FileReader::LoadTexture2DData(filePath, &data, &width, &height, &channels, 4))
    {
       std::cerr << "Failed to load weather map texture data from file: " << filePath << std::endl;
       return;

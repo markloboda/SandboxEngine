@@ -95,6 +95,26 @@ void Editor::RenderImGuiUI()
       ImGui::Begin("Weather", nullptr); {
          WeatherSystem::WeatherOptions &options = runtime.GetWeatherSystem().Options;
 
+         // Weather map selection
+         {
+            std::vector<std::string> weatherMaps = WeatherSystem::GetAvailableWeatherMaps();
+            std::string currentWeatherMap = runtime.GetWeatherSystem().GetCurrentWeatherMap();
+            if (ImGui::BeginCombo("Weather Map", currentWeatherMap.c_str()))
+            {
+               for (int i = 0; i < weatherMaps.size(); ++i)
+               {
+                  bool isSelected = (currentWeatherMap == weatherMaps[i]);
+                  if (ImGui::Selectable(weatherMaps[i].c_str(), isSelected))
+                  {
+                     runtime.GetWeatherSystem().ChangeWeatherMap(weatherMaps[i]);
+                  }
+                  if (isSelected)
+                     ImGui::SetItemDefaultFocus();
+               }
+               ImGui::EndCombo();
+            }
+         }
+
          ImGui::SliderFloat("Time of Day", &options.timeOfDay, 0.0f, 24.0f, "%.1f h");
          ImGui::SliderFloat("Wind Speed", &options.windSpeed, 0.0f, 50.0f, "%.1f m/s");
       }
