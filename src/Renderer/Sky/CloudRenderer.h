@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Renderer/Sky/CloudModel.h>
+class CloudsModel;
 
 class CloudRenderer
 {
@@ -23,22 +23,24 @@ public:
       float cloudStartHeight = 1500.0f; // height of the bottom of the cloud layer
       float cloudEndHeight = 16300.0f; // height of the top of the cloud layer
 
-      float lightAbsorption = 0.62f; // how strongly light is absorbed (scattering falloff)
-      float coverageMultiplier = 2.465f; // scales the coverage read from the weather map
-      float phaseEccentricity = 0.10f; // eccentricity for Henyey-Greenstein phase function
+      float lightAbsorption = 0.744f; // how strongly light is absorbed (scattering falloff)
+      float coverageMultiplier = 4.546f; // scales the coverage read from the weather map
+      float phaseEccentricity = 0.144f; // eccentricity for Henyey-Greenstein phase function
       float densityMultiplier = 0.033f; // scales the final computed cloud density
       float detailThreshold = 0.0f; // threshold for detail noise application
-      float lightRayConeAngle = 1.0f; // angle of the light ray cone for raymarchToLight() in radians
-      float ambientLight = 0.239f; // ambient light intensity for the clouds
+      float lightRayConeAngle = 0.82f; // angle of the light ray cone for raymarchToLight() in radians
+      float ambientLight = 0.359; // ambient light intensity for the clouds
+      int highFreqTextureScale = 1;
 
-      int cloudRaymarchSteps = 300; // number of steps in raymarch()
+      int cloudRaymarchSteps = 271; // number of steps in raymarch()
       int lightRaymarchSteps = 7; // number of steps in raymarchToLight()
       float lightStepLength = 100.0f; // step size in raymarchToLight()
    };
 
    struct CloudRenderWeather
    {
-      vec3 sunDirection;
+      vec3 sunDirection = vec3(0.0f, 1.0f, 0.0f);
+      vec3 detailNoiseOffset = vec3(0.0f);
    };
 
    CloudRenderSettings Settings;
@@ -59,15 +61,14 @@ private:
    Buffer *_uCloudRenderSettings;
    Buffer *_uCloudRenderWeather;
 
-   CloudsModel *_cloudsModel;
    CameraData _shaderParams;
 
 
 public:
-   explicit CloudRenderer(Renderer &renderer);
+   explicit CloudRenderer(Renderer &renderer, CloudsModel &cloudsModel);
    ~CloudRenderer();
 
-   [[nodiscard]] bool Initialize(Renderer &renderer);
+   [[nodiscard]] bool Initialize(Renderer &renderer, CloudsModel &cloudsModel);
    void Terminate() const;
    void Render(const Renderer &renderer, const CommandEncoder &encoder, const TextureView &surfaceTextureView, int profilerIndex);
 };

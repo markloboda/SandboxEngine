@@ -1,8 +1,8 @@
 #include <pch.h>
 
-CloudRenderer::CloudRenderer(Renderer &renderer)
+CloudRenderer::CloudRenderer(Renderer &renderer, CloudsModel &cloudsModel)
 {
-   bool success = Initialize(renderer);
+   bool success = Initialize(renderer, cloudsModel);
    assert(success);
 }
 
@@ -11,7 +11,7 @@ CloudRenderer::~CloudRenderer()
    Terminate();
 }
 
-bool CloudRenderer::Initialize(Renderer &renderer)
+bool CloudRenderer::Initialize(Renderer &renderer, CloudsModel &cloudsModel)
 {
    Device &device = renderer.GetDevice();
 
@@ -24,9 +24,6 @@ bool CloudRenderer::Initialize(Renderer &renderer)
    _uResolution = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(ResolutionData));
    _uCloudRenderSettings = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CloudRenderSettings));
    _uCloudRenderWeather = new Buffer(device, WGPUBufferUsage_Uniform | WGPUBufferUsage_CopyDst, sizeof(CloudRenderWeather));
-
-   // Clouds model
-   _cloudsModel = new CloudsModel(renderer);
 
    // Sampler
    {
@@ -64,35 +61,90 @@ bool CloudRenderer::Initialize(Renderer &renderer)
    // Texture views
    {
       {
-         Texture &weatherMap = _cloudsModel->GetWeatherMapTexture();
+         const CloudsModel::CloudTextureData &weatherMapData = cloudsModel.GetWeatherMapTexture();
+
+         WGPUTextureDescriptor textureDesc = {};
+         textureDesc.label = {"Weather Map", WGPU_STRLEN};
+         textureDesc.dimension = WGPUTextureDimension_2D;
+         textureDesc.size.width = weatherMapData.width;
+         textureDesc.size.height = weatherMapData.height;
+         textureDesc.size.depthOrArrayLayers = 1;
+         textureDesc.sampleCount = 1;
+         textureDesc.mipLevelCount = 1;
+         textureDesc.format = WGPUTextureFormat_RGBA8Unorm;
+         textureDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
+         Texture texture(device, &textureDesc);
+
+         WGPUExtent3D copyExtent = {weatherMapData.width, weatherMapData.height, 1};
+         size_t dataSize = weatherMapData.width * weatherMapData.height * weatherMapData.channels * sizeof(uint8_t);
+         renderer.UploadTextureData(texture, weatherMapData.data, dataSize, &copyExtent);
+
          WGPUTextureViewDescriptor viewDesc = {};
-         viewDesc.format = weatherMap.GetFormat();
+         viewDesc.format = texture.GetFormat();
          viewDesc.dimension = WGPUTextureViewDimension_2D;
          viewDesc.baseMipLevel = 0;
          viewDesc.mipLevelCount = 1;
          viewDesc.baseArrayLayer = 0;
          viewDesc.arrayLayerCount = 1;
-         _weatherMapTextureView = new TextureView(weatherMap.Get(), &viewDesc);
+         _weatherMapTextureView = new TextureView(texture.Get(), &viewDesc);
       } {
-         Texture &cloudBaseLowFreqTexture = _cloudsModel->GetBaseLowFreqNoiseTexture();
+         CloudsModel::CloudTextureData *cloudTextureData;
+         cloudsModel.CreateNewLowFreqNoiseTexture(cloudTextureData);
+
+         WGPUTextureDescriptor textureDesc = {};
+         textureDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
+         textureDesc.dimension = WGPUTextureDimension_3D;
+         textureDesc.size.width = cloudTextureData->width;
+         textureDesc.size.height = cloudTextureData->height;
+         textureDesc.size.depthOrArrayLayers = cloudTextureData->depth;
+         textureDesc.format = WGPUTextureFormat_RGBA8Unorm;
+         textureDesc.mipLevelCount = 1;
+         textureDesc.sampleCount = 1;
+         Texture texture(device, &textureDesc);
+
+         WGPUExtent3D copyExtent = {cloudTextureData->width, cloudTextureData->height, cloudTextureData->depth};
+         size_t dataSize = cloudTextureData->width * cloudTextureData->height * cloudTextureData->depth * cloudTextureData->channels * sizeof(uint8_t);
+         renderer.UploadTextureData(texture, cloudTextureData->data, dataSize, &copyExtent);
+
          WGPUTextureViewDescriptor viewDesc = {};
-         viewDesc.format = cloudBaseLowFreqTexture.GetFormat();
+         viewDesc.format = texture.GetFormat();
          viewDesc.dimension = WGPUTextureViewDimension_3D;
          viewDesc.baseMipLevel = 0;
          viewDesc.mipLevelCount = 1;
          viewDesc.baseArrayLayer = 0;
          viewDesc.arrayLayerCount = 1;
-         _cloudBaseLowFreqTextureView = new TextureView(cloudBaseLowFreqTexture.Get(), &viewDesc);
+         _cloudBaseLowFreqTextureView = new TextureView(texture.Get(), &viewDesc);
+
+         delete cloudTextureData;
       } {
-         Texture &cloudBaseHighFreqTexture = _cloudsModel->GetBaseHighFreqNoiseTexture();
+         CloudsModel::CloudTextureData *cloudTextureData;
+         cloudsModel.GenerateBaseHighFreqNoiseTexture(cloudTextureData);
+
+         WGPUTextureDescriptor textureDesc = {};
+         textureDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
+         textureDesc.dimension = WGPUTextureDimension_3D;
+         textureDesc.size.width = cloudTextureData->width;
+         textureDesc.size.height = cloudTextureData->height;
+         textureDesc.size.depthOrArrayLayers = cloudTextureData->depth;
+         textureDesc.format = WGPUTextureFormat_RGBA8Unorm;
+         textureDesc.mipLevelCount = 1;
+         textureDesc.sampleCount = 1;
+         Texture texture(device, &textureDesc);
+
+         WGPUExtent3D copyExtent = {cloudTextureData->width, cloudTextureData->height, cloudTextureData->depth};
+         size_t dataSize = cloudTextureData->width * cloudTextureData->height * cloudTextureData->depth * cloudTextureData->channels * sizeof(uint8_t);
+         renderer.UploadTextureData(texture, cloudTextureData->data, dataSize, &copyExtent);
+
          WGPUTextureViewDescriptor viewDesc = {};
-         viewDesc.format = cloudBaseHighFreqTexture.GetFormat();
+         viewDesc.format = texture.GetFormat();
          viewDesc.dimension = WGPUTextureViewDimension_3D;
          viewDesc.baseMipLevel = 0;
          viewDesc.mipLevelCount = 1;
          viewDesc.baseArrayLayer = 0;
          viewDesc.arrayLayerCount = 1;
-         _cloudBaseHighFreqTextureView = new TextureView(cloudBaseHighFreqTexture.Get(), &viewDesc);
+         _cloudBaseHighFreqTextureView = new TextureView(texture.Get(), &viewDesc);
+
+         delete cloudTextureData;
       }
    }
 
@@ -263,7 +315,6 @@ void CloudRenderer::Terminate() const
    delete _cloudBaseLowFreqTextureView;
    delete _uCameraData;
    delete _uResolution;
-   delete _cloudsModel;
    delete _uCloudRenderWeather;
    delete _uCloudRenderSettings;
    delete _uCloudBaseHighFreqSampler;

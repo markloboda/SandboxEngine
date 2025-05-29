@@ -31,7 +31,6 @@ void Runtime::FixedUpdate(float dt)
 void Runtime::Update(float dt)
 {
    _editor->Update(dt);
-
    _weatherSystem->Update(dt);
 }
 

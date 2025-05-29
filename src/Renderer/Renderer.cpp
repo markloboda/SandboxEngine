@@ -108,7 +108,7 @@ bool Renderer::Initialize()
    _gridRenderer = new GridRenderer(*this);
    _atmosphereRenderer = new AtmosphereRenderer(*this);
    _clothRenderer = new ClothRenderer(*this);
-   _cloudRenderer = new CloudRenderer(*this);
+   _cloudRenderer = new CloudRenderer(*this, Application::GetInstance().GetRuntime().GetWeatherSystem().Model);
 
    return true;
 }

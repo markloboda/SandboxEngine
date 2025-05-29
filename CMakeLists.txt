@@ -27,11 +27,9 @@ add_subdirectory(${LIBS_ROOT}/stb)
 # Source files
 set(SOURCE_FILES
   ${SRC_ROOT}/Application/Application.cpp
-  ${SRC_ROOT}/Application/ClothParticleSystem.cpp
   ${SRC_ROOT}/Application/Editor.cpp
   ${SRC_ROOT}/Application/Input.cpp
   ${SRC_ROOT}/Application/Runtime.cpp
-  ${SRC_ROOT}/Application/WeatherSystem.cpp
 
   ${SRC_ROOT}/Renderer/Cloth/ClothRenderer.cpp
   ${SRC_ROOT}/Renderer/Components/BindGroup.cpp
@@ -51,12 +49,15 @@ set(SOURCE_FILES
   ${SRC_ROOT}/Renderer/Components/Texture.cpp
   ${SRC_ROOT}/Renderer/Components/TextureView.cpp
   ${SRC_ROOT}/Renderer/Sky/AtmosphereRenderer.cpp
-  ${SRC_ROOT}/Renderer/Sky/CloudModel.cpp
   ${SRC_ROOT}/Renderer/Sky/CloudRenderer.cpp
   ${SRC_ROOT}/Renderer/UI/ImGuiManager.cpp
   ${SRC_ROOT}/Renderer/Utils/Profiler.cpp
   ${SRC_ROOT}/Renderer/GridRenderer.cpp
   ${SRC_ROOT}/Renderer/Renderer.cpp
+
+  ${SRC_ROOT}/Systems/Cloth/ClothParticleSystem.cpp
+  ${SRC_ROOT}/Systems/Weather/CloudsModel.cpp
+  ${SRC_ROOT}/Systems/Weather/WeatherSystem.cpp
 
   ${SRC_ROOT}/Utils/FileReader.cpp
   ${SRC_ROOT}/Utils/FreeCamera.cpp

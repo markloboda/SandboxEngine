@@ -93,9 +93,10 @@ void Editor::RenderImGuiUI()
    // Weather
    {
       ImGui::Begin("Weather", nullptr); {
-         WeatherSystem::WeatherState &weatherState = runtime.GetWeatherSystem().CurrentState;
+         WeatherSystem::WeatherOptions &options = runtime.GetWeatherSystem().Options;
 
-         ImGui::SliderFloat("Time of Day", &weatherState.timeOfDay, 0.0f, 24.0f, "%.1f h");
+         ImGui::SliderFloat("Time of Day", &options.timeOfDay, 0.0f, 24.0f, "%.1f h");
+         ImGui::SliderFloat("Wind Speed", &options.windSpeed, 0.0f, 50.0f, "%.1f m/s");
       }
       ImGui::End();
    }
@@ -120,9 +121,10 @@ void Editor::RenderImGuiUI()
                ImGui::SliderFloat("Coverage Multiplier", &settings.coverageMultiplier, 0.0f, 10.0f);
                ImGui::SliderFloat("Phase Eccentricity", &settings.phaseEccentricity, -1.0f, 1.0f);
                ImGui::SliderFloat("Density Multiplier", &settings.densityMultiplier, 0.0f, 10.0f);
-               ImGui::SliderFloat("Detail Threshold", &settings.detailThreshold, 0.0f, 1.0f);
                ImGui::SliderFloat("Light Ray Cone Angle", &settings.lightRayConeAngle, 0.0f, glm::pi<float>() / 2.0f, "%.2f rad");
                ImGui::SliderFloat("Ambient Light", &settings.ambientLight, 0.0f, 1.0f);
+               ImGui::SliderFloat("Detail Threshold", &settings.detailThreshold, 0.0f, 1.0f);
+               ImGui::SliderInt("High Freq Texture Scale", &settings.highFreqTextureScale, 1, 100000);
             }
 
             if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen))

@@ -34,6 +34,7 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    float detailThreshold;         // weight of detail FBM in final density
    float lightRayConeAngle;
    float ambientLight;          // ambient light level, used for ambient in-scattering
+   int highFreqTextureScale;
 
    int cloudRaymarchSteps;       // number of steps in raymarch()
    int lightRaymarchSteps;       // number of steps in raymarchToLight()
@@ -43,6 +44,7 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
 layout(set = 1, binding = 3) uniform CloudRenderWeather
 {
    vec3 sunDirection;
+   vec3 detailNoiseOffset;
 } uWeather;
 
 layout(location = 0) in vec2 uv;
@@ -248,7 +250,7 @@ vec4 sampleCloudMap(in vec3 pos)
 // Sample cloud detail low frequency noise (3D texture)
 vec4 sampleCloudDetailLowFreq(in vec3 pos)
 {
-   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR1;
+   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR1 + uWeather.detailNoiseOffset;
    vec4 detailSample = texture(sampler3D(cloudBaseLowFreqTexture, cloudBaseLowFreqSampler), detailTextureCoord);
    return detailSample;
 }
@@ -256,7 +258,7 @@ vec4 sampleCloudDetailLowFreq(in vec3 pos)
 // Sample cloud detail high frequency noise (3D texture)
 vec3 sampleCloudDetailHighFreq(in vec3 pos)
 {
-   vec3 detailTextureCoord = pos;
+   vec3 detailTextureCoord = (pos) * 1.0f / float(uSettings.highFreqTextureScale);
    vec3 detailSample = texture(sampler3D(cloudBaseHighFreqTexture, cloudBaseHighFreqSampler), detailTextureCoord).rgb;
    return detailSample;
 }
@@ -388,8 +390,8 @@ vec4 raymarch(vec3 start, vec3 end)
       if (density < EPSILON)
          continue;
 
-      float lightTransmittance = raymarchToLight(rayPos, -uWeather.sunDirection, uSettings.lightRayConeAngle);
-      float phase = henyeyGreenstein(dot(rayDir, -uWeather.sunDirection), uSettings.phaseEccentricity);
+      float lightTransmittance = raymarchToLight(rayPos, uWeather.sunDirection, uSettings.lightRayConeAngle);
+      float phase = henyeyGreenstein(hgCos, uSettings.phaseEccentricity);
       phase *= 4.0 * M_PI;
 
       float T = exp(-avgDensity * uSettings.lightAbsorption * stepSize);

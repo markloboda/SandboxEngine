@@ -3,17 +3,24 @@
 class WeatherSystem
 {
 public:
-   struct WeatherState
+   struct WeatherOptions
    {
-      float timeOfDay = 12.0f; // Time of day in hours (0.0 - 24.0)
+      float timeOfDay = 17.2f; // Time of day in hours (0.0 - 24.0)s
+      float windSpeed = 4.1f; // Wind speed in m/s
    };
 
-   WeatherState CurrentState = {};
+   struct WeatherState
+   {
+      vec3 sunDirection;
+      vec3 detailNoiseOffset;
+   };
+
+   WeatherOptions Options = {};
+   WeatherState State = {};
+   CloudsModel Model;
 
 public:
    void Update(float dt);
-
-private:
    void FeedData() const;
 
 public:

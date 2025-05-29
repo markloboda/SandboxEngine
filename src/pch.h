@@ -70,8 +70,9 @@ using namespace glm;
 #include <Renderer/UI/ImGuiManager.h>
 #include <Renderer/GridRenderer.h>
 
-#include <Application/ClothParticleSystem.h>
-#include <Application/WeatherSystem.h>
+#include <Systems/Cloth/ClothParticleSystem.h>
+#include <Systems/Weather/CloudsModel.h>
+#include <Systems/Weather/WeatherSystem.h>
 
 // Main
 #include <Application/Runtime.h>
