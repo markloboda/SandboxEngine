@@ -38,6 +38,7 @@ using namespace glm;
 #include <Core/Scene.h>
 
 // Helpers.
+#include <Utils/HashUtils.h>
 #include <Application/Input.h>
 #include <Utils/FreeCamera.h>
 #include <Utils/FileReader.h>

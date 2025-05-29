@@ -55,6 +55,12 @@ void CloudsModel::LoadWeatherMapTexture(const std::string &filePath)
 
 void CloudsModel::CreateNewLowFreqNoiseTexture(CloudTextureData *&noise)
 {
+   if (noise)
+   {
+      delete noise;
+      noise = nullptr;
+   }
+
    // Base cloud density
    // Generate a low frequency Perlin Worlye (Perlin - Worley) noise and
    // a low frequency Worley noise
@@ -67,7 +73,7 @@ void CloudsModel::CreateNewLowFreqNoiseTexture(CloudTextureData *&noise)
    const FastNoiseLite layeredWorleyNoise2 = GetWorleyNoiseGenerator(4, 0.18f);
 
    // Generate the 3D noise texture
-   noise = new CloudTextureData{new uint8_t[dim.x * dim.y * dim.z * 4], dim.x, dim.y, dim.z, 4};
+   uint8_t *data = new uint8_t[dim.x * dim.y * dim.z * 4];
    for (uint32_t z = 0; z < dim.z; ++z)
    {
       for (uint32_t y = 0; y < dim.y; ++y)
@@ -87,17 +93,25 @@ void CloudsModel::CreateNewLowFreqNoiseTexture(CloudTextureData *&noise)
                                                     -1.0f, 1.0f, 0.0f, 1.0f);
 
             uint32_t idx = (z * dim.x * dim.y + y * dim.x + x) * 4;
-            noise->data[idx + 0] = static_cast<uint8_t>(perlinWorley * 255.0f); // R channel
-            noise->data[idx + 1] = static_cast<uint8_t>((1.0f - layeredWorley0) * 255.0f); // G channel
-            noise->data[idx + 2] = static_cast<uint8_t>((1.0f - layeredWorley1) * 255.0f); // B channel
-            noise->data[idx + 3] = static_cast<uint8_t>((1.0f - layeredWorley2) * 255.0f); // A channel
+            data[idx + 0] = static_cast<uint8_t>(perlinWorley * 255.0f); // R channel
+            data[idx + 1] = static_cast<uint8_t>((1.0f - layeredWorley0) * 255.0f); // G channel
+            data[idx + 2] = static_cast<uint8_t>((1.0f - layeredWorley1) * 255.0f); // B channel
+            data[idx + 3] = static_cast<uint8_t>((1.0f - layeredWorley2) * 255.0f); // A channel
          }
       }
    }
+
+   noise = new CloudTextureData{data, dim.x, dim.y, dim.z, 4};
 }
 
 void CloudsModel::GenerateBaseHighFreqNoiseTexture(CloudTextureData *&noise)
 {
+   if (noise)
+   {
+      delete noise;
+      noise = nullptr;
+   }
+
    // Base cloud density
    // Generate a high frequency worley noise at increasing frequencies
    u32vec3 dim = {32u, 32u, 32u};
@@ -106,7 +120,7 @@ void CloudsModel::GenerateBaseHighFreqNoiseTexture(CloudTextureData *&noise)
    const FastNoiseLite layeredWorleyNoise2 = GetWorleyNoiseGenerator(7, 0.38f);
 
    // Generate the 3D noise texture
-   noise = new CloudTextureData{new uint8_t[dim.x * dim.y * dim.z * 4], dim.x, dim.y, dim.z, 4};
+   uint8_t *data = new uint8_t[dim.x * dim.y * dim.z * 4];
    for (uint32_t z = 0; z < dim.z; ++z)
    {
       for (uint32_t y = 0; y < dim.y; ++y)
@@ -121,11 +135,13 @@ void CloudsModel::GenerateBaseHighFreqNoiseTexture(CloudTextureData *&noise)
                                                     -1.0f, 1.0f, 0.0f, 1.0f);
 
             uint32_t idx = (z * dim.x * dim.y + y * dim.x + x) * 4;
-            noise->data[idx + 0] = static_cast<uint8_t>((1.0f - layeredWorley0) * 255.0f); // R channel
-            noise->data[idx + 1] = static_cast<uint8_t>((1.0f - layeredWorley1) * 255.0f); // G channel
-            noise->data[idx + 2] = static_cast<uint8_t>((1.0f - layeredWorley2) * 255.0f); // B channel
-            noise->data[idx + 3] = 0; // A channel
+            data[idx + 0] = static_cast<uint8_t>((1.0f - layeredWorley0) * 255.0f); // R channel
+            data[idx + 1] = static_cast<uint8_t>((1.0f - layeredWorley1) * 255.0f); // G channel
+            data[idx + 2] = static_cast<uint8_t>((1.0f - layeredWorley2) * 255.0f); // B channel
+            data[idx + 3] = 0; // A channel
          }
       }
    }
+
+   noise = new CloudTextureData{data, dim.x, dim.y, dim.z, 4};
 }

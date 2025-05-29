@@ -61,6 +61,7 @@ set(SOURCE_FILES
 
   ${SRC_ROOT}/Utils/FileReader.cpp
   ${SRC_ROOT}/Utils/FreeCamera.cpp
+  ${SRC_ROOT}/Utils/HashUtils.cpp
 
   ${SRC_ROOT}/main.cpp
   ${SRC_ROOT}/pch.cpp

@@ -78,6 +78,7 @@ bool CloudRenderer::Initialize(Renderer &renderer, CloudsModel &cloudsModel)
          WGPUExtent3D copyExtent = {weatherMapData.width, weatherMapData.height, 1};
          size_t dataSize = weatherMapData.width * weatherMapData.height * weatherMapData.channels * sizeof(uint8_t);
          renderer.UploadTextureData(*_weatherMapTexture, weatherMapData.data, dataSize, &copyExtent);
+         _weatherMapHash = weatherMapData.hash;
 
          WGPUTextureViewDescriptor viewDesc = {};
          viewDesc.format = _weatherMapTexture->GetFormat();
@@ -88,7 +89,7 @@ bool CloudRenderer::Initialize(Renderer &renderer, CloudsModel &cloudsModel)
          viewDesc.arrayLayerCount = 1;
          _weatherMapTextureView = new TextureView(_weatherMapTexture->Get(), &viewDesc);
       } {
-         CloudsModel::CloudTextureData *cloudTextureData;
+         CloudsModel::CloudTextureData *cloudTextureData = nullptr;
          cloudsModel.CreateNewLowFreqNoiseTexture(cloudTextureData);
 
          WGPUTextureDescriptor textureDesc = {};
@@ -117,7 +118,7 @@ bool CloudRenderer::Initialize(Renderer &renderer, CloudsModel &cloudsModel)
 
          delete cloudTextureData;
       } {
-         CloudsModel::CloudTextureData *cloudTextureData;
+         CloudsModel::CloudTextureData *cloudTextureData = nullptr;
          cloudsModel.GenerateBaseHighFreqNoiseTexture(cloudTextureData);
 
          WGPUTextureDescriptor textureDesc = {};
@@ -343,9 +344,13 @@ void CloudRenderer::Render(const Renderer &renderer, const CommandEncoder &encod
 
    // Update weather map.
    const CloudsModel::CloudTextureData &weatherMapData = cloudsModel.GetWeatherMapTexture();
-   WGPUExtent3D copyExtent = {weatherMapData.width, weatherMapData.height, 1};
-   size_t dataSize = weatherMapData.width * weatherMapData.height * weatherMapData.channels * sizeof(uint8_t);
-   renderer.UploadTextureData(*_weatherMapTexture, weatherMapData.data, dataSize, &copyExtent);
+   if (_weatherMapHash != weatherMapData.hash)
+   {
+      _weatherMapHash = weatherMapData.hash;
+      WGPUExtent3D copyExtent = {weatherMapData.width, weatherMapData.height, 1};
+      size_t dataSize = weatherMapData.width * weatherMapData.height * weatherMapData.channels * sizeof(uint8_t);
+      renderer.UploadTextureData(*_weatherMapTexture, weatherMapData.data, dataSize, &copyExtent);
+   }
 
    WGPURenderPassDescriptor rpDesc = {};
    WGPURenderPassColorAttachment cp{}; {

@@ -64,6 +64,7 @@ private:
 
    CameraData _shaderParams;
 
+   size_t _weatherMapHash = 0;
 
 public:
    explicit CloudRenderer(Renderer &renderer, CloudsModel &cloudsModel);
