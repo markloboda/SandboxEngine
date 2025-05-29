@@ -43,6 +43,8 @@ bool Application::Initialize()
       return false;
    }
 
+   glfwMaximizeWindow(_window);
+
    return true;
 }
 

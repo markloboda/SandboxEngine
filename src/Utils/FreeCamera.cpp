@@ -89,11 +89,11 @@ void FreeCamera::Update(float dt)
       }
       if (Input::IsKeyPressed(Input::EInputKey::KEY_E))
       {
-         _position += _worldUp * speed * dt;
+         _position += _up * speed * dt;
       }
       if (Input::IsKeyPressed(Input::EInputKey::KEY_Q))
       {
-         _position -= _worldUp * speed * dt;
+         _position -= _up * speed * dt;
       }
 
       UpdateCameraVectors();

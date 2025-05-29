@@ -17,24 +17,32 @@ private:
       vec2 xy;
    };
 
+   struct CloudData
+   {
+      vec2 position;
+   };
+
 public:
    struct CloudRenderSettings
    {
       float cloudStartHeight = 1500.0f; // height of the bottom of the cloud layer
       float cloudEndHeight = 16300.0f; // height of the top of the cloud layer
-
       float lightAbsorption = 0.744f; // how strongly light is absorbed (scattering falloff)
-      float coverageMultiplier = 4.546f; // scales the coverage read from the weather map
+      float coverageMultiplier = 1.923f; // scales the coverage read from the weather map
       float phaseEccentricity = 0.144f; // eccentricity for Henyey-Greenstein phase function
       float densityMultiplier = 0.033f; // scales the final computed cloud density
       float detailThreshold = 0.0f; // threshold for detail noise application
-      float lightRayConeAngle = 0.82f; // angle of the light ray cone for raymarchToLight() in radians
-      float ambientLight = 0.359; // ambient light intensity for the clouds
+      float lightRayConeAngle = 0.8f; // angle of the light ray cone for raymarchToLight() in radians
+      float ambientLight = 0.191; // ambient light intensity for the clouds
       int highFreqTextureScale = 1;
-
-      int cloudRaymarchSteps = 271; // number of steps in raymarch()
-      int lightRaymarchSteps = 7; // number of steps in raymarchToLight()
-      float lightStepLength = 100.0f; // step size in raymarchToLight()
+      int cloudRaymarchSteps = 300; // number of steps in raymarch()
+      int lightRaymarchSteps = 6; // number of steps in raymarchToLight()
+      float lightStepLength = 120.0f; // step size in raymarchToLight()
+      float cloudDetailTextureScalingFactor1 = 1.0f; // scaling factor for the first detail texture (low frequency)
+      float toneMappingStrength = 1.0f; // strength of the tone mapping applied to the final cloud color
+      float henyeyGreensteinStrength = 0.0f;
+      float multipleScatteringStrength = 0.0f; // strength of the multiple scattering effect
+      float contrastGamma = 0.8f; // contrast gamma for the final cloud colors
    };
 
    struct CloudRenderWeather
@@ -61,6 +69,7 @@ private:
    Buffer *_uResolution;
    Buffer *_uCloudRenderSettings;
    Buffer *_uCloudRenderWeather;
+   Buffer *_uCloudData;
 
    CameraData _shaderParams;
 

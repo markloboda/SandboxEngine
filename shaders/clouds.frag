@@ -26,7 +26,6 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
 {
    float cloudStartHeight;       // height of the bottom of the cloud layer
    float cloudEndHeight;         // height of the top of the cloud layer
-
    float lightAbsorption;        // how strongly light is absorbed (scattering falloff)
    float coverageMultiplier;     // scales the coverage read from the weather map
    float phaseEccentricity;      // eccentricity for Henyey-Greenstein phase function
@@ -35,10 +34,14 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    float lightRayConeAngle;
    float ambientLight;          // ambient light level, used for ambient in-scattering
    int highFreqTextureScale;
-
    int cloudRaymarchSteps;       // number of steps in raymarch()
    int lightRaymarchSteps;       // number of steps in raymarchToLight()
    float lightStepLength;        // step size in raymarchToLight()
+   float cloudDetailTextureScalingFactor1; // scaling factor for low frequency detail texture UVs
+   float toneMappingStrength;    // strength of the tone mapping, 0.0 = no tone mapping and 1.0 = full gamma correction
+   float henyeyGreensteinStrength; // strength of the phase function, 0.0 = no phase function and 1.0 = full phase function
+   float multipleScatteringStrength;
+   float contrastGamma;  // gamma correction for contrast, 1.0 = no contrast adjustment, >1.0 = more contrast, <1.0 = less contrast
 } uSettings;
 
 layout(set = 1, binding = 3) uniform CloudRenderWeather
@@ -46,6 +49,11 @@ layout(set = 1, binding = 3) uniform CloudRenderWeather
    vec3 sunDirection;
    vec3 detailNoiseOffset;
 } uWeather;
+
+layout(set = 1, binding = 4) uniform CloudData
+{
+   vec2 position;
+} uCloudData;
 
 layout(location = 0) in vec2 uv;
 
@@ -63,11 +71,11 @@ layout(location = 0) out vec4 fragCol;
 // raymarching settings
 #define MAX_RAYMARCH_STEPS uSettings.cloudRaymarchSteps
 #define MAX_RAYMARCH_LIGHT_STEPS uSettings.lightRaymarchSteps
-#define MAX_RAYMARCH_DISTANCE 51200.0
+#define MAX_RAYMARCH_DISTANCE 124000.0
 #define CLOUD_MAP_SCALING_FACTOR _cloudMapScalingFactor
-const float _cloudMapScalingFactor = 1.0 / 51200.0; // covers 51.2km x 51.2km
-#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR1 _cloudDetailTextureScalingFactor1
-const float _cloudDetailTextureScalingFactor1 = 1.0 / 10000; // 10km x 10km
+const float _cloudMapScalingFactor = 1.0 / 124000.0; // covers 124km x 124km
+#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR1 _cloudDetailTextureScalingFactor1 * 1.0 / uSettings.cloudDetailTextureScalingFactor1
+const float _cloudDetailTextureScalingFactor1 = 1.0 / 12000;
 #define CLOUD_HIGH_FREQ_DETAIL_THRESHOLD uSettings.detailThreshold
 
 // cloud heights
@@ -85,6 +93,19 @@ float clampRemap(float originalValue, float originalMin, float originalMax, floa
 {
    float remappedValue = remap(originalValue, originalMin, originalMax, newMin, newMax);
    return clamp(remappedValue, newMin, newMax);
+}
+
+vec3 toneMapGamma(vec3 color, float strength)
+{
+   // strength = 0.0 → no tone mapping, strength = 1.0 → full gamma
+   vec3 gammaCorrected = pow(color, vec3(1.0 / 2.2));
+   return mix(color, gammaCorrected, strength);
+}
+
+vec3 toneMapSmoothstep(vec3 color, float strength)
+{
+   vec3 toneMapped = smoothstep(vec3(0.0), vec3(1.0), color);
+   return mix(color, toneMapped, strength);
 }
 
 vec3 getStartRayDirection(vec2 uv)
@@ -307,12 +328,11 @@ float sampleCloudDensity(in vec3 pos)
    return clamp(cloudDensity, 0.0, 1.0);
 }
 
-// HenyeyGreenstein phase function
-float henyeyGreenstein(float cosTheta, float g)
+float henyeyGreensteinPhase(float cosTheta, float g)
 {
-   float gg = g * g;
-   float denom = 1.0 + gg - 2.0 * g * cosTheta;
-   return ((1.0 - gg) / (denom * sqrt(denom))) * (1.0 / (4.0 * M_PI));
+   float g2 = g * g;
+   float denom = 1.0 + g2 - 2.0 * g * cosTheta;
+   return (1.0 - g2) / (4.0 * M_PI * pow(denom, 1.5));
 }
 
 float raymarchToLight(vec3 rayOrigin, vec3 rayDir, float coneAngle)
@@ -327,7 +347,7 @@ float raymarchToLight(vec3 rayOrigin, vec3 rayDir, float coneAngle)
    vec3 right = normalize(cross(up, rayDir));
    vec3 forward = normalize(cross(rayDir, right));
 
-   vec3 rayPos = rayOrigin + rayDir * stepSize;
+   vec3 rayPos = rayOrigin;
 
    for (int i = 0; i < numSteps; ++i)
    {
@@ -391,8 +411,8 @@ vec4 raymarch(vec3 start, vec3 end)
          continue;
 
       float lightTransmittance = raymarchToLight(rayPos, uWeather.sunDirection, uSettings.lightRayConeAngle);
-      float phase = henyeyGreenstein(hgCos, uSettings.phaseEccentricity);
-      phase *= 4.0 * M_PI;
+
+      float phase = mix(1.0, henyeyGreensteinPhase(hgCos, uSettings.phaseEccentricity), uSettings.henyeyGreensteinStrength);
 
       float T = exp(-avgDensity * uSettings.lightAbsorption * stepSize);
       transmittance *= T;
@@ -414,7 +434,8 @@ vec4 raymarch(vec3 start, vec3 end)
       }
    }
 
-   lightColor = clamp(lightColor, 0.0, 1.0);
+   lightColor = toneMapGamma(lightColor, uSettings.toneMappingStrength);
+   lightColor = pow(lightColor, vec3(uSettings.contrastGamma));
 
    float alpha = 1.0 - transmittance;
 
@@ -423,7 +444,7 @@ vec4 raymarch(vec3 start, vec3 end)
 
 void main()
 {
-   vec3 rayOrigin = uCamera.pos;
+   vec3 rayOrigin = uCamera.pos - vec3(uCloudData.position.x, 0.0, uCloudData.position.y);
    vec3 rayDir = getStartRayDirection(uv);
 
    float dstToStart = getCloudEntryDistance(rayOrigin, rayDir);
@@ -441,4 +462,5 @@ void main()
    vec3 end   = start     + rayDir * dstInside;
 
    fragCol = raymarch(start, end);
+   fragCol = clamp(fragCol, 0.0, 1.0);
 }
