@@ -1,5 +1,6 @@
 set(SOURCE_FILES
   stb_image.cpp
+  stb_image_write.cpp
 )
 
 add_library(stb STATIC ${SOURCE_FILES})

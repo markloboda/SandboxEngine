@@ -42,15 +42,15 @@ CloudsModel::~CloudsModel()
 
 void CloudsModel::LoadWeatherMapTexture(const std::string &filePath)
 {
-   int width, height, channels;
+   uint32_t width, height, channels;
    unsigned char *data = nullptr;
-   if (!FileReader::LoadTexture2DData(filePath, &data, &width, &height, &channels, 4))
+   if (!FileReader::LoadTexture2D(filePath, &data, &width, &height, &channels, 4))
    {
       std::cerr << "Failed to load weather map texture data from file: " << filePath << std::endl;
       return;
    }
 
-   _weatherMap = new CloudTextureData{data, static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1, channels};
+   _weatherMap = new CloudTextureData{data, width, height, 1, channels};
 }
 
 void CloudsModel::CreateNewLowFreqNoiseTexture(CloudTextureData *&noise)
@@ -61,47 +61,62 @@ void CloudsModel::CreateNewLowFreqNoiseTexture(CloudTextureData *&noise)
       noise = nullptr;
    }
 
-   // Base cloud density
-   // Generate a low frequency Perlin Worlye (Perlin - Worley) noise and
-   // a low frequency Worley noise
-   u32vec3 dim = {128u, 128u, 128u};
-   const FastNoiseLite perlinNoise = GetPerlinNoiseGenerator(0, 0.046f);
-   const FastNoiseLite worleyNoise = GetWorleyNoiseGenerator(1, 0.012f);
+   const std::string filePath = "assets/noise/low_freq_cloud_noise.tex3d";
+   uint8_t *data = nullptr;
+   uint32_t width = 0, height = 0, depth = 0, channels = 0;
 
-   const FastNoiseLite layeredWorleyNoise0 = GetWorleyNoiseGenerator(2, 0.046f);
-   const FastNoiseLite layeredWorleyNoise1 = GetWorleyNoiseGenerator(3, 0.13f);
-   const FastNoiseLite layeredWorleyNoise2 = GetWorleyNoiseGenerator(4, 0.18f);
-
-   // Generate the 3D noise texture
-   uint8_t *data = new uint8_t[dim.x * dim.y * dim.z * 4];
-   for (uint32_t z = 0; z < dim.z; ++z)
+   if (FileReader::FileExists(filePath))
    {
-      for (uint32_t y = 0; y < dim.y; ++y)
+      if (!FileReader::LoadTexture3D(filePath, &data, &width, &height, &depth, &channels))
       {
-         for (uint32_t x = 0; x < dim.x; ++x)
-         {
-            float perlinWorley = 0.0; {
-               float perlin = Math::Remap(perlinNoise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
-               float worley = Math::Remap(worleyNoise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
-               perlinWorley = Math::Clamp(perlin * (1.0f - worley), 0.0f, 1.0f);
-            }
-            float layeredWorley0 = Math::ClampRemap(layeredWorleyNoise0.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)),
-                                                    -1.0f, 1.0f, 0.0f, 1.0f);
-            float layeredWorley1 = Math::ClampRemap(layeredWorleyNoise1.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)),
-                                                    -1.0f, 1.0f, 0.0f, 1.0f);
-            float layeredWorley2 = Math::ClampRemap(layeredWorleyNoise2.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)),
-                                                    -1.0f, 1.0f, 0.0f, 1.0f);
-
-            uint32_t idx = (z * dim.x * dim.y + y * dim.x + x) * 4;
-            data[idx + 0] = static_cast<uint8_t>(perlinWorley * 255.0f); // R channel
-            data[idx + 1] = static_cast<uint8_t>((1.0f - layeredWorley0) * 255.0f); // G channel
-            data[idx + 2] = static_cast<uint8_t>((1.0f - layeredWorley1) * 255.0f); // B channel
-            data[idx + 3] = static_cast<uint8_t>((1.0f - layeredWorley2) * 255.0f); // A channel
-         }
+         std::cerr << "Failed to load low frequency noise texture from " << filePath << std::endl;
+         return;
       }
    }
+   else
+   {
+      u32vec3 dim = {128u, 128u, 128u};
+      width = dim.x;
+      height = dim.y;
+      depth = dim.z;
+      channels = 4;
 
-   noise = new CloudTextureData{data, dim.x, dim.y, dim.z, 4};
+      const FastNoiseLite pNoise = GetPerlinNoiseGenerator(0, 0.046f);
+      const FastNoiseLite wNoise = GetWorleyNoiseGenerator(1, 0.012f);
+
+      const FastNoiseLite w0Noise = GetWorleyNoiseGenerator(2, 0.046f);
+      const FastNoiseLite w1Noise = GetWorleyNoiseGenerator(3, 0.13f);
+      const FastNoiseLite w2Noise = GetWorleyNoiseGenerator(4, 0.18f);
+
+      data = new uint8_t[width * height * depth * channels];
+
+      for (uint32_t z = 0; z < depth; ++z)
+      {
+         for (uint32_t y = 0; y < height; ++y)
+         {
+            for (uint32_t x = 0; x < width; ++x)
+            {
+               float p = Math::Remap(pNoise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
+               float w = Math::Remap(wNoise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
+               float pw = Math::Clamp(p * (1.0f - w), 0.0f, 1.0f);
+
+               float w0 = Math::ClampRemap(w0Noise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
+               float w1 = Math::ClampRemap(w1Noise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
+               float w2 = Math::ClampRemap(w2Noise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
+
+               uint32_t idx = (z * width * height + y * width + x) * channels;
+               data[idx + 0] = static_cast<uint8_t>(pw * 255.0f);
+               data[idx + 1] = static_cast<uint8_t>((1.0f - w0) * 255.0f);
+               data[idx + 2] = static_cast<uint8_t>((1.0f - w1) * 255.0f);
+               data[idx + 3] = static_cast<uint8_t>((1.0f - w2) * 255.0f);
+            }
+         }
+      }
+
+      FileReader::SaveTexture3D(filePath, data, width, height, depth, channels);
+   }
+
+   noise = new CloudTextureData{data, width, height, depth, channels};
 }
 
 void CloudsModel::GenerateBaseHighFreqNoiseTexture(CloudTextureData *&noise)
@@ -112,36 +127,53 @@ void CloudsModel::GenerateBaseHighFreqNoiseTexture(CloudTextureData *&noise)
       noise = nullptr;
    }
 
-   // Base cloud density
-   // Generate a high frequency worley noise at increasing frequencies
-   u32vec3 dim = {32u, 32u, 32u};
-   const FastNoiseLite layeredWorleyNoise0 = GetWorleyNoiseGenerator(5, 0.18f);
-   const FastNoiseLite layeredWorleyNoise1 = GetWorleyNoiseGenerator(6, 0.28f);
-   const FastNoiseLite layeredWorleyNoise2 = GetWorleyNoiseGenerator(7, 0.38f);
+   const std::string filePath = "assets/noise/high_freq_cloud_noise.tex3d";
+   uint8_t *data = nullptr;
+   uint32_t width = 0, height = 0, depth = 0, channels = 0;
 
-   // Generate the 3D noise texture
-   uint8_t *data = new uint8_t[dim.x * dim.y * dim.z * 4];
-   for (uint32_t z = 0; z < dim.z; ++z)
+   if (FileReader::FileExists(filePath))
    {
-      for (uint32_t y = 0; y < dim.y; ++y)
+      if (!FileReader::LoadTexture3D(filePath, &data, &width, &height, &depth, &channels))
       {
-         for (uint32_t x = 0; x < dim.x; ++x)
-         {
-            float layeredWorley0 = Math::ClampRemap(layeredWorleyNoise0.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)),
-                                                    -1.0f, 1.0f, 0.0f, 1.0f);
-            float layeredWorley1 = Math::ClampRemap(layeredWorleyNoise1.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)),
-                                                    -1.0f, 1.0f, 0.0f, 1.0f);
-            float layeredWorley2 = Math::ClampRemap(layeredWorleyNoise2.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)),
-                                                    -1.0f, 1.0f, 0.0f, 1.0f);
-
-            uint32_t idx = (z * dim.x * dim.y + y * dim.x + x) * 4;
-            data[idx + 0] = static_cast<uint8_t>((1.0f - layeredWorley0) * 255.0f); // R channel
-            data[idx + 1] = static_cast<uint8_t>((1.0f - layeredWorley1) * 255.0f); // G channel
-            data[idx + 2] = static_cast<uint8_t>((1.0f - layeredWorley2) * 255.0f); // B channel
-            data[idx + 3] = 0; // A channel
-         }
+         std::cerr << "Failed to load high frequency noise texture from " << filePath << std::endl;
+         return;
       }
    }
+   else
+   {
+      u32vec3 dim = {32u, 32u, 32u};
+      width = dim.x;
+      height = dim.y;
+      depth = dim.z;
+      channels = 4;
 
-   noise = new CloudTextureData{data, dim.x, dim.y, dim.z, 4};
+      const FastNoiseLite w0Noise = GetWorleyNoiseGenerator(5, 0.18f);
+      const FastNoiseLite w1Noise = GetWorleyNoiseGenerator(6, 0.28f);
+      const FastNoiseLite w2Noise = GetWorleyNoiseGenerator(7, 0.38f);
+
+      data = new uint8_t[width * height * depth * channels];
+
+      for (uint32_t z = 0; z < depth; ++z)
+      {
+         for (uint32_t y = 0; y < height; ++y)
+         {
+            for (uint32_t x = 0; x < width; ++x)
+            {
+               float w0 = Math::ClampRemap(w0Noise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
+               float w1 = Math::ClampRemap(w1Noise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
+               float w2 = Math::ClampRemap(w2Noise.GetNoise(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)), -1.0f, 1.0f, 0.0f, 1.0f);
+
+               uint32_t idx = (z * width * height + y * width + x) * channels;
+               data[idx + 0] = static_cast<uint8_t>((1.0f - w0) * 255.0f);
+               data[idx + 1] = static_cast<uint8_t>((1.0f - w1) * 255.0f);
+               data[idx + 2] = static_cast<uint8_t>((1.0f - w2) * 255.0f);
+               data[idx + 3] = 0;
+            }
+         }
+      }
+
+      FileReader::SaveTexture3D(filePath, data, width, height, depth, channels);
+   }
+
+   noise = new CloudTextureData{data, width, height, depth, channels};
 }

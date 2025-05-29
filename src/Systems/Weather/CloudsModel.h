@@ -9,10 +9,10 @@ public:
       const uint32_t width;
       const uint32_t height;
       const uint32_t depth;
-      const int channels;
+      const uint32_t channels;
       const size_t hash;
 
-      CloudTextureData(unsigned char *data, uint32_t width, uint32_t height, uint32_t depth, int channels):
+      CloudTextureData(unsigned char *data, uint32_t width, uint32_t height, uint32_t depth, uint32_t channels):
          data(data), width(width), height(height), depth(depth), channels(channels), hash(ComputeHash()) {}
 
       ~CloudTextureData()
