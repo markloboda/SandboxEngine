@@ -24,25 +24,36 @@ layout(set = 1, binding = 1) uniform ResolutionData
 
 layout(set = 1, binding = 2) uniform CloudRenderSettings
 {
-   float cloudStartHeight;       // height of the bottom of the cloud layer
-   float cloudEndHeight;         // height of the top of the cloud layer
-   float lightAbsorption;        // how strongly light is absorbed (scattering falloff)
-   float coverageMultiplier;     // scales the coverage read from the weather map
-   float phaseEccentricity;      // eccentricity for Henyey-Greenstein phase function
-   float densityMultiplier;      // scales the final computed cloud density
-   float detailThreshold;         // weight of detail FBM in final density
-   float lightRayConeAngle;
-   float ambientLight;          // ambient light level, used for ambient in-scattering
-   int highFreqTextureScale;
-   int cloudRaymarchSteps;       // number of steps in raymarch()
-   int lightRaymarchSteps;       // number of steps in raymarchToLight()
-   float lightStepLength;        // step size in raymarchToLight()
-   float cloudDetailTextureScalingFactor1; // scaling factor for low frequency detail texture UVs
-   float toneMappingStrength;    // strength of the tone mapping, 0.0 = no tone mapping and 1.0 = full gamma correction
+   // Position
+   float cloudStartHeight; // height of the bottom of the cloud layer
+   float cloudEndHeight; // height of the top of the cloud layer
+
+   // Densitites
+   float coverageMultiplier; // scales the coverage read from the weather map
+   float densityMultiplier; // scales the final computed cloud density
+   float highFreqThreshold; // threshold for high frequency detail noise application
+   float detailBlendStrength; // strength of the detail noise blending
+
+   // Lighting
+   float ambientLight; // ambient light intensity for the clouds
+   float lightAbsorption; // how strongly light is absorbed (scattering falloff)
    float henyeyGreensteinStrength; // strength of the phase function, 0.0 = no phase function and 1.0 = full phase function
-   float multipleScatteringStrength;
-   float contrastGamma;  // gamma correction for contrast, 1.0 = no contrast adjustment, >1.0 = more contrast, <1.0 = less contrast
-   float detailBlendStrength;
+   float phaseEccentricity; // eccentricity for Henyey-Greenstein phase function
+   float lightRayConeAngle; // angle of the light ray cone for raymarchToLight() in radians
+   float multipleScatteringStrength; // strength of the multiple scattering effect
+
+   // Textures
+   float lowFreqTextureScale; // scaling factor for the first detail texture (low frequency)
+   float highFreqTextureScale; // scaling factor for the second detail texture (high frequency)
+
+   // Post Processing
+   float toneMappingStrength; // strength of the tone mapping applied to the final cloud color
+   float contrastGamma; // contrast gamma for the final cloud colors
+
+   // Performance
+   int cloudRaymarchSteps; // number of steps in raymarch()
+   int lightRaymarchSteps; // number of steps in raymarchToLight()
+   float lightStepLength; // step size in raymarchToLight()
 } uSettings;
 
 layout(set = 1, binding = 3) uniform CloudRenderWeather
@@ -70,14 +81,11 @@ layout(location = 0) out vec4 fragCol;
 #define AMBIENT_COLOR vec3(0.45, 0.52, 0.61)
 
 // raymarching settings
-#define MAX_RAYMARCH_STEPS uSettings.cloudRaymarchSteps
-#define MAX_RAYMARCH_LIGHT_STEPS uSettings.lightRaymarchSteps
 #define MAX_RAYMARCH_DISTANCE 124000.0
 #define CLOUD_MAP_SCALING_FACTOR _cloudMapScalingFactor
 const float _cloudMapScalingFactor = 1.0 / 124000.0; // covers 124km x 124km
-#define CLOUD_DETAIL_TEXTURE_SCALING_FACTOR1 _cloudDetailTextureScalingFactor1 * 1.0 / uSettings.cloudDetailTextureScalingFactor1
-const float _cloudDetailTextureScalingFactor1 = 1.0 / 12000;
-#define CLOUD_HIGH_FREQ_DETAIL_THRESHOLD uSettings.detailThreshold
+const float _lowFreqTextureScaleBase = 1.0 / 12000.0; // base scale for low frequency detail texture
+const float _highFreqTextureScaleBase = 1.0 / 1.0; // base scale for high frequency detail texture
 
 // cloud heights
 #define STRATUS_OFFSET       vec3(0.1, 0.2, 0.3)
@@ -272,7 +280,8 @@ vec4 sampleCloudMap(in vec3 pos)
 // Sample cloud detail low frequency noise (3D texture)
 vec4 sampleCloudDetailLowFreq(in vec3 pos)
 {
-   vec3 detailTextureCoord = pos * CLOUD_DETAIL_TEXTURE_SCALING_FACTOR1 + uWeather.detailNoiseOffset;
+   float scale = _lowFreqTextureScaleBase * 1.0 / uSettings.lowFreqTextureScale;
+   vec3 detailTextureCoord = pos * scale + uWeather.detailNoiseOffset;
    vec4 detailSample = texture(sampler3D(cloudBaseLowFreqTexture, cloudBaseLowFreqSampler), detailTextureCoord);
    return detailSample;
 }
@@ -280,7 +289,8 @@ vec4 sampleCloudDetailLowFreq(in vec3 pos)
 // Sample cloud detail high frequency noise (3D texture)
 vec3 sampleCloudDetailHighFreq(in vec3 pos)
 {
-   vec3 detailTextureCoord = (pos) * 1.0f / float(uSettings.highFreqTextureScale);
+   float scale = _highFreqTextureScaleBase * 1.0 / uSettings.highFreqTextureScale;
+   vec3 detailTextureCoord = pos * scale;
    vec3 detailSample = texture(sampler3D(cloudBaseHighFreqTexture, cloudBaseHighFreqSampler), detailTextureCoord).rgb;
    return detailSample;
 }
@@ -310,12 +320,12 @@ float sampleCloudDensity(in vec3 pos)
    float baseDensity = remap(lowFreqPerlin, (1.0 - lowFreqFBM), 1.0, 0.0, 1.0);
 
    // detail high freq data (if enabled)
-   if (uSettings.detailThreshold > 0.0)
+   if (uSettings.highFreqThreshold > 0.0)
    {
       vec3 detail = sampleCloudDetailHighFreq(pos).rgb;
       float highFreqFBM = clamp(dot(detail, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
 
-      if (baseDensity < uSettings.detailThreshold)
+      if (baseDensity < uSettings.highFreqThreshold)
       {
          // Remap with detail controlling the lower bound
          float remapped = clampRemap(baseDensity, (1.0 - highFreqFBM), 1.0, 0.0, 1.0);
@@ -341,7 +351,7 @@ float henyeyGreensteinPhase(float cosTheta, float g)
 
 float raymarchToLight(vec3 rayOrigin, vec3 rayDir, float coneAngle)
 {
-   const int numSteps = MAX_RAYMARCH_LIGHT_STEPS;
+   const int numSteps = uSettings.lightRaymarchSteps;
    const float stepSize = uSettings.lightStepLength;
 
    float lightTransmittance = 1.0;
@@ -395,7 +405,7 @@ vec4 raymarch(vec3 start, vec3 end)
    // constants
    const float hgCos = dot(rayDir, uWeather.sunDirection);
 
-   const int numSteps = MAX_RAYMARCH_STEPS;
+   const int numSteps = uSettings.cloudRaymarchSteps;
 
    float prevRayDst = 0.0;
    for (int i = 0; i < numSteps; ++i)

@@ -141,29 +141,29 @@ void Editor::RenderImGuiUI()
                ImGui::Text("Densities");
                ImGui::SliderFloat("Coverage Multiplier", &settings.coverageMultiplier, 0.0f, 10.0f);
                ImGui::SliderFloat("Density Multiplier", &settings.densityMultiplier, 0.0f, 10.0f);
-               ImGui::SliderFloat("High Frequency Threshold", &settings.detailThreshold, 0.0f, 1.0f);
-               ImGui::SliderFloat("Detail Blend Strength", &settings.detailBlendStrength, 0.0f, 1.0f, "%.2f");
+               ImGui::SliderFloat("High Frequency Threshold", &settings.highFreqThreshold, 0.0f, 1.0f);
+               ImGui::SliderFloat("Detail Blend", &settings.detailBlendStrength, 0.0f, 1.0f, "%.2f");
 
                ImGui::Separator();
 
                ImGui::Text("Lighting");
                ImGui::SliderFloat("Ambient Light", &settings.ambientLight, 0.0f, 1.0f);
                ImGui::SliderFloat("Light Absorption", &settings.lightAbsorption, 0.1f, 2.0f);
+               ImGui::SliderFloat("Henyey Greenstein", &settings.henyeyGreensteinStrength, 0.0f, 1.0f, "%.1f");
                ImGui::SliderFloat("Phase Eccentricity", &settings.phaseEccentricity, -1.0f, 1.0f);
                ImGui::SliderFloat("Light Ray Cone Angle", &settings.lightRayConeAngle, 0.0f, glm::pi<float>() / 2.0f, "%.1f rad");
-               ImGui::SliderFloat("Henyey Greenstein", &settings.henyeyGreensteinStrength, 0.0f, 1.0f, "%.1f");
                ImGui::SliderFloat("Multiple Scattering", &settings.multipleScatteringStrength, 0.0f, 1.0f, "%.1f");
 
                ImGui::Separator();
 
                ImGui::Text("Textures");
-               ImGui::SliderInt("High Freq Texture Scale", &settings.highFreqTextureScale, 1, 100000);
-               ImGui::SliderFloat("Cloud Detail Texture Scaling 1", &settings.cloudDetailTextureScalingFactor1, 0.1f, 10.0f, "%.1f");
+               ImGui::SliderFloat("Low Freq Texture Scale", &settings.lowFreqTextureScale, 0.1f, 10.0f, "%.1f");
+               ImGui::SliderFloat("High Freq Texture Scale", &settings.highFreqTextureScale, 0.1f, 10.0f, "%.1f");
 
                ImGui::Separator();
 
                ImGui::Text("Post Processing");
-               ImGui::SliderFloat("Tone Mapping Strength", &settings.toneMappingStrength, 0.0f, 1.0f, "%.01f");
+               ImGui::SliderFloat("Tone Mapping", &settings.toneMappingStrength, 0.0f, 1.0f, "%.01f");
                ImGui::SliderFloat("Contrast Gamma", &settings.contrastGamma, 0.1f, 5.0f, "%.01f");
             }
 
