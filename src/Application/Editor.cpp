@@ -138,10 +138,11 @@ void Editor::RenderImGuiUI()
             if (ImGui::CollapsingHeader("Visuals", ImGuiTreeNodeFlags_DefaultOpen))
             {
                // Sliders for cloud settings
-               ImGui::Text("Position");
+               ImGui::Text("Densities");
                ImGui::SliderFloat("Coverage Multiplier", &settings.coverageMultiplier, 0.0f, 10.0f);
                ImGui::SliderFloat("Density Multiplier", &settings.densityMultiplier, 0.0f, 10.0f);
                ImGui::SliderFloat("High Frequency Threshold", &settings.detailThreshold, 0.0f, 1.0f);
+               ImGui::SliderFloat("Detail Blend Strength", &settings.detailBlendStrength, 0.0f, 1.0f, "%.2f");
 
                ImGui::Separator();
 

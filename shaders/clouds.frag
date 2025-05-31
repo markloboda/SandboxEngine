@@ -42,6 +42,7 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    float henyeyGreensteinStrength; // strength of the phase function, 0.0 = no phase function and 1.0 = full phase function
    float multipleScatteringStrength;
    float contrastGamma;  // gamma correction for contrast, 1.0 = no contrast adjustment, >1.0 = more contrast, <1.0 = less contrast
+   float detailBlendStrength;
 } uSettings;
 
 layout(set = 1, binding = 3) uniform CloudRenderWeather
@@ -311,17 +312,20 @@ float sampleCloudDensity(in vec3 pos)
    // detail high freq data (if enabled)
    if (uSettings.detailThreshold > 0.0)
    {
-      vec3  detailHighFreqSample = sampleCloudDetailHighFreq(pos).rgb;
-      float highFreqFBM = clamp(dot(detailHighFreqSample, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
+      vec3 detail = sampleCloudDetailHighFreq(pos).rgb;
+      float highFreqFBM = clamp(dot(detail, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
+
       if (baseDensity < uSettings.detailThreshold)
       {
-         baseDensity = remap(baseDensity, (1.0 - highFreqFBM), 1.0, 0.0, 1.0);
+         // Remap with detail controlling the lower bound
+         float remapped = clampRemap(baseDensity, (1.0 - highFreqFBM), 1.0, 0.0, 1.0);
+         baseDensity = mix(baseDensity, remapped, uSettings.detailBlendStrength); // e.g., 0.3–0.6
       }
    }
 
    baseDensity *= heightFraction;
+   baseDensity *= heightGradient;
    float cloudDensity = remap(baseDensity, (1.0 - cloudCoverage), 1.0, 0.0, 1.0);
-   cloudDensity *= heightGradient;
 
    cloudDensity *= uSettings.densityMultiplier;
 
