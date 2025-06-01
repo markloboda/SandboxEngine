@@ -189,6 +189,12 @@ void Editor::RenderImGuiUI()
 
 void Editor::Update(const float dt) const
 {
+   if (Input::IsKeyPressed(Input::KEY_LEFT_SHIFT) && Input::IsKeyClicked(Input::KEY_F1))
+   {
+      Renderer &renderer = Application::GetInstance().GetRuntime().GetRenderer();
+      renderer.RenderUI = !renderer.RenderUI;
+   }
+
    // Update camera
    _camera->Update(dt);
 }

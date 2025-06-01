@@ -173,7 +173,10 @@ void Renderer::Render()
       }
 
       // ImGui.
-      ImGuiManager::GetInstance().Render(*this, encoder, textureView, 5);
+      if (RenderUI)
+      {
+         ImGuiManager::GetInstance().Render(*this, encoder, textureView, 5);
+      }
    }
 
    if (_profilerEnabled)

@@ -83,6 +83,8 @@ void Application::Run()
 
       _runtime->Update(static_cast<float>(frameTime));
       _runtime->Render();
+
+      Input::Update();
    }
 }
 

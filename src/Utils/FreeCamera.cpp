@@ -17,7 +17,7 @@ FreeCamera::FreeCamera(vec3 position, vec3 up, float yaw, float pitch)
    _forward = vec3(0.0f, 0.0f, -1.0f);
    _speed = 100.0f;
    _sensitivity = 0.1f;
-   _zoom = 45.0f;
+   _zoom = 60.0f;
    UpdateCameraVectors();
 
    Input::SetCursorPositionCallback(

@@ -2,7 +2,8 @@
 
 void Input::CursorPosChanged(GLFWwindow * /*window*/, double xpos, double ypos)
 {
-   for (auto &callback: GetInstance()._cursorPositionCallback)
+   Input &instace = GetInstance();
+   for (auto &callback: instace._cursorPositionCallback)
    {
       callback(xpos, ypos);
    }
@@ -10,7 +11,8 @@ void Input::CursorPosChanged(GLFWwindow * /*window*/, double xpos, double ypos)
 
 void Input::MouseWheelChanged(GLFWwindow * /*window*/, double /*xoffset*/, double yoffset)
 {
-   for (auto &callback: GetInstance()._mouseWheelCallback)
+   Input &instace = GetInstance();
+   for (auto &callback: instace._mouseWheelCallback)
    {
       callback(yoffset);
    }
@@ -18,14 +20,24 @@ void Input::MouseWheelChanged(GLFWwindow * /*window*/, double /*xoffset*/, doubl
 
 void Input::Initialize()
 {
-   glfwSetCursorPosCallback(Application::GetInstance().GetWindow(), CursorPosChanged);
-   glfwSetScrollCallback(Application::GetInstance().GetWindow(), MouseWheelChanged);
+   Application &app = Application::GetInstance();
+   glfwSetCursorPosCallback(app.GetWindow(), CursorPosChanged);
+   glfwSetScrollCallback(app.GetWindow(), MouseWheelChanged);
 }
 
 void Input::Terminate()
 {
    GetInstance()._cursorPositionCallback.clear();
    glfwSetCursorPosCallback(Application::GetInstance().GetWindow(), nullptr);
+}
+
+void Input::Update()
+{
+   Input &instace = GetInstance();
+   for (auto &[key, state]: instace._previousState)
+   {
+      state = IsKeyPressed(key);
+   }
 }
 
 bool Input::IsKeyPressed(EInputKey key)
@@ -37,14 +49,26 @@ bool Input::IsKeyPressed(EInputKey key)
       return glfwGetMouseButton(window, key) == GLFW_PRESS;
    }
 
-   return glfwGetKey(Application::GetInstance().GetWindow(), static_cast<int>(key)) == GLFW_PRESS;
+   return glfwGetKey(window, static_cast<int>(key)) == GLFW_PRESS;
+}
+
+bool Input::IsKeyClicked(EInputKey key)
+{
+   Input &instace = GetInstance();
+
+   bool isPressed = IsKeyPressed(key);
+   bool wasPressed = instace._previousState[key];
+
+   bool clicked = wasPressed && !isPressed;
+
+   return clicked;
 }
 
 vec2 Input::GetCursorPos()
 {
    double x, y;
    glfwGetCursorPos(Application::GetInstance().GetWindow(), &x, &y);
-   return vec2(static_cast<float>(x), static_cast<float>(y));
+   return {static_cast<float>(x), static_cast<float>(y)};
 }
 
 void Input::SetCursorPositionCallback(const CursorPositionCallback &callback)

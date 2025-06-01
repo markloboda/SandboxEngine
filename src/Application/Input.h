@@ -149,8 +149,9 @@ private:
       return instance;
    }
 
-   std::vector<CursorPositionCallback> _cursorPositionCallback;
-   std::vector<MouseWheelCallback> _mouseWheelCallback;
+   std::vector<CursorPositionCallback> _cursorPositionCallback = {};
+   std::vector<MouseWheelCallback> _mouseWheelCallback = {};
+   std::unordered_map<EInputKey, bool> _previousState = {};
 
 private:
    Input() = default;
@@ -165,8 +166,10 @@ private:
 public:
    static void Initialize();
    static void Terminate();
+   static void Update();
 
    static bool IsKeyPressed(EInputKey key);
+   static bool IsKeyClicked(EInputKey key);
    static vec2 GetCursorPos();
 
    static void SetCursorPositionCallback(const CursorPositionCallback &callback);

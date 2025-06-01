@@ -23,6 +23,7 @@ public:
    bool RenderAtmosphere = true;
    bool RenderClouds = true;
    bool RenderCloth = false;
+   bool RenderUI = true;
 
 private:
    GLFWwindow *_window;
