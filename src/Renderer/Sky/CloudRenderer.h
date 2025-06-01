@@ -26,35 +26,39 @@ public:
    struct CloudRenderSettings
    {
       // Position
-      float cloudStartHeight = 1500.0f; // height of the bottom of the cloud layer
-      float cloudEndHeight = 16300.0f; // height of the top of the cloud layer
+      float cloudStartHeight = 12000.0f; // height of the bottom of the cloud layer
+      float cloudEndHeight = 26800.0f; // height of the top of the cloud layer
 
       // Densitites
-      float coverageMultiplier = 2.513f; // scales the coverage read from the weather map
-      float densityMultiplier = 0.059f; // scales the final computed cloud density
-      float highFreqThreshold = 0.461f; // threshold for high frequency detail noise application
-      float detailBlendStrength = 0.52f; // strength of the detail noise blending
+      float coverageMultiplier = 3.31f; // scales the coverage read from the weather map
+      float densityMultiplier = 0.984f; // scales the final computed cloud density
+      float highFreqThreshold = 0.247; // threshold for high frequency detail noise application
+      float detailBlendStrength = 0.41f; // strength of the detail noise blending
 
       // Lighting
-      float ambientLight = 0.210; // ambient light intensity for the clouds
-      float lightAbsorption = 0.904f; // how strongly light is absorbed (scattering falloff)
-      float henyeyGreensteinStrength = 0.0f; // strength of the phase function, 0.0 = no phase function and 1.0 = full phase function
-      float phaseEccentricity = 0.144f; // eccentricity for Henyey-Greenstein phase function
+      float ambientLight = 0.155; // ambient light intensity for the clouds
+      float lightAbsorption = 0.5; // how strongly light is absorbed (scattering falloff)
+      float henyeyGreensteinStrength = 0.1f; // strength of the phase function, 0.0 = no phase function and 1.0 = full phase function
+      float phaseEccentricity = 0.851f; // eccentricity for Henyey-Greenstein phase function
       float lightRayConeAngle = 0.8f; // angle of the light ray cone for raymarchToLight() in radians
-      float multipleScatteringStrength = 0.0f; // strength of the multiple scattering effect
 
       // Textures
       float lowFreqTextureScale = 1.1f; // scaling factor for the first detail texture (low frequency)
-      float highFreqTextureScale = 1.0f; // scaling factor for the second detail texture (high frequency)
+      float highFreqTextureScale = 0.7f; // scaling factor for the second detail texture (high frequency)
 
       // Post Processing
       float toneMappingStrength = 1.0f; // strength of the tone mapping applied to the final cloud color
-      float contrastGamma = 0.5f; // contrast gamma for the final cloud colors
+      float contrastGamma = 0.4f; // contrast gamma for the final cloud colors
 
       // Performance
-      int cloudRaymarchSteps = 300; // number of steps in raymarch()
+      int cloudRaymarchSteps = 120; // number of steps in raymarch()
       int lightRaymarchSteps = 6; // number of steps in raymarchToLight()
-      float lightStepLength = 120.0f; // step size in raymarchToLight()
+      float lightStepLength = 200.0f; // step size in raymarchToLight()
+      float coverageCullThreshold = 0.5f; // threshold for culling clouds based on coverage
+      bool dynamicStepSize = false; // whether to use dynamic step size in raymarch()
+      float stepSizeFarMultiplier = 1.0; // far step size for raymarching
+      float stepSizeNearMultiplier = 0.2; // near step size for raymarching
+      float maxEmptySteps = 5; // maximum number of empty steps
    };
 
    struct CloudRenderWeather

@@ -152,7 +152,6 @@ void Editor::RenderImGuiUI()
                ImGui::SliderFloat("Henyey Greenstein", &settings.henyeyGreensteinStrength, 0.0f, 1.0f, "%.1f");
                ImGui::SliderFloat("Phase Eccentricity", &settings.phaseEccentricity, -1.0f, 1.0f);
                ImGui::SliderFloat("Light Ray Cone Angle", &settings.lightRayConeAngle, 0.0f, glm::pi<float>() / 2.0f, "%.1f rad");
-               ImGui::SliderFloat("Multiple Scattering", &settings.multipleScatteringStrength, 0.0f, 1.0f, "%.1f");
 
                ImGui::Separator();
 
@@ -172,6 +171,15 @@ void Editor::RenderImGuiUI()
                ImGui::InputInt("Cloud Raymarch Steps", &settings.cloudRaymarchSteps, 1, 1000);
                ImGui::InputInt("Light Raymarch Steps", &settings.lightRaymarchSteps, 1, 1000);
                ImGui::InputFloat("Light Step Length", &settings.lightStepLength, 0.1f, 500.0f, "%.1f");
+               ImGui::SliderFloat("Coverage Cull Threshold", &settings.coverageCullThreshold, 0.0f, 1.0f, "%.2f");
+               ImGui::Separator();
+               ImGui::Checkbox("Dynamic Step Size", &settings.dynamicStepSize);
+               if (settings.dynamicStepSize)
+               {
+                  ImGui::SliderFloat("Step Size Far Multiplier", &settings.stepSizeFarMultiplier, 1.0, 2.0f, "%.2f");
+                  ImGui::SliderFloat("Step Size Near Multiplier", &settings.stepSizeNearMultiplier, 0.01f, 1.0f, "%.2f");
+                  ImGui::InputFloat("Max Empty Steps", &settings.maxEmptySteps, 1.0f, 100.0f, "%.1f");
+               }
             }
          }
          ImGui::End();

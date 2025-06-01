@@ -40,7 +40,6 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    float henyeyGreensteinStrength; // strength of the phase function, 0.0 = no phase function and 1.0 = full phase function
    float phaseEccentricity; // eccentricity for Henyey-Greenstein phase function
    float lightRayConeAngle; // angle of the light ray cone for raymarchToLight() in radians
-   float multipleScatteringStrength; // strength of the multiple scattering effect
 
    // Textures
    float lowFreqTextureScale; // scaling factor for the first detail texture (low frequency)
@@ -54,6 +53,11 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    int cloudRaymarchSteps; // number of steps in raymarch()
    int lightRaymarchSteps; // number of steps in raymarchToLight()
    float lightStepLength; // step size in raymarchToLight()
+   float coverageCullThreshold; // threshold for culling clouds based on coverage
+   bool  dynamicStepSize; // whether to use dynamic step size in raymarch()
+   float stepSizeFarMultiplier; // far step size for raymarching
+   float stepSizeNearMultiplier; // near step size for raymarching
+   float maxEmptySteps; // maximum number of empty steps
 } uSettings;
 
 layout(set = 1, binding = 3) uniform CloudRenderWeather
@@ -85,7 +89,7 @@ layout(location = 0) out vec4 fragCol;
 #define CLOUD_MAP_SCALING_FACTOR _cloudMapScalingFactor
 const float _cloudMapScalingFactor = 1.0 / 124000.0; // covers 124km x 124km
 const float _lowFreqTextureScaleBase = 1.0 / 12000.0; // base scale for low frequency detail texture
-const float _highFreqTextureScaleBase = 1.0 / 1.0; // base scale for high frequency detail texture
+const float _highFreqTextureScaleBase = 1.0 / 3378.0; // base scale for high frequency detail texture
 
 // cloud heights
 #define STRATUS_OFFSET       vec3(0.1, 0.2, 0.3)
@@ -306,7 +310,12 @@ float sampleCloudDensity(in vec3 pos)
    }
 
    // map data
-   float cloudCoverage  = clamp(mapSample.r * uSettings.coverageMultiplier, 0.0, 1.0);
+   float cloudCoverage = clamp(mapSample.r * uSettings.coverageMultiplier, 0.0, 1.0);
+   if (cloudCoverage < uSettings.coverageCullThreshold)
+   {
+      return 0.0;
+   }
+
    float cloudType      = mapSample.b;
    float heightFraction = getCloudHeightFraction(pos.y, cloudType);
    float heightGradient = clampRemap(pos.y, uSettings.cloudStartHeight, uSettings.cloudEndHeight, 0.0, 1.0);
@@ -338,6 +347,9 @@ float sampleCloudDensity(in vec3 pos)
    float cloudDensity = remap(baseDensity, (1.0 - cloudCoverage), 1.0, 0.0, 1.0);
 
    cloudDensity *= uSettings.densityMultiplier;
+
+   cloudDensity = pow(cloudDensity, 1.5);       // Compress high values (optional)
+   cloudDensity *= 0.4;                    // Final scale so max is around 0.4
 
    return clamp(cloudDensity, 0.0, 1.0);
 }
@@ -379,7 +391,8 @@ float raymarchToLight(vec3 rayOrigin, vec3 rayDir, float coneAngle)
       if (density > EPSILON)
       {
          lightTransmittance *= exp(-density * uSettings.lightAbsorption * stepSize);
-         if (lightTransmittance <= EPSILON) break;
+         if (lightTransmittance <= 0.001)
+         { break; }
       }
 
       rayPos += coneDir * stepSize;
@@ -390,69 +403,97 @@ float raymarchToLight(vec3 rayOrigin, vec3 rayDir, float coneAngle)
 
 vec4 raymarch(vec3 start, vec3 end)
 {
-   // Ray setup
-   vec3  ray       = end - start;
-   float rayLength = length(ray);
-   vec3  rayDir    = ray / rayLength;
+   const vec3  ray = end - start;
+   const float rayLength = length(ray);
+   const vec3  rayDir = ray / rayLength;
 
-   // Volumetric state
-   float transmittance = 1.0;
-   vec3  lightColor   = vec3(0.0);
-   float prevDensity = 0.0;
-
-   // Sun direction
-
-   // constants
    const float hgCos = dot(rayDir, uWeather.sunDirection);
 
-   const int numSteps = uSettings.cloudRaymarchSteps;
+   float transmittance = 1.0;
+   vec3  lightColor = vec3(0.0);
+   float prevDensity = 0.0;
 
-   float prevRayDst = 0.0;
-   for (int i = 0; i < numSteps; ++i)
+   float rayDst = 0.0;
+
+   float stepSize, stepSizeFar, stepSizeNear;
+   if (uSettings.dynamicStepSize)
    {
-      // update raymarching position
-      float progress = float(i + 1) / float(numSteps);
-      float rayDst   = progress * rayLength;
-      float stepSize = rayDst - prevRayDst;
-      vec3  rayPos   = start + rayDir * rayDst;
+      float stepSizeNormal = rayLength / float(uSettings.cloudRaymarchSteps);
+      // Dynamic step size based on distance
+      stepSizeFar = stepSizeNormal * uSettings.stepSizeFarMultiplier;
+      stepSizeNear = stepSizeNormal * uSettings.stepSizeNearMultiplier;
+      stepSize = stepSizeFar;
+   }
+   else
+   {
+      stepSize = rayLength / float(uSettings.cloudRaymarchSteps);
+   }
 
-      prevRayDst = rayDst;
+   int   emptySteps = 0;
+   bool  inCloud = false;
 
+   for (int i = 0; i < uSettings.cloudRaymarchSteps; ++i)
+   {
+      if (rayDst > rayLength)
+      break;
+
+      vec3 rayPos = start + rayDir * rayDst;
       float density = sampleCloudDensity(rayPos);
-      float avgDensity = (density + prevDensity) * 0.5;
-      prevDensity = density;
-      if (density < EPSILON)
-         continue;
 
-      float lightTransmittance = raymarchToLight(rayPos, uWeather.sunDirection, uSettings.lightRayConeAngle);
-
-      float phase = mix(1.0, henyeyGreensteinPhase(hgCos, uSettings.phaseEccentricity), uSettings.henyeyGreensteinStrength);
-
-      float T = exp(-avgDensity * uSettings.lightAbsorption * stepSize);
-      transmittance *= T;
-
-      // direct light scattering
-      float scatterProb = 1.0 - exp(-avgDensity);
-      float inscattering = lightTransmittance * phase * scatterProb;
-
-      // ambient light scattering
-      float ambient = uSettings.ambientLight * scatterProb;
-
-      // add both to energy
-      lightColor += transmittance * (inscattering * SUN_COLOR + ambient * AMBIENT_COLOR) * stepSize;
-
-      if (transmittance <= 0.01)
+      if (density > 0.0)
       {
-         transmittance = 0.0;
-         break;
+         if (uSettings.dynamicStepSize && !inCloud)
+         {
+            // Hit cloud: step back and reduce step size
+            rayDst -= stepSize;
+            stepSize = stepSizeNear;
+            inCloud = true;
+            emptySteps = 0;
+            continue;
+         }
+
+         float avgDensity = 0.5 * (prevDensity + density);
+         prevDensity = density;
+
+         float lightT = raymarchToLight(rayPos, uWeather.sunDirection, uSettings.lightRayConeAngle);
+         float phase = mix(1.0, henyeyGreensteinPhase(hgCos, uSettings.phaseEccentricity), uSettings.henyeyGreensteinStrength);
+
+         float T = exp(-avgDensity * uSettings.lightAbsorption * stepSize);
+         transmittance *= T;
+
+         float scatterProb = 1.0 - exp(-avgDensity);
+         float inscatter = lightT * phase * scatterProb;
+         float ambient = uSettings.ambientLight * scatterProb;
+
+         lightColor += transmittance * (inscatter * SUN_COLOR + ambient * AMBIENT_COLOR) * stepSize;
+
+         if (transmittance <= 0.01)
+         {
+            transmittance = 0.0;
+            break;
+         }
       }
+      else
+      {
+         if (uSettings.dynamicStepSize && inCloud)
+         {
+            emptySteps++;
+            if (emptySteps >= uSettings.maxEmptySteps)
+            {
+               // No cloud for a while, increase step size again
+               stepSize = stepSizeFar;
+               inCloud = false;
+               emptySteps = 0;
+            }
+         }
+      }
+
+      rayDst += stepSize;
    }
 
    lightColor = toneMapGamma(lightColor, uSettings.toneMappingStrength);
    lightColor = pow(lightColor, vec3(uSettings.contrastGamma));
-
    float alpha = 1.0 - transmittance;
-
    return vec4(lightColor, alpha);
 }
 
