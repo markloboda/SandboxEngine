@@ -228,7 +228,7 @@ float getCloudInsideDistance(vec3 rayOrigin, vec3 rayDir)
 
 float heightGradient(float mappedHeight, float min, float center, float max)
 {
-   return clampRemap(mappedHeight, 0.0, min, 0.0, 1.0) * clampRemap(mappedHeight, center, max, 1.0, 0.0);
+   return clampRemap(mappedHeight, 0.0, min, 0.0, 1.0) * (1.0 - clampRemap(mappedHeight, center, max, 0.0, 1.0));
 }
 
 // Calculate the cloud height fraction for the given position and cloud type

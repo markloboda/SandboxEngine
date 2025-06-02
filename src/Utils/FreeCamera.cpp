@@ -67,7 +67,7 @@ void FreeCamera::Update(float dt)
       float speed = _speed;
       if (Input::IsKeyPressed(Input::KEY_LEFT_SHIFT))
       {
-         speed *= 5.0f;
+         speed *= 100;
       }
 
       // Movement
