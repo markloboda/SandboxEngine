@@ -40,21 +40,24 @@ public:
       float lightAbsorption = 0.375; // how strongly light is absorbed (scattering falloff)
       float henyeyGreensteinStrength = 0.0f; // phase function strength
       float phaseEccentricity = 0.0; // eccentricity for Henyey-Greenstein phase function
-      float lightRayConeAngle = 0.0f; // angle of the light ray cone for raymarchToLight() in radians
+      float lightRayConeAngle = 0.2f; // angle of the light ray cone for raymarchToLight() in radians
 
       // Post Processing
       float toneMappingStrength = 1.0f; // strength of the tone mapping applied to the final cloud color
       float contrastGamma = 0.5f; // contrast gamma for the final cloud colors
 
       // Performance
-      int cloudRaymarchSteps = 500; // number of steps in raymarch()
+      int cloudRaymarchStepsVer = 70; // number of steps in raymarch() vertical
+      int cloudRaymarchStepsHor = 400; // number of steps in raymarch() horizontal
       int lightRaymarchSteps = 6; // number of steps in raymarchToLight()
-      float lightStepLength = 50.0f; // step size in raymarchToLight()
+      float lightStepLength = 100.0f; // step size in raymarchToLight()
       float coverageCullThreshold = 0.0f; // threshold for culling clouds based on coverage
       int dynamicStep = 1; // whether to use dynamic step size in raymarch()
-      float stepSizeFarMultiplier = 2.0; // far step size for raymarching
-      float stepSizeNearMultiplier = 1.0; // near step size for raymarching
       float maxEmptySteps = 5; // maximum number of empty steps
+      float stepSizeFarMultiplierVer = 1.29; // far step size for raymarching
+      float stepSizeNearMultiplierVer = 0.29; // near step size for raymarching
+      float stepSizeFarMultiplierHor = 1.00; // far step size for raymarching
+      float stepSizeNearMultiplierHor = 0.48; // near step size for raymarching
    };
 
    struct CloudRenderWeather

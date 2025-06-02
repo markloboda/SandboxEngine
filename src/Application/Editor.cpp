@@ -162,7 +162,8 @@ void Editor::RenderImGuiUI()
 
             if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen))
             {
-               ImGui::InputInt("Cloud Raymarch Steps", &settings.cloudRaymarchSteps, 1, 1000);
+               ImGui::InputInt("Cloud Raymarch Steps Vertical", &settings.cloudRaymarchStepsVer, 1, 1000);
+               ImGui::InputInt("Cloud Raymarch Steps Horizontal", &settings.cloudRaymarchStepsHor, 1, 1000);
                ImGui::InputInt("Light Raymarch Steps", &settings.lightRaymarchSteps, 1, 1000);
                ImGui::InputFloat("Light Step Length", &settings.lightStepLength, 0.1f, 500.0f, "%.1f");
                ImGui::SliderFloat("Coverage Cull Threshold", &settings.coverageCullThreshold, 0.0f, 1.0f, "%.2f");
@@ -172,9 +173,20 @@ void Editor::RenderImGuiUI()
                settings.dynamicStep = dynamicStep;
                if (dynamicStep)
                {
-                  ImGui::SliderFloat("Step Size Far Multiplier", &settings.stepSizeFarMultiplier, 1.0, 2.0f, "%.2f");
-                  ImGui::SliderFloat("Step Size Near Multiplier", &settings.stepSizeNearMultiplier, 0.01f, 1.0f, "%.2f");
                   ImGui::InputFloat("Max Empty Steps", &settings.maxEmptySteps, 1.0f, 100.0f, "%.1f");
+                  ImGui::Separator();
+                  ImGui::Text("Looking Vertical");
+                  ImGui::SliderFloat("Step Size Far Multiplier Ver", &settings.stepSizeFarMultiplierVer, 1.0, 5.0f,
+                                     "%.2f");
+                  ImGui::SliderFloat("Step Size Near Multiplier Ver", &settings.stepSizeNearMultiplierVer, 0.01f, 1.0f,
+                                     "%.2f");
+
+                  ImGui::Separator();
+                  ImGui::Text("Looking Horizontal");
+                  ImGui::SliderFloat("Step Size Far Multiplier Hor", &settings.stepSizeFarMultiplierHor, 1.0, 5.0f,
+                                     "%.2f");
+                  ImGui::SliderFloat("Step Size Near Multiplier Hor", &settings.stepSizeNearMultiplierHor, 0.01f, 1.0f,
+                                     "%.2f");
                }
             }
          }

@@ -46,14 +46,17 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    float contrastGamma; // contrast gamma for the final cloud colors
 
    // Performance
-   int cloudRaymarchSteps; // number of steps in raymarch()
+   int cloudRaymarchStepsVer; // number of steps in raymarch()
+   int cloudRaymarchStepsHor; // number of steps in raymarch()
    int lightRaymarchSteps; // number of steps in raymarchToLight()
    float lightStepLength; // step size in raymarchToLight()
    float coverageCullThreshold; // threshold for culling clouds based on coverage
    int  dynamicStep; // whether to use dynamic step size in raymarch()
-   float stepSizeFarMultiplier; // far step size for raymarching
-   float stepSizeNearMultiplier; // near step size for raymarching
    float maxEmptySteps; // maximum number of empty steps
+   float stepSizeFarMultiplierVer; // far step size for raymarching
+   float stepSizeNearMultiplierVer; // near step size for raymarching
+   float stepSizeFarMultiplierHor; // far step size for raymarching
+   float stepSizeNearMultiplierHor ; // near step size for raymarching
 } uSettings;
 
 layout(set = 1, binding = 3) uniform CloudRenderWeather
@@ -81,7 +84,7 @@ layout(location = 0) out vec4 fragCol;
 #define AMBIENT_COLOR vec3(0.45, 0.52, 0.61)
 
 // raymarching settings
-#define MAX_RAYMARCH_DISTANCE 512000.0
+#define MAX_RAYMARCH_DISTANCE 35600.0
 #define CLOUD_MAP_SCALING_FACTOR _cloudMapScalingFactor
 const float _cloudMapScalingFactor = 1.0 / 25600.0;
 const float _lowFreqTextureScale = 1.0 / 6000.0; // base scale for low frequency detail texture
@@ -381,26 +384,30 @@ vec4 raymarch(vec3 start, vec3 end)
    vec3  lightColor = vec3(0.0);
    float prevDensity = 0.0;
 
-   float rayDst = 0.0;
-
+   float verticalFactor = abs(rayDir.y);
+   int stepCount = int(mix(uSettings.cloudRaymarchStepsHor, uSettings.cloudRaymarchStepsVer, verticalFactor));
    float stepSize, stepSizeFar, stepSizeNear;
    if (uSettings.dynamicStep == 1)
    {
-      float stepSizeNormal = rayLength / float(uSettings.cloudRaymarchSteps);
+      float farMultiplier = mix(uSettings.stepSizeFarMultiplierHor, uSettings.stepSizeFarMultiplierVer, verticalFactor);
+      float nearMultiplier = mix(uSettings.stepSizeNearMultiplierHor, uSettings.stepSizeNearMultiplierVer, verticalFactor);
+
+      float stepSizeNormal = rayLength / stepCount;
       // Dynamic step size based on distance
-      stepSizeFar = stepSizeNormal * uSettings.stepSizeFarMultiplier;
-      stepSizeNear = stepSizeNormal * uSettings.stepSizeNearMultiplier;
+      stepSizeNear = stepSizeNormal * nearMultiplier;
+      stepSizeFar = stepSizeNormal * farMultiplier;
       stepSize = stepSizeFar;
    }
    else
    {
-      stepSize = rayLength / float(uSettings.cloudRaymarchSteps);
+      stepSize = rayLength / stepCount;
    }
 
    int   emptySteps = 0;
    bool  inCloud = false;
+   float rayDst = 0.0;
 
-   for (int i = 0; i < uSettings.cloudRaymarchSteps; ++i)
+   for (int i = 0; i < stepCount; ++i)
    {
       if (rayDst > rayLength)
       break;
