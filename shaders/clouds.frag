@@ -62,8 +62,8 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
 
 layout(set = 1, binding = 3) uniform CloudRenderWeather
 {
-   vec3 sunDirection;
-   vec3 detailNoiseOffset;
+   vec4 sunDirection;
+   vec4 detailNoiseOffset;
 } uWeather;
 
 layout(set = 1, binding = 4) uniform CloudData
@@ -285,7 +285,7 @@ vec4 sampleCloudMap(in vec3 pos)
 vec4 sampleCloudDetailLowFreq(in vec3 pos)
 {
    float scale = _lowFreqTextureScaleBase * 1.0 / uSettings.lowFreqTextureScale;
-   vec3 detailTextureCoord = pos * scale + uWeather.detailNoiseOffset;
+   vec3 detailTextureCoord = pos * scale + uWeather.detailNoiseOffset.xyz;
    vec4 detailSample = texture(sampler3D(cloudBaseLowFreqTexture, cloudBaseLowFreqSampler), detailTextureCoord);
    return detailSample;
 }
@@ -407,7 +407,7 @@ vec4 raymarch(vec3 start, vec3 end)
    const float rayLength = length(ray);
    const vec3  rayDir = ray / rayLength;
 
-   const float hgCos = dot(rayDir, uWeather.sunDirection);
+   const float hgCos = dot(rayDir, uWeather.sunDirection.xyz);
 
    float transmittance = 1.0;
    vec3  lightColor = vec3(0.0);
@@ -455,7 +455,7 @@ vec4 raymarch(vec3 start, vec3 end)
          float avgDensity = 0.5 * (prevDensity + density);
          prevDensity = density;
 
-         float lightT = raymarchToLight(rayPos, uWeather.sunDirection, uSettings.lightRayConeAngle);
+         float lightT = raymarchToLight(rayPos, uWeather.sunDirection.xyz, uSettings.lightRayConeAngle);
          float phase = mix(1.0, henyeyGreensteinPhase(hgCos, uSettings.phaseEccentricity), uSettings.henyeyGreensteinStrength);
 
          float T = exp(-avgDensity * uSettings.lightAbsorption * stepSize);

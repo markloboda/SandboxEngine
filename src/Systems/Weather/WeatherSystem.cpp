@@ -12,7 +12,7 @@ WeatherSystem::~WeatherSystem()
 
 void WeatherSystem::Update(float dt)
 {
-   constexpr vec3 windOffset = vec3(0.0f, 0.01f, 0.0f);
+   constexpr vec4 windOffset = vec4(0.005f, 0.0f, 0.005f, 1.0f);
 
    State.sunDirection = GetSunDirection(Options.timeOfDay);
    State.detailNoiseOffset += Options.windSpeed * dt * windOffset;
@@ -23,7 +23,7 @@ void WeatherSystem::Update(float dt)
 
 void WeatherSystem::FeedData() const
 {
-   vec3 sunDirection = GetSunDirection(Options.timeOfDay);
+   vec4 sunDirection = GetSunDirection(Options.timeOfDay);
 
    CloudRenderer &cloudRenderer = Application::GetInstance().GetRuntime().GetRenderer().GetCloudRenderer();
    cloudRenderer.Weather.sunDirection = sunDirection;

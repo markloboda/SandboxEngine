@@ -63,8 +63,8 @@ public:
 
    struct CloudRenderWeather
    {
-      vec3 sunDirection = vec3(0.0f, 1.0f, 0.0f);
-      vec3 detailNoiseOffset = vec3(0.0f);
+      vec4 sunDirection = vec4(0.0f, 1.0f, 0.0f, 1.0f);
+      vec4 detailNoiseOffset = vec4(0.0f);
    };
 
    CloudRenderSettings Settings;

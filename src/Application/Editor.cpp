@@ -101,7 +101,7 @@ void Editor::RenderImGuiUI()
             std::string currentWeatherMap = runtime.GetWeatherSystem().GetCurrentWeatherMap();
             if (ImGui::BeginCombo("Weather Map", currentWeatherMap.c_str()))
             {
-               for (int i = 0; i < weatherMaps.size(); ++i)
+               for (size_t i = 0; i < weatherMaps.size(); ++i)
                {
                   bool isSelected = (currentWeatherMap == weatherMaps[i]);
                   if (ImGui::Selectable(weatherMaps[i].c_str(), isSelected))
