@@ -5,8 +5,8 @@ class WeatherSystem
 public:
    struct WeatherOptions
    {
-      float timeOfDay = 11.2f; // Time of day in hours (0.0 - 24.0)s
-      float windSpeed = 3.3f; // Wind speed in m/s
+      float timeOfDay = 9.8; // Time of day in hours (0.0 - 24.0)s
+      float windSpeed = 2.5f; // Wind speed in m/s
    };
 
    struct WeatherState

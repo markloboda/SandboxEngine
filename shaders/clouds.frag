@@ -41,10 +41,6 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    float phaseEccentricity; // eccentricity for Henyey-Greenstein phase function
    float lightRayConeAngle; // angle of the light ray cone for raymarchToLight() in radians
 
-   // Textures
-   float lowFreqTextureScale; // scaling factor for the first detail texture (low frequency)
-   float highFreqTextureScale; // scaling factor for the second detail texture (high frequency)
-
    // Post Processing
    float toneMappingStrength; // strength of the tone mapping applied to the final cloud color
    float contrastGamma; // contrast gamma for the final cloud colors
@@ -85,11 +81,11 @@ layout(location = 0) out vec4 fragCol;
 #define AMBIENT_COLOR vec3(0.45, 0.52, 0.61)
 
 // raymarching settings
-#define MAX_RAYMARCH_DISTANCE 124000.0
+#define MAX_RAYMARCH_DISTANCE 512000.0
 #define CLOUD_MAP_SCALING_FACTOR _cloudMapScalingFactor
-const float _cloudMapScalingFactor = 1.0 / 124000.0; // covers 124km x 124km
-const float _lowFreqTextureScaleBase = 1.0 / 12000.0; // base scale for low frequency detail texture
-const float _highFreqTextureScaleBase = 1.0 / 3378.0; // base scale for high frequency detail texture
+const float _cloudMapScalingFactor = 1.0 / 25600.0;
+const float _lowFreqTextureScale = 1.0 / 6000.0; // base scale for low frequency detail texture
+const float _highFreqTextureScale = 1.0 / 1200.0; // base scale for high frequency detail texture
 
 // cloud heights
 #define STRATUS_OFFSET       vec3(0.1, 0.2, 0.3)
@@ -232,7 +228,7 @@ float heightGradient(float mappedHeight, float min, float center, float max)
 }
 
 // Calculate the cloud height fraction for the given position and cloud type
-float getCloudHeightFraction(float height, float cloudType)
+float getCloudTypeFraction(float height, float cloudType)
 {
    // Cloud type float from 0.0 to 1.0
    // 0.0 = stratus
@@ -284,7 +280,7 @@ vec4 sampleCloudMap(in vec3 pos)
 // Sample cloud detail low frequency noise (3D texture)
 vec4 sampleCloudDetailLowFreq(in vec3 pos)
 {
-   float scale = _lowFreqTextureScaleBase * 1.0 / uSettings.lowFreqTextureScale;
+   float scale = _lowFreqTextureScale;
    vec3 detailTextureCoord = pos * scale + uWeather.detailNoiseOffset.xyz;
    vec4 detailSample = texture(sampler3D(cloudBaseLowFreqTexture, cloudBaseLowFreqSampler), detailTextureCoord);
    return detailSample;
@@ -293,7 +289,7 @@ vec4 sampleCloudDetailLowFreq(in vec3 pos)
 // Sample cloud detail high frequency noise (3D texture)
 vec3 sampleCloudDetailHighFreq(in vec3 pos)
 {
-   float scale = _highFreqTextureScaleBase * 1.0 / uSettings.highFreqTextureScale;
+   float scale = _highFreqTextureScale;
    vec3 detailTextureCoord = pos * scale;
    vec3 detailSample = texture(sampler3D(cloudBaseHighFreqTexture, cloudBaseHighFreqSampler), detailTextureCoord).rgb;
    return detailSample;
@@ -302,56 +298,28 @@ vec3 sampleCloudDetailHighFreq(in vec3 pos)
 // Get cloud density at world position
 float sampleCloudDensity(in vec3 pos)
 {
-   vec4 mapSample = sampleCloudMap(pos);
-   if (mapSample.a < EPSILON)
-   {
-      // no clouds at this position (outside cloud layer or tile bounds)
-      return 0.0;
-   }
+   vec4  mapSample = sampleCloudMap(pos);
+   float coverage  = clamp(mapSample.r * uSettings.coverageMultiplier, 0.0, 1.0);
+   float cloudType = mapSample.b;
+   vec4 detailLowFreqSample  = sampleCloudDetailLowFreq(pos);
 
-   // map data
-   float cloudCoverage = clamp(mapSample.r * uSettings.coverageMultiplier, 0.0, 1.0);
-   if (cloudCoverage < uSettings.coverageCullThreshold)
-   {
-      return 0.0;
-   }
-
-   float cloudType      = mapSample.b;
-   float heightFraction = getCloudHeightFraction(pos.y, cloudType);
-   float heightGradient = clampRemap(pos.y, uSettings.cloudStartHeight, uSettings.cloudEndHeight, 0.0, 1.0);
-
-   // detail low freq data
-   vec4  detailLowFreqSample  = sampleCloudDetailLowFreq(pos);
-   float lowFreqPerlin  = detailLowFreqSample.r;
    float lowFreqFBM = clamp(dot(detailLowFreqSample.gba, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
+   float baseCloud = remap(detailLowFreqSample.r, -(1.0 - lowFreqFBM), 1.0, 0.0, 1.0);
+   baseCloud *= getCloudTypeFraction(pos.y, cloudType);
 
-   // final density calculation
-   float baseDensity = remap(lowFreqPerlin, (1.0 - lowFreqFBM), 1.0, 0.0, 1.0);
+   float heightFraction    = clampRemap(pos.y, uSettings.cloudStartHeight, uSettings.cloudEndHeight, 0.0, 1.0);
+   float cloudWithCoverage = remap(baseCloud, (1.0 - coverage), 1.0, 0.0, 1.0);
+   cloudWithCoverage *= heightFraction;
 
-   // detail high freq data (if enabled)
-   if (uSettings.highFreqThreshold > 0.0)
-   {
-      vec3 detail = sampleCloudDetailHighFreq(pos).rgb;
-      float highFreqFBM = clamp(dot(detail, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
-
-      if (baseDensity < uSettings.highFreqThreshold)
-      {
-         // Remap with detail controlling the lower bound
-         float remapped = clampRemap(baseDensity, (1.0 - highFreqFBM), 1.0, 0.0, 1.0);
-         baseDensity = mix(baseDensity, remapped, uSettings.detailBlendStrength); // e.g., 0.3–0.6
-      }
+   // Erode edges.
+   vec3 detailHighFreq = sampleCloudDetailHighFreq(pos).rgb;
+   float highFreqFBM = clamp(dot(detailHighFreq, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
+   if (cloudWithCoverage < uSettings.highFreqThreshold) {
+      float eroded = remap(cloudWithCoverage, (1.0 - highFreqFBM), 1.0, 0.0, 1.0);
+      cloudWithCoverage = mix(cloudWithCoverage, eroded, uSettings.detailBlendStrength);
    }
 
-   baseDensity *= heightFraction;
-   baseDensity *= heightGradient;
-   float cloudDensity = remap(baseDensity, (1.0 - cloudCoverage), 1.0, 0.0, 1.0);
-
-   cloudDensity *= uSettings.densityMultiplier;
-
-   cloudDensity = pow(cloudDensity, 1.5);       // Compress high values (optional)
-   cloudDensity *= 0.4;                    // Final scale so max is around 0.4
-
-   return clamp(cloudDensity, 0.0, 1.0);
+   return clamp(cloudWithCoverage, 0.0, 1.0);
 }
 
 float henyeyGreensteinPhase(float cosTheta, float g)

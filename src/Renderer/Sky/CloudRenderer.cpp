@@ -343,7 +343,7 @@ void CloudRenderer::Render(const Renderer &renderer, const CommandEncoder &encod
    // Collect CloudBounds nodes
    const Application *app = &Application::GetInstance();
    const ResolutionData resolution = {vec2(app->GetWindowWidth(), app->GetWindowHeight())};
-   const CloudData cloudData = {vec2(-51200, -51200)};
+   const CloudData cloudData = {vec2(0, -12800)};
    FreeCamera &camera = app->GetRuntime().GetActiveCamera();
 
    _shaderParams.view = camera.GetViewMatrix();

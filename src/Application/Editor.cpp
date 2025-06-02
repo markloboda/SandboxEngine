@@ -155,12 +155,6 @@ void Editor::RenderImGuiUI()
 
                ImGui::Separator();
 
-               ImGui::Text("Textures");
-               ImGui::SliderFloat("Low Freq Texture Scale", &settings.lowFreqTextureScale, 0.1f, 10.0f, "%.1f");
-               ImGui::SliderFloat("High Freq Texture Scale", &settings.highFreqTextureScale, 0.1f, 10.0f, "%.1f");
-
-               ImGui::Separator();
-
                ImGui::Text("Post Processing");
                ImGui::SliderFloat("Tone Mapping", &settings.toneMappingStrength, 0.0f, 1.0f, "%.01f");
                ImGui::SliderFloat("Contrast Gamma", &settings.contrastGamma, 0.1f, 5.0f, "%.01f");
