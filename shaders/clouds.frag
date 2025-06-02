@@ -54,7 +54,7 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    int lightRaymarchSteps; // number of steps in raymarchToLight()
    float lightStepLength; // step size in raymarchToLight()
    float coverageCullThreshold; // threshold for culling clouds based on coverage
-   bool  dynamicStepSize; // whether to use dynamic step size in raymarch()
+   int  dynamicStep; // whether to use dynamic step size in raymarch()
    float stepSizeFarMultiplier; // far step size for raymarching
    float stepSizeNearMultiplier; // near step size for raymarching
    float maxEmptySteps; // maximum number of empty steps
@@ -416,7 +416,7 @@ vec4 raymarch(vec3 start, vec3 end)
    float rayDst = 0.0;
 
    float stepSize, stepSizeFar, stepSizeNear;
-   if (uSettings.dynamicStepSize)
+   if (uSettings.dynamicStep == 1)
    {
       float stepSizeNormal = rayLength / float(uSettings.cloudRaymarchSteps);
       // Dynamic step size based on distance
@@ -442,7 +442,7 @@ vec4 raymarch(vec3 start, vec3 end)
 
       if (density > 0.0)
       {
-         if (uSettings.dynamicStepSize && !inCloud)
+         if (uSettings.dynamicStep == 1 && !inCloud)
          {
             // Hit cloud: step back and reduce step size
             rayDst -= stepSize;
@@ -475,7 +475,7 @@ vec4 raymarch(vec3 start, vec3 end)
       }
       else
       {
-         if (uSettings.dynamicStepSize && inCloud)
+         if (uSettings.dynamicStep == 1 && inCloud)
          {
             emptySteps++;
             if (emptySteps >= uSettings.maxEmptySteps)

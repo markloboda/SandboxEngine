@@ -55,7 +55,7 @@ public:
       int lightRaymarchSteps = 6; // number of steps in raymarchToLight()
       float lightStepLength = 200.0f; // step size in raymarchToLight()
       float coverageCullThreshold = 0.5f; // threshold for culling clouds based on coverage
-      bool dynamicStepSize = false; // whether to use dynamic step size in raymarch()
+      int dynamicStep = 0.0; // whether to use dynamic step size in raymarch()
       float stepSizeFarMultiplier = 1.0; // far step size for raymarching
       float stepSizeNearMultiplier = 0.2; // near step size for raymarching
       float maxEmptySteps = 5; // maximum number of empty steps

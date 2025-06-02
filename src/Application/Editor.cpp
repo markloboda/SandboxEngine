@@ -173,8 +173,10 @@ void Editor::RenderImGuiUI()
                ImGui::InputFloat("Light Step Length", &settings.lightStepLength, 0.1f, 500.0f, "%.1f");
                ImGui::SliderFloat("Coverage Cull Threshold", &settings.coverageCullThreshold, 0.0f, 1.0f, "%.2f");
                ImGui::Separator();
-               ImGui::Checkbox("Dynamic Step Size", &settings.dynamicStepSize);
-               if (settings.dynamicStepSize)
+               bool dynamicStep = settings.dynamicStep;
+               ImGui::Checkbox("Dynamic Step Size", &dynamicStep);
+               settings.dynamicStep = dynamicStep;
+               if (dynamicStep)
                {
                   ImGui::SliderFloat("Step Size Far Multiplier", &settings.stepSizeFarMultiplier, 1.0, 2.0f, "%.2f");
                   ImGui::SliderFloat("Step Size Near Multiplier", &settings.stepSizeNearMultiplier, 0.01f, 1.0f, "%.2f");
