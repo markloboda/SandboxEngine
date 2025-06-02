@@ -139,7 +139,7 @@ void Editor::RenderImGuiUI()
             {
                // Sliders for cloud settings
                ImGui::Text("Densities");
-               ImGui::SliderFloat("Coverage Multiplier", &settings.coverageMultiplier, 0.0f, 10.0f);
+               ImGui::SliderFloat("Coverage Multiplier", &settings.coverageMultiplier, 0.0f, 1.7f);
                ImGui::SliderFloat("Density Multiplier", &settings.densityMultiplier, 0.0f, 10.0f);
                ImGui::SliderFloat("High Frequency Threshold", &settings.highFreqThreshold, 0.0f, 1.0f);
                ImGui::SliderFloat("Detail Blend", &settings.detailBlendStrength, 0.0f, 1.0f, "%.2f");
@@ -160,8 +160,7 @@ void Editor::RenderImGuiUI()
                ImGui::SliderFloat("Contrast Gamma", &settings.contrastGamma, 0.1f, 5.0f, "%.01f");
             }
 
-            if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen))
-            {
+            if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_None)) {
                ImGui::InputInt("Cloud Raymarch Steps Vertical", &settings.cloudRaymarchStepsVer, 1, 1000);
                ImGui::InputInt("Cloud Raymarch Steps Horizontal", &settings.cloudRaymarchStepsHor, 1, 1000);
                ImGui::InputInt("Light Raymarch Steps", &settings.lightRaymarchSteps, 1, 1000);
