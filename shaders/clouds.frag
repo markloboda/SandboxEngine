@@ -50,6 +50,7 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    int lightRaymarchSteps; // number of steps in raymarchToLight()
    float lightStepLength; // step size in raymarchToLight()
    float coverageCullThreshold; // threshold for culling clouds based on coverage
+   float erodeCullThreshold;
    int  dynamicStep; // whether to use dynamic step size in raymarch()
    float maxEmptySteps; // maximum number of empty steps
    float stepSizeFarMultiplierVer; // far step size for raymarching
@@ -83,7 +84,7 @@ layout(location = 0) out vec4 fragCol;
 #define AMBIENT_COLOR vec3(0.45, 0.52, 0.61)
 
 // raymarching settings
-#define MAX_RAYMARCH_DISTANCE 35600.0
+#define MAX_RAYMARCH_DISTANCE 30000.0
 #define CLOUD_MAP_SCALING_FACTOR _cloudMapScalingFactor
 const float _cloudMapScalingFactor = 1.0 / 25600.0;
 const float _lowFreqTextureScale = 1.0 / 6000.0; // base scale for low frequency detail texture
@@ -300,8 +301,14 @@ vec3 sampleCloudDetailHighFreq(in vec3 pos)
 // Get cloud density at world position
 float sampleCloudDensity(in vec3 pos)
 {
-   vec4  mapSample = sampleCloudMap(pos);
-   float coverage  = clamp(mapSample.r * uSettings.coverageMultiplier, 0.0, 1.0);
+   vec4 mapSample = sampleCloudMap(pos);
+   if (mapSample.a <= EPSILON)
+   { return 0.0; }
+
+   float coverage = clamp(mapSample.r * uSettings.coverageMultiplier, 0.0, 1.0);
+   if (coverage < uSettings.coverageCullThreshold)
+   { return 0.0; }
+
    float cloudType = mapSample.b;
    vec4 detailLowFreqSample  = sampleCloudDetailLowFreq(pos);
 
@@ -314,10 +321,13 @@ float sampleCloudDensity(in vec3 pos)
    cloudWithCoverage *= heightFraction;
 
    // Erode edges.
-   vec3 detailHighFreq = sampleCloudDetailHighFreq(pos).rgb;
-   float highFreqFBM = clamp(dot(detailHighFreq, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
-   float eroded = remap(cloudWithCoverage, (1.0 - highFreqFBM), 1.0, 0.0, 1.0);
-   cloudWithCoverage = mix(cloudWithCoverage, eroded, uSettings.detailBlendStrength);
+   if (cloudWithCoverage < uSettings.erodeCullThreshold)
+   {
+      vec3 detailHighFreq = sampleCloudDetailHighFreq(pos).rgb;
+      float highFreqFBM = clamp(dot(detailHighFreq, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
+      float eroded = remap(cloudWithCoverage, (1.0 - highFreqFBM), 1.0, 0.0, 1.0);
+      cloudWithCoverage = mix(cloudWithCoverage, eroded, uSettings.detailBlendStrength);
+   }
 
    return clamp(cloudWithCoverage * uSettings.densityMultiplier, 0.0, 1.0);
 }

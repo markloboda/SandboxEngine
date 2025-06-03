@@ -164,7 +164,8 @@ void Editor::RenderImGuiUI()
                ImGui::InputInt("Cloud Raymarch Steps Horizontal", &settings.cloudRaymarchStepsHor, 1, 1000);
                ImGui::InputInt("Light Raymarch Steps", &settings.lightRaymarchSteps, 1, 1000);
                ImGui::InputFloat("Light Step Length", &settings.lightStepLength, 0.1f, 500.0f, "%.1f");
-               ImGui::SliderFloat("Coverage Cull Threshold", &settings.coverageCullThreshold, 0.0f, 1.0f, "%.2f");
+               ImGui::SliderFloat("Coverage Cull", &settings.coverageCullThreshold, 0.0f, 1.0f, "%.2f");
+               ImGui::SliderFloat("Erode Cull", &settings.erodeCullThreshold, 0.0f, 1.0f, "%.2f");
                ImGui::Separator();
                bool dynamicStep = settings.dynamicStep;
                ImGui::Checkbox("Dynamic Step Size", &dynamicStep);

@@ -46,17 +46,18 @@ public:
       float contrastGamma = 0.5f; // contrast gamma for the final cloud colors
 
       // Performance
-      int cloudRaymarchStepsVer = 70; // number of steps in raymarch() vertical
-      int cloudRaymarchStepsHor = 400; // number of steps in raymarch() horizontal
+      int cloudRaymarchStepsVer = 60; // number of steps in raymarch() vertical
+      int cloudRaymarchStepsHor = 200; // number of steps in raymarch() horizontal
       int lightRaymarchSteps = 6; // number of steps in raymarchToLight()
       float lightStepLength = 100.0f; // step size in raymarchToLight()
-      float coverageCullThreshold = 0.0f; // threshold for culling clouds based on coverage
+      float coverageCullThreshold = 0.35f; // threshold for culling clouds based on coverage
+      float erodeCullThreshold = 0.08f; // threshold for culling high frequency texture sampling
       int dynamicStep = 1; // whether to use dynamic step size in raymarch()
-      float maxEmptySteps = 5; // maximum number of empty steps
-      float stepSizeFarMultiplierVer = 1.41; // far step size for raymarching
-      float stepSizeNearMultiplierVer = 0.5; // near step size for raymarching
-      float stepSizeFarMultiplierHor = 1.00; // far step size for raymarching
-      float stepSizeNearMultiplierHor = 0.48; // near step size for raymarching
+      float maxEmptySteps = 6; // maximum number of empty steps
+      float stepSizeFarMultiplierVer = 1.29; // far step size for raymarching
+      float stepSizeNearMultiplierVer = 0.68; // near step size for raymarching
+      float stepSizeFarMultiplierHor = 1.0; // far step size for raymarching
+      float stepSizeNearMultiplierHor = 0.24; // near step size for raymarching
    };
 
    struct CloudRenderWeather
