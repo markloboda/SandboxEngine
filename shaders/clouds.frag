@@ -31,7 +31,6 @@ layout(set = 1, binding = 2) uniform CloudRenderSettings
    // Densitites
    float coverageMultiplier; // scales the coverage read from the weather map
    float densityMultiplier; // scales the final computed cloud density
-   float highFreqThreshold; // threshold for high frequency detail noise application
    float detailBlendStrength; // strength of the detail noise blending
 
    // Lighting
@@ -93,7 +92,7 @@ const float _highFreqTextureScale = 1.0 / 1200.0; // base scale for high frequen
 // cloud heights
 #define STRATUS_OFFSET       vec3(0.1, 0.2, 0.3)
 #define STRATOCUMULUS_OFFSET vec3(0.1, 0.5, 0.6)
-#define CUMULUS_OFFSET       vec3(0.1, 0.9, 1.0)
+#define CUMULUS_OFFSET       vec3(0.1, 0.8, 0.9)
 
 // helper functions
 float remap(float originalValue, float originalMin, float originalMax, float newMin, float newMax)
@@ -317,12 +316,10 @@ float sampleCloudDensity(in vec3 pos)
    // Erode edges.
    vec3 detailHighFreq = sampleCloudDetailHighFreq(pos).rgb;
    float highFreqFBM = clamp(dot(detailHighFreq, vec3(0.625, 0.25, 0.125)), 0.0, 1.0);
-   if (cloudWithCoverage < uSettings.highFreqThreshold) {
-      float eroded = remap(cloudWithCoverage, (1.0 - highFreqFBM), 1.0, 0.0, 1.0);
-      cloudWithCoverage = mix(cloudWithCoverage, eroded, uSettings.detailBlendStrength);
-   }
+   float eroded = remap(cloudWithCoverage, (1.0 - highFreqFBM), 1.0, 0.0, 1.0);
+   cloudWithCoverage = mix(cloudWithCoverage, eroded, uSettings.detailBlendStrength);
 
-   return clamp(cloudWithCoverage, 0.0, 1.0);
+   return clamp(cloudWithCoverage * uSettings.densityMultiplier, 0.0, 1.0);
 }
 
 float henyeyGreensteinPhase(float cosTheta, float g)

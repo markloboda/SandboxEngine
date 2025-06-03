@@ -141,7 +141,6 @@ void Editor::RenderImGuiUI()
                ImGui::Text("Densities");
                ImGui::SliderFloat("Coverage Multiplier", &settings.coverageMultiplier, 0.0f, 1.7f);
                ImGui::SliderFloat("Density Multiplier", &settings.densityMultiplier, 0.0f, 10.0f);
-               ImGui::SliderFloat("High Frequency Threshold", &settings.highFreqThreshold, 0.0f, 1.0f);
                ImGui::SliderFloat("Detail Blend", &settings.detailBlendStrength, 0.0f, 1.0f, "%.2f");
 
                ImGui::Separator();

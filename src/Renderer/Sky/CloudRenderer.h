@@ -26,24 +26,23 @@ public:
    struct CloudRenderSettings
    {
       // Position
-      float cloudStartHeight = 2000.0f; // height of the bottom of the cloud layer
-      float cloudEndHeight = 7000.0f; // height of the top of the cloud layer
+      float cloudStartHeight = 11000.0f; // height of the bottom of the cloud layer
+      float cloudEndHeight = 16000.0f; // height of the top of the cloud layer
 
       // Densitites
-      float coverageMultiplier = 1.0; // scales the coverage read from the weather map
-      float densityMultiplier = 1.0; // scales the final computed cloud density
-      float highFreqThreshold = 1.0; // threshold for high frequency detail noise application
+      float coverageMultiplier = 1.278; // scales the coverage read from the weather map
+      float densityMultiplier = 0.3; // scales the final computed cloud density
       float detailBlendStrength = 0.02f; // strength of the detail noise blending
 
       // Lighting
-      float ambientLight = 0.1; // ambient light intensity for the clouds
-      float lightAbsorption = 0.375; // how strongly light is absorbed (scattering falloff)
-      float henyeyGreensteinStrength = 0.0f; // phase function strength
-      float phaseEccentricity = 0.0; // eccentricity for Henyey-Greenstein phase function
-      float lightRayConeAngle = 0.2f; // angle of the light ray cone for raymarchToLight() in radians
+      float ambientLight = 0.09; // ambient light intensity for the clouds
+      float lightAbsorption = 0.218; // how strongly light is absorbed (scattering falloff)
+      float henyeyGreensteinStrength = 0.7f; // phase function strength
+      float phaseEccentricity = 0.262; // eccentricity for Henyey-Greenstein phase function
+      float lightRayConeAngle = 0.3f; // angle of the light ray cone for raymarchToLight() in radians
 
       // Post Processing
-      float toneMappingStrength = 1.0f; // strength of the tone mapping applied to the final cloud color
+      float toneMappingStrength = 0.6f; // strength of the tone mapping applied to the final cloud color
       float contrastGamma = 0.5f; // contrast gamma for the final cloud colors
 
       // Performance
@@ -54,8 +53,8 @@ public:
       float coverageCullThreshold = 0.0f; // threshold for culling clouds based on coverage
       int dynamicStep = 1; // whether to use dynamic step size in raymarch()
       float maxEmptySteps = 5; // maximum number of empty steps
-      float stepSizeFarMultiplierVer = 1.29; // far step size for raymarching
-      float stepSizeNearMultiplierVer = 0.29; // near step size for raymarching
+      float stepSizeFarMultiplierVer = 1.41; // far step size for raymarching
+      float stepSizeNearMultiplierVer = 0.5; // near step size for raymarching
       float stepSizeFarMultiplierHor = 1.00; // far step size for raymarching
       float stepSizeNearMultiplierHor = 0.48; // near step size for raymarching
    };
